@@ -6,12 +6,12 @@
 
 ## 기본 정보
 
-- 이름: 홍길동
-- 영문 이름: Gildong Hong
-- 한 줄 정체성: 구조를 설명할 줄 아는 유니티 클라이언트 개발자
-- 이메일: you@example.com
-- GitHub: https://github.com/your-id
-- 기타 링크: 블로그 https://your-blog.example.com
+- 이름: 김진우
+- 영문 이름: Kim Jinwoo
+- 한 줄 정체성: Unity 게임 클라이언트 프로그래머
+- 이메일: woo_2000@naver.com
+- GitHub: https://github.com/rlawlsdn77
+- 기타 링크:
 
 ## 자기소개
 
@@ -27,7 +27,11 @@
 
 - Unity
 - C#
-- 디자인 패턴
+- Physics2D (Raycast · BoxCast)
+- TSV / ScriptableObject / JSON
+- uGUI / TextMeshPro
+- DOTween
+- Input System
 
 ## 페이지 설정
 
@@ -35,5 +39,5 @@
   <!-- project = 프로젝트 중심 (프로젝트가 여러 개일 때) / stack = 기술 스택 중심 (특정 기술을 강조할 때) · 지금의 덱에는 아직 반영되지 않습니다(장면 순서 고정) -->
 - 강조색: #2F6FEB
   <!-- 버튼·링크·태그에 쓰이는 색 하나. 예) #2F6FEB 블루, #0F9D76 그린, #D9480F 오렌지, #7048E8 퍼플 -->
-- 프로젝트 순서:
+- 프로젝트 순서: Doc_Shifter, Doc_OverFixed
   <!-- 비워 두면 src/ 폴더 이름 순서. 바꾸려면 폴더 이름을 쉼표로: 2-Yggdrasil, 1-action-platformer -->
