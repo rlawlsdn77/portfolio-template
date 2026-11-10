@@ -1,0 +1,408 @@
+{
+  "schemaVersion": 2,
+  "id": "Shifter",
+  "doc": "Shifter_기술문서.md",
+  "title": "SHIFTER",
+  "tagline": "Shift 키로 흰색과 검은색 속성을 바꿔 가며, 밟을 수 있는 발판과 맞는 탄환이 함께 뒤집히는 2D 퍼즐 플랫포머",
+  "cover": "images/01_cover.png",
+  "team": { "type": "solo", "size": "1인", "role": "" },
+  "meta": [
+    { "label": "장르", "value": "2D 퍼즐 플랫포머" },
+    { "label": "기간", "value": "2026.06.24 ~ 2026.07.10 (07.07 완성, 07.10 리팩토링)" },
+    { "label": "인원", "value": "1인" },
+    { "label": "환경", "value": "Unity 6 (6000.3.15f1), URP 2D, C#" }
+  ],
+  "tags": ["Unity 6", "C#", "URP 2D", "Physics2D", "키네마틱 이동", "UnityEvent", "Input System"],
+  "links": {
+    "github": "https://github.com/rlawlsdn77/Unity-2D-Shifter",
+    "video": "",
+    "extra": []
+  },
+  "intent": {
+    "text": "목표는 7월 초까지 메뉴 → STAGE 1 → STAGE 2 → 보스 격파로 이어지는 한 판을 완성하고, 모든 기믹을 Shift 규칙 하나로 설명할 수 있게 만드는 것이었습니다.",
+    "verbatim": true
+  },
+  "highlights": [
+    {
+      "title": "Shift 속성 시스템",
+      "what": "플레이어·발판·탄환이 같은 태그 문자열을 갖고, 모든 판정이 \"같은 색인가\" 하나로 끝난다",
+      "how": "속성을 Unity 태그 문자열 하나로 통일해 바꾸는 곳은 `Shifter.ShiftTag()` 하나뿐이고, 다른 색 발판은 `BoxCollider2D`째 꺼서 이동과 레이캐스트에서 함께 사라진다",
+      "why": "같은 문자열 하나로 비교되는 단순함이 \"같은 색인가\" 규칙과 맞았고, 콜라이더를 끄는 방식 덕분에 나중에 만든 레이저 퍼즐도 추가 코드 없이 Shift 규칙을 따랐다",
+      "section": "3.1 문제와 구조",
+      "image": { "src": "images/06_shift_compare.png", "w": 2576, "h": 720, "caption": "같은 장소에서 흰색일 때와 검은색일 때 비교" }
+    },
+    {
+      "title": "스테이지 기믹과 퍼즐",
+      "what": "버튼은 UnityEvent로 잇고, 레이저 반사와 밀어내는 벽을 키네마틱 이동 위에 직접 구현한다",
+      "how": "레이저는 매 프레임 레이캐스트를 이어 붙여 거울에서 `Vector2.Reflect`로 꺾고, 크러셔 벽은 콜라이더를 끈 채 겹침을 직접 검사해 벽 이동량을 `AddExternalMovement`로 더한다",
+      "why": "조준 퍼즐은 지금 각도면 어디에 맞는지가 바로 보여야 했고, 이동 판정을 BoxCast가 쥔 구조에서는 플레이어를 옮기는 길을 `CharacterController2D` 하나로 모으는 것이 가장 안전하다고 판단했다",
+      "section": "4.3 핵심 동작",
+      "image": null
+    },
+    {
+      "title": "보스전",
+      "what": "패턴 3종을 `IBossPattern`(시작·정리)으로 통일하고, 패턴 3회 → 그로기 → 약점의 주기를 돈다",
+      "how": "`BossManager`는 10초마다 이전 패턴의 `EndPattern()`을 부른 뒤 무작위 패턴을 시작하고, 각 패턴은 `EndPattern`에서 자기 코루틴과 투사체를 모두 정리한다",
+      "why": "패턴끼리 공유하는 것은 동작이 아니라 약속(시작하면 끝낼 수 있어야 한다)이라고 봐서 추상 클래스 대신 인터페이스를 택했다",
+      "section": "5.3 핵심 동작",
+      "image": { "src": "images/14_boss_groggy.png", "w": 1920, "h": 1080, "caption": "그로기 중 열린 약점" }
+    }
+  ],
+  "troubleshooting": [
+    {
+      "title": "겹치면 얼어붙는 문제: 크러셔 벽과 보스전 랜덤 발판",
+      "problem": "크러셔 벽에 콜라이더를 켜 두면 벽과 겹치는 순간 플레이어가 얼어붙었고, 보스전 랜덤 발판이 플레이어 위치에 생기면 빠져나올 수 없었다",
+      "cause": "BoxCast가 이미 들어가 있는 콜라이더도 맞혀 겹친 상태에서는 모든 방향이 거리 0으로 막히고, 키네마틱 이동에는 겹침을 풀어 주는 처리가 없었다",
+      "solution": "크러셔 벽은 콜라이더를 끄고 겹침을 직접 검사해 벽 이동량만큼 플레이어를 옮겼고, 랜덤 발판은 위치 검사 규칙을 만드는 대신 기능을 걷어냈다",
+      "result": "",
+      "lesson": "물리 엔진 밖으로 나왔으면 밀기·밀리기·겹침을 끝까지 직접 책임져야 한다",
+      "section": "7.2 문제 해결 경험"
+    },
+    {
+      "title": "고쳤던 빌드 에러가 리팩토링에서 되살아난 문제",
+      "problem": "메뉴의 종료 버튼 코드에 에디터 전용 API(`UnityEditor.EditorApplication.isPlaying`)가 있어 빌드하면 컴파일 에러가 난다",
+      "cause": "07.07에 `#if UNITY_EDITOR`로 감싸 고쳤지만 07.10 리팩토링 커밋에서 두 줄이 다시 빠졌고, 에디터 플레이에서는 정상 동작해 드러나지 않았다",
+      "solution": "커밋 이력을 다시 읽다가 발견해 다시 감싸고 커밋했고(11.09), 런타임 스크립트 중 `UnityEditor` 참조는 이 한 곳뿐임을 검색으로 확인했다",
+      "result": "",
+      "lesson": "리팩토링은 기능을 빼는 일이기도 하므로, 뺀 기능에 기대던 코드와 빌드 결과를 함께 확인해야 한다",
+      "section": "7.2 문제 해결 경험"
+    },
+    {
+      "title": "왼쪽을 보면 충돌 범위가 그림과 어긋나던 문제",
+      "problem": "왼쪽으로 이동하면 그림은 뒤집히는데 충돌 범위는 그대로 남아, 벽·발판과 닿는 위치가 그림과 달랐다",
+      "cause": "좌우 반전을 Animator가 붙은 자식 오브젝트의 스케일로 해서, 루트의 콜라이더(중심에서 x로 약 0.27 치우침)는 뒤집히지 않았다",
+      "solution": "루트의 `transform.localScale.x`를 뒤집어 그림과 콜라이더가 함께 반전되게 했다",
+      "result": "",
+      "lesson": "",
+      "section": "7.2 문제 해결 경험"
+    }
+  ],
+  "screenshots": [
+    { "src": "images/02_ingame.png", "w": 1920, "h": 1080, "caption": "인게임 화면" },
+    { "src": "images/06_shift_compare.png", "w": 2576, "h": 720, "caption": "같은 장소에서 흰색일 때와 검은색일 때 비교" },
+    { "src": "images/09_stage2_laser.png", "w": 1920, "h": 1080, "caption": "레이저 조준 모드" },
+    { "src": "images/10_stage2_crusher.png", "w": 1920, "h": 1080, "caption": "크러셔 벽" },
+    { "src": "images/11_boss_eruption.png", "w": 1920, "h": 1080, "caption": "운석 패턴" },
+    { "src": "images/14_boss_groggy.png", "w": 1920, "h": 1080, "caption": "그로기 중 열린 약점" }
+  ],
+  "retro": {
+    "section": "7. 결과 및 배운 점",
+    "achieved": [
+      "메뉴 → STAGE 1 → STAGE 2 → 보스 → 메뉴, 게임오버 · 재시작 · 일시정지까지 구현",
+      "흰·검 발판 추가는 코드 수정 0줄 — STAGE 2의 발판 20개(흰 9 · 검 11)를 프리팹 배치만으로 넣음",
+      "패턴 전환 · 그로기 · 사망 어느 경로에서도 이전 패턴의 탄이 남지 않음 (테스트 3회 모두 남은 투사체 0개)",
+      "자동 테스트 플레이로 주요 동작 17항목 검증, 새 버그 3건 발견(11.09)"
+    ],
+    "regrets": [
+      "STAGE 1 총알 · STAGE 2 레드 타일 · 보스 레이저가 충돌 설정 문제로 맞지 않는다 (테스트로 발견, 미수정)",
+      "Shift 순간 다른 색 발판 안에 갇힌다 (겹침 해소 없음)",
+      "`PlatformManager`가 이유였던 랜덤 발판이 사라진 뒤에도 매 프레임 태그로 발판을 다시 찾는다",
+      "`BossManager`가 패턴의 구체 타입과 애니메이션 트리거를 `switch`로 직접 안다"
+    ],
+    "plans": [
+      "총알·레드 타일 콜라이더를 트리거로 바꾸고, 보스 레이저 판정 박스를 보이는 크기로 줄인다",
+      "Shift 전에 `Physics2D.OverlapBox`로 새 색 발판과 겹치는지 확인해 막거나 바깥으로 밀어낸다",
+      "시작할 때 한 번 모으고, `Shifter`가 속성을 바꿀 때 이벤트를 내면 그때만 갱신한다",
+      "`IBossPattern`이 자기 애니메이션 트리거를 갖게 하고, `GetComponents<IBossPattern>()` 배열에서 무작위로 고른다"
+    ]
+  },
+  "deck": {
+    "chapters": [
+      { "key": "overview", "title": "프로젝트 개요", "sectionPath": ["1. 프로젝트 개요"] },
+      { "key": "structure", "title": "시스템 구조", "sectionPath": ["2. 시스템 구조"] },
+      { "key": "shift", "title": "Shift 속성 시스템", "sectionPath": ["3. Shift 속성 시스템"] },
+      { "key": "gimmick", "title": "스테이지 기믹과 퍼즐", "sectionPath": ["4. 스테이지 기믹과 퍼즐"] },
+      { "key": "boss", "title": "보스전", "sectionPath": ["5. 보스전"] },
+      { "key": "misc", "title": "기타 구현", "sectionPath": ["6. 기타 구현"] },
+      { "key": "result", "title": "결과 및 배운 점", "sectionPath": ["7. 결과 및 배운 점"] }
+    ],
+    "slides": [
+      {
+        "key": "what",
+        "chapter": "overview",
+        "layout": "overview",
+        "tab": "개요",
+        "title": { "text": "1.1 무엇을 만들었나 (What)", "verbatim": true },
+        "lead": { "text": "SHIFTER는 플레이어(Shifter)가 자신의 속성을 흰색 ↔ 검은색으로 바꿔 가며 스테이지를 통과하는 2D 퍼즐 플랫포머입니다.", "verbatim": true },
+        "sectionPath": ["1. 프로젝트 개요", "1.1 무엇을 만들었나 (What)"],
+        "points": [
+          { "label": "발판", "text": "발판은 플레이어와 같은 색일 때만 밟힙니다. 다른 색 발판은 반투명해지고 몸이 그대로 통과합니다.", "verbatim": true },
+          { "label": "탄환", "text": "탄환도 플레이어와 같은 색일 때만 맞습니다. 다른 색 탄환은 몸을 지나갑니다.", "verbatim": true },
+          { "label": "", "text": "Shift에는 1초 쿨타임이 있어 연타로 모든 상황을 넘길 수는 없습니다.", "verbatim": true }
+        ],
+        "visuals": [
+          { "kind": "image", "src": "images/02_ingame.png", "w": 1920, "h": 1080, "caption": { "text": "인게임 화면", "verbatim": true } }
+        ]
+      },
+      {
+        "key": "why",
+        "chapter": "overview",
+        "layout": "full",
+        "tab": "개요",
+        "title": { "text": "1.2 왜 이렇게 만들었나 (Why)", "verbatim": true },
+        "lead": { "text": "이 게임의 재미는 Shift 한 번에 '밟을 수 있는 곳'과 '맞는 탄환'이 동시에 뒤집히는 데 있습니다.", "verbatim": true },
+        "sectionPath": ["1. 프로젝트 개요", "1.2 왜 이렇게 만들었나 (Why)"],
+        "points": [],
+        "visuals": [
+          { "kind": "table", "n": 1, "fp": "문제|구체적 상황|해결 방향" }
+        ]
+      },
+      {
+        "key": "architecture",
+        "chapter": "structure",
+        "layout": "visual",
+        "tab": "구조",
+        "title": { "text": "2.2 아키텍처", "verbatim": true },
+        "lead": null,
+        "sectionPath": ["2. 시스템 구조", "2.2 아키텍처"],
+        "points": [
+          { "label": "", "text": "실선은 직접 호출, 점선은 값을 읽기만 하는 관계입니다.", "verbatim": true },
+          { "label": "", "text": "플레이어의 속성(태그)을 바꾸는 곳은 `Shifter.ShiftTag()` 하나이고, 나머지는 모두 읽기만 합니다.", "verbatim": true }
+        ],
+        "visuals": [
+          { "kind": "mermaid", "n": 1, "fp": "flowchart TB" }
+        ]
+      },
+      {
+        "key": "shift-structure",
+        "chapter": "shift",
+        "layout": "visual",
+        "tab": "구조",
+        "title": { "text": "3.1 문제와 구조", "verbatim": true },
+        "lead": { "text": "속성을 Unity 태그 문자열 하나로 통일했습니다.", "verbatim": true },
+        "sectionPath": ["3. Shift 속성 시스템", "3.1 문제와 구조"],
+        "points": [
+          { "label": "문제", "text": "Shift 한 번에 바뀌어야 하는 것이 네 가지입니다. ① 흰·검 발판의 충돌 ② 발판의 투명도 ③ 탄환 피격 ④ 속성 UI.", "verbatim": true }
+        ],
+        "visuals": [
+          { "kind": "mermaid", "n": 1, "fp": "flowchart LR" }
+        ]
+      },
+      {
+        "key": "shift-rules",
+        "chapter": "shift",
+        "layout": "full",
+        "tab": "구조",
+        "title": { "text": "3.1 문제와 구조", "verbatim": true },
+        "lead": { "text": "크러셔 벽은 규칙을 뒤집었습니다. 발판에서 익힌 \"같은 색 = 단단함\"과 반대로, 벽은 같은 색일 때 통과하고 다른 색일 때 밀어냅니다.", "verbatim": true },
+        "sectionPath": ["3. Shift 속성 시스템", "3.1 문제와 구조"],
+        "points": [],
+        "visuals": [
+          { "kind": "table", "n": 1, "fp": "대상|플레이어와 같은 색|다른 색|비고" }
+        ]
+      },
+      {
+        "key": "shift-compare",
+        "chapter": "shift",
+        "layout": "visual",
+        "tab": "결과",
+        "title": { "text": "3.1 문제와 구조", "verbatim": true },
+        "lead": null,
+        "sectionPath": ["3. Shift 속성 시스템", "3.1 문제와 구조"],
+        "points": [
+          { "label": "", "text": "회색(Common)은 출발 상태입니다. 흰·검 발판을 모두 밟을 수 없지만 흰·검 탄환에도 맞지 않습니다.", "verbatim": true },
+          { "label": "", "text": "첫 Shift 뒤에는 흰 ↔ 검만 오가고 회색으로 돌아오지 않습니다.", "verbatim": true }
+        ],
+        "visuals": [
+          { "kind": "image", "src": "images/06_shift_compare.png", "w": 2576, "h": 720, "caption": { "text": "같은 장소에서 흰색일 때와 검은색일 때 비교", "verbatim": true } }
+        ]
+      },
+      {
+        "key": "platform-collider",
+        "chapter": "shift",
+        "layout": "code",
+        "tab": "구현",
+        "title": { "text": "② 발판: 태그로 모으고, 콜라이더째 끈다", "verbatim": true },
+        "lead": null,
+        "sectionPath": ["3. Shift 속성 시스템", "3.3 핵심 동작"],
+        "points": [
+          { "label": "", "text": "다른 색 발판은 콜라이더 자체를 끕니다.", "verbatim": true },
+          { "label": "", "text": "그래서 플레이어의 이동 판정(BoxCast)뿐 아니라 레이저 퍼즐의 레이캐스트도 그 발판을 지나갑니다.", "verbatim": true }
+        ],
+        "visuals": [
+          { "kind": "code", "n": 2, "lines": [30, 39], "fp": "// PlatformManager.cs (발췌) — 매 프레임 플레이어 태그를 읽어 발판의 충돌과 투명도를" }
+        ]
+      },
+      {
+        "key": "shift-choice",
+        "chapter": "shift",
+        "layout": "overview",
+        "tab": "선택",
+        "title": { "text": "3.4 고민과 선택", "verbatim": true },
+        "lead": null,
+        "sectionPath": ["3. Shift 속성 시스템", "3.4 고민과 선택"],
+        "points": [
+          { "label": "결정 1", "text": "플레이어·발판·탄환이 같은 문자열 하나로 비교되는 단순함이 이 게임의 규칙(\"같은 색인가\")과 그대로 맞았습니다.", "verbatim": true },
+          { "label": "결정 2", "text": "씬당 관리 대상이 30개 이하라 검색 비용보다 '새 발판을 놓치지 않는 것'이 중요했습니다.", "verbatim": true },
+          { "label": "결정 3", "text": "돌아보면 이 선택 덕분에, 2주 뒤에 만든 레이저 퍼즐(07.07)이 추가 코드 없이 Shift 규칙을 따랐습니다.", "verbatim": true }
+        ],
+        "visuals": []
+      },
+      {
+        "key": "stage-screens",
+        "chapter": "gimmick",
+        "layout": "full",
+        "tab": "결과",
+        "title": { "text": "4.1 문제와 구조", "verbatim": true },
+        "lead": { "text": "레이저는 흰 막대 거울 3개에서 꺾여 오른쪽 센서에 닿고, 가운데 회색 기둥(흰 발판)은 반투명해져 빛이 그대로 지나갑니다.", "verbatim": true },
+        "sectionPath": ["4. 스테이지 기믹과 퍼즐", "4.1 문제와 구조"],
+        "points": [],
+        "visuals": [
+          { "kind": "table", "n": 3, "fp": "레이저 조준 모드|크러셔 벽" }
+        ]
+      },
+      {
+        "key": "laser",
+        "chapter": "gimmick",
+        "layout": "code",
+        "tab": "구현",
+        "title": { "text": "① 레이저 반사: 레이캐스트를 이어 붙인다", "verbatim": true },
+        "lead": null,
+        "sectionPath": ["4. 스테이지 기믹과 퍼즐", "4.3 핵심 동작"],
+        "points": [
+          { "label": "", "text": "`Vector2.Reflect(입사 방향, 면의 법선)`이라 거울 각도를 따로 저장하지 않습니다.", "verbatim": true },
+          { "label": "", "text": "맞은 점에서 그대로 다시 쏘면 방금 맞은 면을 또 맞힙니다. 진행 방향으로 조금 띄워 출발합니다.", "verbatim": true },
+          { "label": "", "text": "다른 색 발판은 콜라이더가 꺼져 있으므로 레이캐스트에 맞지 않습니다. 그래서 Shift가 빛의 길을 바꿉니다", "verbatim": true }
+        ],
+        "visuals": [
+          { "kind": "code", "n": 1, "lines": [14, 33], "fp": "// LightBeam.cs — 조준 중 매 프레임 호출. 맞은 곳까지 선을 긋고, 거울이면 꺾어서 다시 쏜" }
+        ]
+      },
+      {
+        "key": "crusher",
+        "chapter": "gimmick",
+        "layout": "code",
+        "tab": "구현",
+        "title": { "text": "② 크러셔 벽: 콜라이더 없이 민다", "verbatim": true },
+        "lead": null,
+        "sectionPath": ["4. 스테이지 기믹과 퍼즐", "4.3 핵심 동작"],
+        "points": [
+          { "label": "", "text": "그래서 벽과 플레이어의 겹침(bounds)을 직접 검사하고, 벽이 움직인 만큼(`wallDelta`)을 `AddExternalMovement`로 더합니다.", "verbatim": true },
+          { "label": "", "text": "벽(초당 10)이 플레이어(초당 8)보다 빨라 다른 색 벽에서 달아날 수 없습니다.", "verbatim": true }
+        ],
+        "visuals": [
+          { "kind": "code", "n": 2, "lines": [11, 28], "fp": "// CrusherWall.cs (발췌) — 물리 프레임마다 벽을 옮기고, 다른 색 벽이 플레이어와 겹치면" }
+        ]
+      },
+      {
+        "key": "gimmick-choice",
+        "chapter": "gimmick",
+        "layout": "overview",
+        "tab": "선택",
+        "title": { "text": "4.4 고민과 선택", "verbatim": true },
+        "lead": null,
+        "sectionPath": ["4. 스테이지 기믹과 퍼즐", "4.4 고민과 선택"],
+        "points": [
+          { "label": "결정 1", "text": "이동 판정을 BoxCast가 쥐고 있는 구조에서는 플레이어를 옮기는 길을 `CharacterController2D` 하나로 모으는 것이 가장 안전하다고 판단했습니다", "verbatim": true },
+          { "label": "결정 2", "text": "조준 퍼즐에서는 '지금 이 각도면 어디에 맞는가'가 바로 보여야 한다고 판단했습니다.", "verbatim": true },
+          { "label": "결정 3", "text": "레이저 퍼즐은 '조준 모드 진입' 함수 하나만 부르면 되므로 범용 버튼이 맞았습니다.", "verbatim": true }
+        ],
+        "visuals": []
+      },
+      {
+        "key": "boss-cycle",
+        "chapter": "boss",
+        "layout": "visual",
+        "tab": "흐름",
+        "title": { "text": "5.1 문제와 구조", "verbatim": true },
+        "lead": null,
+        "sectionPath": ["5. 보스전", "5.1 문제와 구조"],
+        "points": [
+          { "label": "", "text": "한 주기는 45초(대기 10 + 패턴 30 + 그로기 5)입니다.", "verbatim": true },
+          { "label": "", "text": "가장 빠른 격파는 세 번째 그로기가 시작되는 약 130초(2:10)", "verbatim": true }
+        ],
+        "visuals": [
+          { "kind": "mermaid", "n": 1, "fp": "stateDiagram-v2" }
+        ]
+      },
+      {
+        "key": "boss-patterns",
+        "chapter": "boss",
+        "layout": "full",
+        "tab": "결과",
+        "title": { "text": "5.1 문제와 구조", "verbatim": true },
+        "lead": { "text": "탄마다 흰색 또는 검은색이 섞여 날아오므로, 한 색으로 버티는 대신 다가오는 탄과 다른 색이 되도록 Shift 시점을 골라야 합니다.", "verbatim": true },
+        "sectionPath": ["5. 보스전", "5.1 문제와 구조"],
+        "points": [],
+        "visuals": [
+          { "kind": "table", "n": 3, "fp": "운석|난사|레이저" }
+        ]
+      },
+      {
+        "key": "boss-pattern-change",
+        "chapter": "boss",
+        "layout": "code",
+        "tab": "구현",
+        "title": { "text": "① 패턴 교체와 그로기", "verbatim": true },
+        "lead": null,
+        "sectionPath": ["5. 보스전", "5.3 핵심 동작"],
+        "points": [
+          { "label": "", "text": "`BossManager`는 무엇이 남았는지 모르고 `EndPattern()`만 부릅니다.", "verbatim": true },
+          { "label": "", "text": "운석이 15개 중 10개째를 만들던 중이어도 코루틴과 남은 운석이 함께 사라집니다.", "verbatim": true },
+          { "label": "", "text": "그로기 중에는 `Update`가 `PatternManager`를 부르지 않아 타이머가 0에 멈춰 있다가, 그로기가 끝나면 다시 10초를 셉니다.", "verbatim": true }
+        ],
+        "visuals": [
+          { "kind": "code", "n": 1, "lines": [8, 25], "fp": "// BossManager.cs (발췌)" }
+        ]
+      },
+      {
+        "key": "boss-choice",
+        "chapter": "boss",
+        "layout": "full",
+        "tab": "선택",
+        "title": { "text": "5.4 고민과 선택", "verbatim": true },
+        "lead": { "text": "흰·검 발판이 둘 다 플레이어 위치에 생기면 빠져나갈 방법이 없었습니다.", "verbatim": true },
+        "sectionPath": ["5. 보스전", "5.4 고민과 선택"],
+        "points": [],
+        "visuals": [
+          { "kind": "table", "n": 1, "fp": "|As-Is (07.06 ~ 07.09)|To-Be (07.10 ~)" }
+        ]
+      },
+      {
+        "key": "camera",
+        "chapter": "misc",
+        "layout": "visual",
+        "tab": "구현",
+        "title": { "text": "6.1 카메라: 위는 넓게, 아래는 좁게", "verbatim": true },
+        "lead": null,
+        "sectionPath": ["6. 기타 구현", "6.1 카메라: 위는 넓게, 아래는 좁게"],
+        "points": [
+          { "label": "", "text": "제자리 점프로는 카메라가 거의 움직이지 않습니다.", "verbatim": true },
+          { "label": "", "text": "반대로 떨어질 때는 1유닛만 벗어나도 따라 내려가 착지할 곳을 먼저 보여 줍니다.", "verbatim": true }
+        ],
+        "visuals": [
+          { "kind": "image", "src": "images/15_camera_deadzone.png", "w": 1087, "h": 531, "caption": { "text": "Scene 뷰의 카메라 데드존 기즈모", "verbatim": true } }
+        ]
+      },
+      {
+        "key": "result-goals",
+        "chapter": "result",
+        "layout": "full",
+        "tab": "결과",
+        "title": { "text": "7.1 결과", "verbatim": true },
+        "lead": null,
+        "sectionPath": ["7. 결과 및 배운 점", "7.1 결과"],
+        "points": [],
+        "visuals": [
+          { "kind": "table", "n": 1, "fp": "개요의 목표|결과|근거" }
+        ]
+      },
+      {
+        "key": "ts-overlap",
+        "chapter": "result",
+        "layout": "problem",
+        "tab": "문제 해결",
+        "title": { "text": "겹치면 얼어붙는 문제: 크러셔 벽과 보스전 랜덤 발판 (07.07, 07.10)", "verbatim": true },
+        "lead": null,
+        "sectionPath": ["7. 결과 및 배운 점", "7.2 문제 해결 경험"],
+        "points": [
+          { "label": "문제", "text": "크러셔 벽에 콜라이더를 켜 두면 벽이 플레이어와 겹치는 순간 플레이어가 얼어붙었고, 보스전 랜덤 발판이 플레이어 위치에 생기면 빠져나올 수 없었습니다.", "verbatim": true },
+          { "label": "원인", "text": "겹친 상태에서는 모든 방향이 거리 0으로 막힙니다. 키네마틱 이동에는 겹침을 풀어 주는 처리가 없습니다.", "verbatim": true },
+          { "label": "해결", "text": "크러셔 벽은 콜라이더를 끄고 겹침을 직접 검사해 벽 이동량만큼 플레이어를 옮겼습니다", "verbatim": true },
+          { "label": "해결", "text": "랜덤 발판은 생성 위치 검사 규칙을 만드는 대신 기능을 걷어냈습니다", "verbatim": true }
+        ],
+        "visuals": []
+      }
+    ]
+  }
+}
