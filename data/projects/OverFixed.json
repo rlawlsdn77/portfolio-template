@@ -42,10 +42,10 @@
     {
       "title": "재료 흐름과 오브젝트 풀링",
       "what": "재료 90개를 재사용하고, 모든 재료가 함선 지붕 위를 스치도록 경로를 계산한다",
-      "how": "생성 구의 위쪽 반구에서 출발해 함선 구에 접선(θ = asin(r / d))으로 꺾은 직선을 DOTween으로 등속 이동하고, 끝나면 풀로 돌려보낸다",
+      "how": "생성 구의 위쪽 반구에서 출발해 함선 구의 꼭대기를 스치는 직선을 DOTween으로 일정한 속도로 옮기고, 도착하면 풀로 돌려보낸다",
       "why": "지붕 에어락으로만 드나드는 함선 구조에 맞췄고, 경로 길이가 일정해 풀 크기를 감이 아니라 계산으로 점검할 수 있게 되었다",
       "section": "5.3 핵심 동작",
-      "image": { "src": "images/10_flow_path.png", "w": 1920, "h": 1080, "caption": "재료 흐름 도식: 생성 구 45 m · 함선 구 25 m · 접선 경로 (Scene 뷰)" }
+      "image": { "src": "images/10_flow_path.png", "w": 1920, "h": 1080, "caption": "재료 흐름 도식: 생성 구 45 m · 함선 구 25 m · 흐름 경로 (Scene 뷰)" }
     },
     {
       "title": "사고와 미니게임",
@@ -88,10 +88,10 @@
   "screenshots": [
     { "src": "images/07_hud.png", "w": 1920, "h": 1080, "caption": "항해 중 HUD" },
     { "src": "images/09_flow_ingame.png", "w": 1920, "h": 1080, "caption": "선외에서 본 재료 흐름" },
-    { "src": "images/10_flow_path.png", "w": 1920, "h": 1080, "caption": "재료 흐름 도식: 생성 구 45 m · 함선 구 25 m · 접선 경로 (Scene 뷰)" },
+    { "src": "images/10_flow_path.png", "w": 1920, "h": 1080, "caption": "재료 흐름 도식: 생성 구 45 m · 함선 구 25 m · 흐름 경로 (Scene 뷰)" },
     { "src": "images/14_accident_marker.png", "w": 1920, "h": 1080, "caption": "사고가 난 패널" },
     { "src": "images/11_minigame_timing.png", "w": 1920, "h": 1080, "caption": "타이밍 바" },
-    { "src": "images/15_first_person_hold.png", "w": 1920, "h": 1080, "caption": "재료를 든 1인칭 화면 (손 IK)" }
+    { "src": "images/15_first_person_hold.png", "w": 1920, "h": 1080, "caption": "재료를 든 1인칭 화면" }
   ],
   "retro": {
     "section": "8. 결과 및 배운 점",
@@ -266,31 +266,32 @@
         "chapter": "pool",
         "layout": "visual",
         "tab": "흐름",
-        "title": { "text": "① 흐름 경로: 함선 위를 스치는 접선", "verbatim": true },
+        "title": { "text": "① 흐름 경로: 위쪽에서 출발해 함선 위를 스친다", "verbatim": true },
         "lead": null,
         "sectionPath": ["5. 재료 흐름과 오브젝트 풀링", "5.3 핵심 동작"],
         "points": [
-          { "label": "", "text": "무작위 방향의 y를 절댓값으로 바꿔 위쪽 반구에서만 출발합니다.", "verbatim": true },
-          { "label": "", "text": "이 씬에서는 두 구의 중심이 같아 모든 경로의 길이가 74.8 m로 같습니다.", "verbatim": true }
+          { "label": "", "text": "재료는 생성 구의 위쪽 반구에서만 출발합니다.", "verbatim": true },
+          { "label": "", "text": "출발한 재료는 함선 중심을 곧장 향하지 않고, 조금 위로 비껴 함선 구의 꼭대기를 스치는 직선으로 날아갑니다.", "verbatim": true },
+          { "label": "", "text": "이 씬에서는 두 구의 중심이 같아 모든 경로의 길이가 약 74.8 m로 같습니다.", "verbatim": true }
         ],
         "visuals": [
-          { "kind": "image", "src": "images/10_flow_path.png", "w": 1920, "h": 1080, "caption": { "text": "재료 흐름 도식: 생성 구 45 m · 함선 구 25 m · 접선 경로 (Scene 뷰)", "verbatim": true } }
+          { "kind": "image", "src": "images/10_flow_path.png", "w": 1920, "h": 1080, "caption": { "text": "재료 흐름 도식: 생성 구 45 m · 함선 구 25 m · 흐름 경로 (Scene 뷰)", "verbatim": true } }
         ]
       },
       {
-        "key": "spawn",
+        "key": "take-item",
         "chapter": "pool",
         "layout": "code",
         "tab": "구현",
-        "title": { "text": "5.3 핵심 동작", "verbatim": true },
+        "title": { "text": "③ 잡기: 풀은 줄지 않는다", "verbatim": true },
         "lead": null,
         "sectionPath": ["5. 재료 흐름과 오브젝트 풀링", "5.3 핵심 동작"],
         "points": [
-          { "label": "", "text": "바깥의 점에서 구에 그은 접선은 중심 방향과 θ = asin(r / d)만큼 벌어집니다.", "verbatim": true },
-          { "label": "", "text": "물리 대신 트윈으로 시작·끝·시간만 정합니다.", "verbatim": true }
+          { "label": "", "text": "흐르던 재료를 잡으면 그 재료는 풀로 돌려보내고, 손에는 같은 종류의 새 인스턴스를 줍니다. 그래서 풀이 줄지 않아 생성 비율이 유지됩니다.", "verbatim": false },
+          { "label": "", "text": "반납할 때 트윈을 멈춰, 꺼진 재료가 계속 끌려가지 않게 합니다.", "verbatim": false }
         ],
         "visuals": [
-          { "kind": "code", "n": 1, "lines": [3, 22], "fp": "// SpawnManager.cs" }
+          { "kind": "code", "n": 2, "fp": "// SpawnManager.cs" }
         ]
       },
       {
@@ -359,11 +360,11 @@
         "lead": null,
         "sectionPath": ["7. 기타 구현"],
         "points": [
-          { "label": "", "text": "재료를 들면 손 IK로 재료 양옆을 쥐고, 손 목표를 어깨에서 팔이 늘 닿는 거리 안으로 당겨 걸어도 손이 떨어지지 않는다", "verbatim": true },
-          { "label": "", "text": "1인칭 카메라를 가리지 않게 내 머리 뼈는 0 크기로 줄인다", "verbatim": true }
+          { "label": "", "text": "이동 속도에 맞춰 걷기·뛰기 애니메이션을 섞어 발이 미끄러지지 않게 한다", "verbatim": true },
+          { "label": "", "text": "재료를 들면 두 손이 재료를 쥐고, 1인칭 카메라에 내 머리가 보이지 않게 숨긴다", "verbatim": true }
         ],
         "visuals": [
-          { "kind": "image", "src": "images/15_first_person_hold.png", "w": 1920, "h": 1080, "caption": { "text": "재료를 든 1인칭 화면 (손 IK)", "verbatim": true } }
+          { "kind": "image", "src": "images/15_first_person_hold.png", "w": 1920, "h": 1080, "caption": { "text": "재료를 든 1인칭 화면", "verbatim": true } }
         ]
       },
       {

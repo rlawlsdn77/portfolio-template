@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-10",
+  "generatedAt": "2026-11-11",
   "profile": {
     "name": "김진우",
     "nameEn": "Kim Jinwoo",
@@ -43,28 +43,6 @@
         { "text": "밸런스 표는 TSV 4종, 조절값은 ScriptableObject 7종, 최고 기록은 JSON으로 분리", "project": "OverFixed" },
         { "text": "열 이름을 키로 칸을 찾는 제네릭 `TsvParser`와 `.tsv`용 `ScriptedImporter`", "project": "OverFixed" },
         { "text": "Newtonsoft.Json으로 종류(`Type`) → `TurnMessage` → `Parameter` 순서로 세 번 파싱", "project": "IfIWasInMarket" }
-      ]
-    },
-    {
-      "name": "uGUI / TextMeshPro",
-      "evidence": [
-        { "text": "전선 잇기 UI의 Layout Group 정렬 시점 문제를 `LayoutRebuilder`로 해결", "project": "OverFixed" },
-        { "text": "속성이 바뀐 프레임에만 속성 UI 이미지를 바꾸는 `UIModManager`", "project": "Shifter" },
-        { "text": "TMP `GetPreferredValues`로 채팅 스크롤 영역 높이를 직접 맞춤", "project": "IfIWasInMarket" }
-      ]
-    },
-    {
-      "name": "DOTween",
-      "evidence": [
-        { "text": "`DOMove`로 재료를 등속 이동하고 `OnComplete`에서 풀로 반납", "project": "OverFixed" },
-        { "text": "`DOKill` 후 `DOIntensity`로 발언자 스포트라이트를 0에서 목표 밝기까지", "project": "IfIWasInMarket" }
-      ]
-    },
-    {
-      "name": "Input System",
-      "evidence": [
-        { "text": "자동 테스트에서 Input System 이벤트로 실제 Shift·Esc·D 키 입력을 넣어 검증", "project": "Shifter" },
-        { "text": "TAB 정보창을 `SimpleInput.GetKey(Key.Tab)`로 매 프레임 계산해 토글 오류 해결", "project": "IfIWasInMarket" }
       ]
     }
   ],

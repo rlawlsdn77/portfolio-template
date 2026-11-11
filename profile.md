@@ -29,9 +29,6 @@
 - C#
 - Physics2D (Raycast · BoxCast)
 - TSV / ScriptableObject / JSON
-- uGUI / TextMeshPro
-- DOTween
-- Input System
 
 ## 페이지 설정
 

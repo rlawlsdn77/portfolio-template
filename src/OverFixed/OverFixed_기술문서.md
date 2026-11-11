@@ -611,50 +611,17 @@ Item = SpawnManager.Instance.TakeItem(item);
 
 ### 5.3 핵심 동작
 
-**① 흐름 경로: 함선 위를 스치는 접선**
+**① 흐름 경로: 위쪽에서 출발해 함선 위를 스친다**
 
-![재료 흐름 도식: 생성 구 45 m · 함선 구 25 m · 접선 경로 (Scene 뷰)](images/10_flow_path.png)
+![재료 흐름 도식: 생성 구 45 m · 함선 구 25 m · 흐름 경로 (Scene 뷰)](images/10_flow_path.png)
 
-*Scene 뷰에서 본 흐름 구조. 바깥 구가 생성 구(반지름 45 m), 안쪽 구가 함선 구(반지름 25 m)입니다. 노란 선은 아래 `Spawn()`과 같은 식으로 계산한 경로 예시이고 흰 점이 출발점입니다. 위쪽 반구에서 출발한 모든 경로가 함선 구의 꼭대기 쪽을 스쳐 지나갑니다.*
+*Scene 뷰에서 본 흐름 구조. 바깥 구가 생성 구(반지름 45 m), 안쪽 구가 함선 구(반지름 25 m)입니다. 노란 선은 `Spawn()`이 만드는 경로의 예시이고 흰 점이 출발점입니다. 위쪽 반구에서 출발한 모든 경로가 함선 구의 꼭대기 쪽을 스쳐 지나갑니다.*
 
-```csharp
-// SpawnManager.cs
-private void Spawn(ItemObject item)
-{
-    Vector3 spawnDirection = Random.onUnitSphere;
-    spawnDirection.y = Mathf.Abs(spawnDirection.y);                         // (1) 위쪽 반구
-    Vector3 startPosition = spawnSphere.position + spawnDirection * SpawnRadius;
+- 재료는 생성 구의 **위쪽 반구에서만** 출발합니다. 지붕 에어락으로 나간 플레이어가 함선 아래로 갈 일이 없기 때문입니다.
+- 출발한 재료는 함선 중심을 곧장 향하지 않고, 조금 위로 비껴 **함선 구의 꼭대기를 스치는 직선**으로 날아갑니다. 그래서 함선을 뚫고 지나가지 않고, 모두 지붕 근처를 지나갑니다.
+- 이동은 물리 대신 트윈(DOTween)으로 처리합니다. 출발점·도착점·시간만 정해 일정한 속도로 옮기고, 도착하면 풀로 돌려보냅니다.
 
-    // 함선 중심 방향에서 접선 각도만큼 위로 꺾는다 (sin(접선 각도) = 함선 반지름 / 중심까지 거리)
-    Vector3 toSafeCenter = safeSphere.position - startPosition;
-    float tangentAngle = Mathf.Asin(SafeRadius / toSafeCenter.magnitude);    // (2)
-    Vector3 upward = Vector3.ProjectOnPlane(Vector3.up, toSafeCenter).normalized;
-    Vector3 moveDirection = Mathf.Cos(tangentAngle) * toSafeCenter.normalized + Mathf.Sin(tangentAngle) * upward;
-
-    // 구 표면에서 출발해 반대편 표면까지 가는 거리
-    float moveDistance = -2f * Vector3.Dot(startPosition - spawnSphere.position, moveDirection);   // (3)
-    Vector3 endPosition = startPosition + moveDirection * moveDistance;
-
-    item.transform.position = startPosition;
-    item.transform.rotation = Quaternion.identity;
-    item.gameObject.SetActive(true);
-    item.transform.DOMove(endPosition, moveDistance / spawnConfig.FlowSpeed)
-        .SetEase(Ease.Linear).OnComplete(() => ReturnItem(item));           // (4)
-}
-```
-
-1. 무작위 방향의 y를 절댓값으로 바꿔 **위쪽 반구에서만** 출발합니다. 지붕 에어락으로 나간 플레이어가 함선 아래로 갈 일이 없기 때문입니다.
-2. 바깥의 점에서 구에 그은 접선은 중심 방향과 θ = asin(r / d)만큼 벌어집니다. 그 각도만큼 '위쪽'으로 꺾으면 경로가 함선 구의 꼭대기 쪽을 스칩니다.
-3. 구 표면의 점에서 출발해 다시 구면에 닿을 때까지의 거리입니다. 아래 식처럼 내적 하나로 구합니다.
-4. 물리 대신 트윈으로 시작·끝·시간만 정합니다. 충돌로 경로를 벗어나지 않고, 끝나는 순간(`OnComplete`) 정확히 풀로 돌아갑니다.
-
-```text
-접선 각도   θ = asin(r / d)          r: 함선 구 반지름, d: 출발점에서 함선 중심까지 거리
-이동 거리   t = -2 (p - c) · u       |p + t·u - c|² = R² 이고 |p - c| = R 이므로 (p: 출발점, c: 생성 구 중심, u: 이동 방향)
-두 구의 중심이 같으면  t = 2√(R² - r²) = 2√(45² - 25²) ≈ 74.8 m  →  74.8 m ÷ 2.5 m/s ≈ 30초
-```
-
-이 씬에서는 두 구의 중심이 같아 **모든 경로의 길이가 74.8 m로 같습니다.** 그래서 재료 하나가 흐르는 시간(약 30초)과 동시에 떠 있는 개수(1.5개/초 × 30초 ≈ 45개, 그중 고철 약 22개)를 미리 계산할 수 있고, 종류당 30개인 풀이 충분한지 확인할 수 있습니다.
+이 씬에서는 두 구의 중심이 같아 **모든 경로의 길이가 약 74.8 m로 같습니다.** 흐르는 속도가 초당 2.5 m이므로 재료 하나가 흐르는 시간은 약 30초이고, 동시에 떠 있는 개수(1.5개/초 × 30초 ≈ 45개, 그중 고철 약 22개)도 미리 계산할 수 있습니다. 그래서 종류당 30개인 풀이 충분한지 확인할 수 있었습니다.
 
 **② 생성 주기: 넘친 시간을 버리지 않는다**
 
@@ -713,11 +680,11 @@ private void ReturnItem(ItemObject item)
 > - 장점: 모든 재료가 함선 근처로 온다.
 > - 단점: 함선을 관통한다 (선체 안으로 사라지거나 선내에 떠다닌다).
 >
-> **[대안 C] 위쪽 반구에서 출발해 함선 위를 스치는 접선 방향**
+> **[대안 C] 위쪽 반구에서 출발해 함선 위를 스치는 방향**
 > - 장점: 모든 재료가 지붕 근처를 지나 동선이 짧다. 경로 길이가 일정해 흐르는 시간과 동시 개수를 계산할 수 있다.
-> - 단점: 접선 계산이 필요하고, 경로가 모두 함선 위쪽에 모여 흐름이 단조로워질 수 있다.
+> - 단점: 방향을 정하는 계산이 조금 더 필요하고, 경로가 모두 함선 위쪽에 모여 흐름이 단조로워질 수 있다.
 >
-> **[결정] 대안 C.** 플레이어가 지붕 에어락으로만 드나드는 함선 구조에 맞췄습니다. 계산은 asin과 내적 몇 줄로 끝났고, '경로 길이가 일정하다'는 성질 덕분에 풀 크기를 감이 아니라 계산으로 점검할 수 있게 되었습니다.
+> **[결정] 대안 C.** 플레이어가 지붕 에어락으로만 드나드는 함선 구조에 맞췄습니다. '경로 길이가 일정하다'는 성질 덕분에 풀 크기를 감이 아니라 계산으로 점검할 수 있게 되었습니다.
 
 **결정 2. 플레이어가 잡은 재료를 어떻게 처리할까?**
 
@@ -1040,31 +1007,20 @@ public override void Begin(AccidentRow accidentRow, int successCount)
 
 | 기능 | 구현 요점 | 클래스 |
 |---|---|---|
-| 선내 / 선외 이동 | 이동 상태 2개. 선내는 중력과 평면 이동, 선외는 관성 유영. 선외 속도는 매 프레임 `exp(-Drag × dt)`를 곱해 줄여, 프레임 속도와 상관없이 같은 비율로 감속한다 | `PlayerController` |
+| 선내 / 선외 이동 | 이동 상태 2개. 선내는 중력과 평면 이동, 선외는 관성 유영. 선외에서는 이동 키를 놓으면 속도가 서서히 줄어든다 | `PlayerController` |
 | 선외 활동 범위 | 활동 구 밖으로 나가면 바깥으로 향하는 속도 성분을 없애고 안쪽으로 밀어 낸다 | `PlayerController` |
 | 조작 잠금 | bool이 아닌 횟수로 센다. 에어락 통과와 화면 열기가 겹쳐도 모두 풀려야 해제되고, 화면 잠금 중에는 커서를 보인다 | `PlayerController` |
 | 에어락 | 0.5초 동안 조작을 잠그고 진행 막대를 채운 뒤 선내 ↔ 지붕으로 옮긴다. `CharacterController`를 끄고 위치를 바꾼 뒤 다시 켠다 | `LocalPlayer`, `AirLock`, `HoldBarUI` |
 | 상호작용 | 상자 범위(`OverlapBox`) 안 상호작용 태그 대상 중 가장 가까운 것을 고른다. HUD 안내도 같은 규칙으로 "크리스탈 줍기"를 띄우고, 지금 못 하면 이유("손이 찼음", "맞는 주문 없음")를 흐리게 보인다 | `InteractionCube`, `LocalPlayer`, `InteractionPromptUI` |
 | 주문 보드 | MonoBehaviour가 아닌 순수 C# 클래스. 주문 3칸, 제출한 재료는 그 재료가 필요한 주문 중 남은 시간이 가장 짧은 칸에 자동 배정, 끝난 칸은 5초 뒤 새 주문으로 채운다 | `OrderBoard`, `OrderManager` |
-| 1인칭 로봇 애니메이션 | 이동 속도에 맞춘 Walk/Run 블렌드(아래 7.1). 재료를 들면 손 IK로 재료 양옆을 쥐고, 손 목표를 어깨에서 팔이 늘 닿는 거리 안으로 당겨 걸어도 손이 떨어지지 않는다. 1인칭 카메라를 가리지 않게 내 머리 뼈는 0 크기로 줄인다 | `PlayerAnimator`, `FirstPersonHead`, `PlayerCamera` |
+| 1인칭 로봇 애니메이션 | 이동 속도에 맞춰 걷기·뛰기 애니메이션을 섞어 발이 미끄러지지 않게 한다. 재료를 들면 두 손이 재료를 쥐고, 1인칭 카메라에 내 머리가 보이지 않게 숨긴다 | `PlayerAnimator`, `FirstPersonHead`, `PlayerCamera` |
 | 사고 위치 표시 | 사고 패널 위에 "이름 거리m"를 띄운다. 화면 밖이나 카메라 뒤면 화면 가장자리에 붙이고 화살표로 방향을 가리킨다 | `WorldMarkerUI` |
-| 상호작용 대상 빛 | 시작할 때 같은 메시에 발광 재질만 입힌 껍데기를 자식으로 만든다. 정적 배칭이 플레이 중 메시를 합치므로 원본 메시를 따로 참조한다 | `InteractionHighlight` |
+| 상호작용 대상 빛 | 상호작용할 수 있는 대상은 빛나게 표시한다 | `InteractionHighlight` |
 | Esc 처리 | Esc는 `PauseUI` 한 곳에서만 받아 터미널 → 미니게임 → 일시정지 순서로 하나만 처리한다. 화면마다 받으면 한 번 눌러 두 화면이 반응하기 때문이다 | `PauseUI` |
 
-![재료를 든 1인칭 화면 (손 IK)](images/15_first_person_hold.png)
+![재료를 든 1인칭 화면](images/15_first_person_hold.png)
 
-*재료를 든 1인칭 화면. 손 IK가 두 손을 크리스탈 양옆에 붙여 쥐고, 왼쪽 아래에는 "손 1/1 크리스탈"이 표시됩니다.*
-
-### 7.1 발이 미끄러지지 않는 블렌드 값
-
-이동 속도 v를 Walk–Run 블렌드 값으로 바꿀 때 단순 비례로 바꾸면 발이 미끄러집니다. 블렌드 트리는 두 클립의 **보폭과 주기 길이를 함께** 섞기 때문에, 섞인 클립의 발 속도는 '섞인 보폭 ÷ 섞인 주기'가 됩니다. 이 값이 실제 속도 v와 같아지는 Run 가중치 w를 풀었습니다.
-
-```text
-v = ((1 - w)·Sw + w·Sr) / ((1 - w)·Tw + w·Tr)      Sw, Sr: 한 주기 동안 나아가는 거리 (보폭 속도 × 주기 길이)
-→ w = (v·Tw - Sw) / (Sr - Sw - v·(Tr - Tw))          Tw, Tr: Walk, Run 클립의 주기 길이
-```
-
-`PlayerAnimator.ToSpeedBlend`가 이 식을 그대로 씁니다. Run 클립의 보폭 속도(3.21 m/s)보다 빠르면 블렌드 대신 재생 속도를 올립니다.
+*재료를 든 1인칭 화면. 두 손이 크리스탈 양옆을 쥐고 있고, 왼쪽 아래에는 "손 1/1 크리스탈"이 표시됩니다.*
 
 ---
 
