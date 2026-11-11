@@ -1,10 +1,43 @@
 /* ─────────────────────────────────────────────────────────────
-   테마 (theme/theme.css) — 포트폴리오 문서·발표 덱·상세 문서가 마지막에 싣는 파일
-   지금은 비어 있어 기본 테마(어두운 바탕 · profile.md 강조색 → 보랏빛 그러데이션)를 씁니다.
-
-   바꾸려면: Claude Code에서 마음에 드는 웹페이지 스크린샷을 첨부하고
-     /portfolio-theme
-   를 입력하세요. Claude가 색·모양·영문 글꼴·효과를 정해진 규칙으로 뽑아 이 파일을 채웁니다.
-   손잡이(--t-*) 설명: .claude/skills/portfolio-theme/rules.md
-   이 파일은 /portfolio-update가 건드리지 않습니다(템플릿을 업데이트해도 내 테마가 남음).
+   테마 (theme/theme.css) — /portfolio-theme가 만듦 · 2026-11-11
+   참고한 화면: 따뜻한 오프화이트 종이 위에 잉크 글자와 코발트 강조를 쓴 영화 카탈로그풍 한 화면 페이지(글로 된 디자인 명세, 스크린샷 없음)
+   뽑은 인상: 밝은 종이 바탕 · 거의 검은 잉크 글자 · 코발트 한 색 강조 · 각진 1px 잉크 테두리 라벨 · 세리프 영문 제목 · 평평한 바탕(광채 없음)
+   값을 고쳐도 됩니다(저장 → 새로고침). 손잡이 설명: .claude/skills/portfolio-theme/rules.md
+   이 파일은 /portfolio-update가 건드리지 않습니다. 기본 테마로 되돌리기: /portfolio-theme 되돌리기
    ───────────────────────────────────────────────────────────── */
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/playfair-display@5.3.0/latin-700.css");   /* 영문 라벨 글꼴 */
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/playfair-display@5.3.0/latin-800.css");
+
+:root {
+  /* ① 바탕과 글자 — 바탕 대비: 제목 12 · 본문 7 · 보조 4.5 이상(check-theme.py가 확인) */
+  --t-scheme: light;            /* 밝은 종이 바탕 */
+  --t-bg: #EDEBE6;              /* 페이지·장면 바탕 — 따뜻한 오프화이트 종이 */
+  --t-surface: #F4F2ED;         /* 카드·판 — 조금 더 밝은 종이 */
+  --t-ink: #141414;             /* 제목·강한 글자 — 잉크 */
+  --t-body: #2E2C28;            /* 본문 — 잉크와 보조의 중간 */
+  --t-muted: #6D6A63;           /* 보조 글자(날짜·캡션) — 따뜻한 회색 */
+  --t-line: #CBC7BE;            /* 얇은 구분선·카드 테두리 */
+  --t-line-2: #141414;          /* 버튼·태그 테두리 — 인쇄 카탈로그 태그처럼 1px 잉크 */
+
+  /* ② 강조색 — 코발트 한 색 */
+  --t-accent: #1F3FB0;
+  --t-accent-2: #1F3FB0;        /* 강조가 한 색이라 --t-accent와 같은 값 */
+  --t-accent-3: #1F3FB0;
+
+  /* ③ 모양 */
+  --t-radius: 2px;              /* 거의 각진 카드 */
+  --t-pill: 0px;                /* 네모 박스 라벨·버튼 */
+  --t-shadow: rgb(20 16 10 / .16);   /* 종이 위 부드러운 따뜻한 그림자 */
+
+  /* ④ 영문 라벨 글꼴 — 세리프 제목 인상(허용 목록의 세리프) */
+  --t-display: 'Playfair Display';
+
+  /* ⑤ 효과 */
+  --t-grad: linear-gradient(var(--accent-ink), var(--accent-ink));   /* 단색 라벨 */
+  --t-badge: var(--accent-fill);                                     /* 단색 번호 배지 */
+  --t-glow: 0;                  /* 평평한 종이 — 번지는 빛 없음 */
+  --t-mark: 0;                  /* 머리 뒤 큰 영문 이름 없음 */
+
+  /* ⑥ 다이어그램 판 — 카드 색과 같게 */
+  --t-diagram: #F4F2ED;
+}

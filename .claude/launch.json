@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "4600"],
       "port": 4600
+    },
+    {
+      "name": "portfolio-ps",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "C:\\Users\\VR_9KI~1\\AppData\\Local\\Temp\\claude\\64ff6ea5c19da4b4\\5405b310-e2a0-44ac-a2f5-0b940c62a63d\\scratchpad\\serve.ps1", "-Root", "C:\\Users\\VR_9 KIM\\portfolio-template", "-Port", "4600"],
+      "port": 4600
     }
   ]
 }

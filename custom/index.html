@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>포트폴리오</title>
+<!-- /portfolio-custom 직접 생성 모드 — 종이 카탈로그 · 가로 선반 · 한번에 보기.
+     내용은 ../data/*.json, UI 문구는 ../theme/strings.tsv에서 읽습니다(이 파일에 내용을 복사하지 않음). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: { paper: '#EDEBE6', sheet: '#F4F2ED', ink: '#141414', body: '#2E2C28', muted: '#6D6A63', rule: '#CBC7BE', btn: '#A8A49B', cobalt: '#1F3FB0' },
+        fontFamily: {
+          serif: ['Hahmlet', 'Georgia', 'serif'],
+          sans: ['"Pretendard Variable"', 'Pretendard', 'system-ui', 'sans-serif'],
+        },
+      },
+    },
+  };
+</script>
+<style>
+  :root { --ease: cubic-bezier(.2,.8,.2,1); }
+  html { scroll-behavior: smooth; }
+  body { background: #EDEBE6; color: #141414; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  /* 종이 결 — 화면 전체에 얹는 잔 무늬 */
+  .grain { position: fixed; inset: 0; z-index: 40; pointer-events: none; mix-blend-mode: multiply; opacity: .55;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .42 0 0 0 0 .38 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  /* 고딕 라벨 */
+  .lbl { font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif; font-weight: 600; font-size: 11px; line-height: 1; letter-spacing: .09em; text-transform: uppercase; }
+  .tag { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border: 1px solid #A8A49B; font-size: 12px; font-weight: 500; color: #2E2C28; white-space: nowrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border: 1px solid #A8A49B; background: transparent; color: #141414;
+    font-size: 13px; font-weight: 600; letter-spacing: .02em; transition: background-color .35s var(--ease), color .35s var(--ease), border-color .35s var(--ease); white-space: nowrap; }
+  .btn:hover { background: #141414; color: #F4F2ED; border-color: #141414; }
+  .btn.primary { border-color: #1F3FB0; color: #1F3FB0; }
+  .btn.primary:hover { background: #1F3FB0; color: #fff; }
+  .btn:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid #1F3FB0; outline-offset: 2px; }
+  code.ic { font-family: ui-monospace, "D2Coding", Consolas, monospace; font-size: .9em; padding: 0 .3em; background: rgba(20,20,20,.07); border-radius: 2px; }
+
+  /* 선반 */
+  .shelf { display: flex; gap: 10px; height: 680px; }
+  .tape { position: relative; flex: 0 0 84px; min-width: 0; border: 1px solid #CBC7BE; background: #F4F2ED; overflow: hidden; cursor: pointer;
+    transition: flex-basis .8s var(--ease), flex-grow .8s var(--ease), transform .45s var(--ease), box-shadow .8s var(--ease); }
+  .tape:not(.open):hover { transform: translateY(-10px); }
+  .tape.open { flex: 1 1 auto; cursor: default; box-shadow: 0 30px 60px -28px rgba(20,16,10,.45); border-color: #141414; transform: rotate(-.6deg); }
+  .spine { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 0 0 18px; transition: transform .6s var(--ease); }
+  .tape.open .spine { transform: translateX(-110%); }
+  .spine-art { width: 100%; height: 120px; background-size: cover; background-position: center; filter: grayscale(.35) contrast(1.05); border-bottom: 1px solid #CBC7BE; }
+  .spine-title { writing-mode: vertical-rl; font-family: Hahmlet, Georgia, serif; font-weight: 600; font-size: 24px; line-height: 1; margin-top: 18px; white-space: nowrap; }
+  .face { position: absolute; inset: 0; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); clip-path: inset(0 100% 0 0);
+    transition: clip-path .9s var(--ease) .1s; }
+  .tape.open .face { clip-path: inset(0 0 0 0); }
+  .mask { overflow: hidden; flex-shrink: 0; }
+  .rise { display: block; transform: translateY(110%); transition: transform .9s var(--ease); }
+  .tape.open .rise { transform: translateY(0); }
+  .glance-card { transition: transform .45s var(--ease), box-shadow .45s var(--ease); }
+  .glance-card:hover { transform: translateY(-6px); box-shadow: 0 30px 60px -32px rgba(20,16,10,.45); }
+  .seg { position: relative; display: inline-flex; border: 1px solid #A8A49B; }
+  .seg button { position: relative; z-index: 1; height: 34px; padding: 0 14px; transition: color .45s var(--ease); white-space: nowrap; }
+  .seg .ind { position: absolute; top: 0; bottom: 0; background: #1F3FB0; transition: transform .6s var(--ease), width .6s var(--ease); }
+  .clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .clamp3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+  @media (max-width: 1023px) {
+    .shelf { height: auto; }
+    .tape:not(.open) { display: none; }
+    .tape.open { transform: none; }
+    .face { position: static; grid-template-columns: 1fr; }
+    .face .art { aspect-ratio: 16 / 10; border-right: 0; border-bottom: 1px solid #CBC7BE; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 1ms !important; transition-delay: 0ms !important; }
+  }
+  @media print { .grain { display: none; } }
+</style>
+</head>
+<body class="font-sans">
+<div class="grain" aria-hidden="true"></div>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useLayoutEffect } = React;
+
+// ── 문구 표(theme/strings.tsv): 맨 끝 "내 문구" 칸 → 없으면 기본 문구 ──
+const FALLBACK = {
+  'name.deck': '발표 덱', 'name.doc': '상세 기술문서', 'name.video': '시연 영상', 'name.role': '내 역할', 'name.intent': '개발 의도',
+  'name.team': '팀 프로젝트', 'name.solo': '개인 프로젝트', 'page.updated': '업데이트 {date}', 'page.intro': '자기소개', 'page.stack': '기술 스택',
+  'page.stack-note': '근거 프로젝트와 함께', 'page.glance': '프로젝트 요약', 'page.nav-intro': '소개', 'page.nav-stack': '{page.stack}',
+  'page.nav-projects': '프로젝트', 'page.nav-glance': '한눈에 보기', 'page.nav-contact': '연락처', 'en.portfolio': 'PORTFOLIO', 'en.about': 'ABOUT ME',
+  'en.skills': 'SKILLS', 'en.project': 'PROJECT', 'en.feature': 'FEATURE', 'en.glance': 'AT A GLANCE', 'en.contact': 'CONTACT',
+};
+async function loadStrings() {
+  const table = { ...FALLBACK };
+  try {
+    const r = await fetch('../theme/strings.tsv', { cache: 'no-cache' });
+    if (r.ok) {
+      const txt = (await r.text()).replace(/^﻿/, '');
+      for (const line of txt.split(/\r?\n/)) {
+        if (!line || line.startsWith('#')) continue;
+        const c = line.split('\t');
+        if (c.length < 3 || c[0] === '키') continue;
+        const mine = (c[3] || '').trim();
+        table[c[0].trim()] = mine || c[2].trim();
+      }
+    }
+  } catch (e) { /* 표가 없으면 기본 문구 */ }
+  const resolve = (k, depth = 0) => String(table[k] ?? '').replace(/\{([a-z0-9-]+\.[a-z0-9-]+)\}/g, (m, ref) => depth > 4 ? m : resolve(ref, depth + 1));
+  return (k, vars = {}) => resolve(k).replace(/\{([a-z0-9-]+)\}/g, (m, v) => (v in vars ? vars[v] : m));
+}
+
+// `백틱` → 코드 글자
+function Rich({ text }) {
+  if (!text) return null;
+  return text.split(/(`[^`]+`)/g).map((p, i) => p.startsWith('`') && p.endsWith('`') && p.length > 1
+    ? <code key={i} className="ic">{p.slice(1, -1)}</code> : <React.Fragment key={i}>{p}</React.Fragment>);
+}
+const pad = (n) => String(n).padStart(2, '0');
+const img = (p, src) => `../src/${p.id}/${src}`;
+const metaOf = (p, label) => (p.meta || []).find((m) => m.label === label)?.value || '';
+
+function Arrow({ dir = 1 }) {
+  return (
+    <svg width="18" height="10" viewBox="0 0 18 10" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden="true">
+      {dir > 0 ? <path d="M13 1 L17 5 L13 9 M17 5 H1" /> : <path d="M5 1 L1 5 L5 9 M1 5 H17" />}
+    </svg>
+  );
+}
+
+function ProjectLinks({ p, t, compact }) {
+  const L = p.links || {};
+  const items = [
+    { href: `../project.html?p=${encodeURIComponent(p.id)}`, label: t('name.deck'), primary: true },
+    { href: `../doc.html?p=${encodeURIComponent(p.id)}`, label: t('name.doc') },
+    L.github ? { href: L.github, label: 'GitHub', ext: true } : null,
+    L.video ? { href: L.video, label: t('name.video'), ext: true } : null,
+    ...((L.extra || []).filter((x) => x && x.url).map((x) => ({ href: x.url, label: x.label, ext: true }))),
+  ].filter(Boolean);
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((it) => (
+        <a key={it.label} className={'btn' + (it.primary ? ' primary' : '') + (compact ? ' !h-9 !px-3 !text-[12px]' : '')}
+           href={it.href} target="_blank" rel="noopener">
+          {it.label}<span aria-hidden="true">↗</span>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+// ── 선반의 테이프 한 개: 닫히면 책등, 열리면 표지와 설명 ──
+function Tape({ p, i, total, open, onOpen, t }) {
+  const team = p.team || {};
+  const kind = team.type === 'team' ? `${t('name.team')}${team.size ? ' · ' + team.size : ''}` : t('name.solo');
+  const d = (k) => ({ transitionDelay: open ? `${380 + k * 70}ms` : '0ms' });
+  return (
+    <article className={'tape' + (open ? ' open' : '')} onClick={() => !open && onOpen(i)}
+             aria-label={p.title} aria-current={open ? 'true' : undefined}>
+      <div className="spine" aria-hidden={open}>
+        <div className="spine-art" style={{ backgroundImage: p.cover ? `url("${img(p, p.cover)}")` : 'none' }} />
+        <span className="lbl mt-4 text-cobalt">{pad(i + 1)}</span>
+        <span className="spine-title">{p.title}</span>
+        <span className="mt-auto lbl text-muted" style={{ writingMode: 'vertical-rl' }}>{(p.tags || [])[0] || ''}</span>
+      </div>
+
+      <div className="face" aria-hidden={!open}>
+        <div className="art relative bg-ink/5 border-r border-rule overflow-hidden">
+          {p.cover && <img src={img(p, p.cover)} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />}
+          <span className="absolute left-4 top-4 lbl bg-sheet/90 border border-ink px-2 py-[6px]">{t('en.project')} {pad(i + 1)} / {pad(total)}</span>
+        </div>
+        <div className="flex flex-col gap-4 p-7 xl:p-9 overflow-y-auto">
+          <div className="mask"><span className="rise lbl text-cobalt" style={d(0)}>{kind}</span></div>
+          <div className="mask"><h3 className="rise font-serif font-bold text-[40px] xl:text-[48px] leading-[1.05] tracking-[-.02em]" style={d(1)}>{p.title}</h3></div>
+          <div className="mask"><p className="rise text-[15px] leading-[1.6] text-body" style={d(2)}>{p.tagline}</p></div>
+          <div className="mask">
+            <dl className="rise grid grid-cols-2 gap-x-5 gap-y-3 border-t border-ink pt-3" style={d(3)}>
+              {(p.meta || []).map((m) => (
+                <div key={m.label} className="min-w-0">
+                  <dt className="lbl text-muted mb-1">{m.label}</dt>
+                  <dd className="text-[13px] leading-[1.45] text-ink"><Rich text={m.value} /></dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+          {team.type === 'team' && team.role && (
+            <div className="mask"><div className="rise text-[13px] leading-[1.5]" style={d(4)}>
+              <span className="lbl text-cobalt mr-2">{t('name.role')}</span><Rich text={team.role} />
+            </div></div>
+          )}
+          {(p.highlights || []).length > 0 && (
+            <div className="mask"><ol className="rise border-t border-rule" style={d(5)}>
+              {p.highlights.map((h, k) => (
+                <li key={k} className="flex items-baseline gap-3 py-[8px] border-b border-rule" title={h.what ? h.what.replace(/`/g, '') : undefined}>
+                  <span className="lbl text-cobalt shrink-0">{t('en.feature')} {pad(k + 1)}</span>
+                  <span className="min-w-0 text-[14px] font-semibold">{h.title}</span>
+                </li>
+              ))}
+            </ol></div>
+          )}
+          <div className="mask"><div className="rise flex flex-wrap gap-[6px]" style={d(6)}>
+            {(p.tags || []).map((g) => <span key={g} className="tag">{g}</span>)}
+          </div></div>
+          <div className="mask pt-1"><div className="rise" style={d(7)}><ProjectLinks p={p} t={t} /></div></div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+// ── 한번에 보기: 세 프로젝트를 짧은 설명과 함께 ──
+function Glance({ projects, t, onPick }) {
+  return (
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {projects.map((p, i) => {
+        const team = p.team || {};
+        return (
+          <article key={p.id} className="glance-card bg-sheet border border-rule flex flex-col min-w-0">
+            <button type="button" onClick={() => onPick(i)} className="block text-left" aria-label={`${p.title} — 선반에서 열기`}>
+              <div className="aspect-[16/10] overflow-hidden border-b border-rule bg-ink/5">
+                {p.cover && <img src={img(p, p.cover)} alt="" className="w-full h-full object-cover" loading="lazy" />}
+              </div>
+            </button>
+            <div className="flex flex-col gap-3 p-6 grow">
+              <div className="flex items-center justify-between gap-3">
+                <span className="lbl text-cobalt">{pad(i + 1)}</span>
+                <span className="lbl text-muted">{team.type === 'team' ? `${t('name.team')}${team.size ? ' · ' + team.size : ''}` : t('name.solo')}</span>
+              </div>
+              <h3 className="font-serif font-bold text-[30px] leading-[1.1] tracking-[-.015em]">{p.title}</h3>
+              <p className="text-[14px] leading-[1.6] text-body clamp3">{p.tagline}</p>
+              <p className="text-[12.5px] text-muted">{metaOf(p, '기간')}</p>
+              <div className="flex flex-wrap gap-[6px]">{(p.tags || []).slice(0, 4).map((g) => <span key={g} className="tag">{g}</span>)}</div>
+              <div className="mt-auto pt-3"><ProjectLinks p={p} t={t} compact /></div>
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+function Seg({ value, onChange, items }) {
+  const refs = useRef([]);
+  const wrap = useRef(null);
+  const [box, setBox] = useState({ x: 0, w: 0 });
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = refs.current[items.findIndex((x) => x.value === value)];
+      if (el) setBox({ x: el.offsetLeft, w: el.offsetWidth });
+    };
+    measure();
+    // 글꼴·스타일이 늦게 들어와 폭이 바뀌면 다시 잰다
+    const ro = new ResizeObserver(measure);
+    refs.current.forEach((el) => el && ro.observe(el));
+    document.fonts?.ready.then(measure);
+    return () => ro.disconnect();
+  }, [value, items.length]);
+  return (
+    <div className="seg" role="tablist" ref={wrap}>
+      <span className="ind" style={{ width: box.w, transform: `translateX(${box.x}px)` }} aria-hidden="true" />
+      {items.map((it, k) => (
+        <button key={it.value} ref={(el) => (refs.current[k] = el)} type="button" role="tab" aria-selected={value === it.value}
+                className={'lbl ' + (value === it.value ? 'text-white' : 'text-ink')} onClick={() => onChange(it.value)}>
+          {it.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function App() {
+  const [state, setState] = useState({ loading: true });
+  const [active, setActive] = useState(0);
+  const [view, setView] = useState(() => (location.hash === '#glance' ? 'glance' : 'shelf'));
+  const shelfRef = useRef(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [t, pr] = await Promise.all([loadStrings(), fetch('../data/portfolio.json', { cache: 'no-cache' }).then((r) => r.json())]);
+        const projects = (await Promise.all((pr.projects || []).map((id) =>
+          fetch(`../data/projects/${encodeURIComponent(id)}.json`, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null)))).filter(Boolean);
+        document.title = `${pr.profile?.name || ''} · ${t('en.portfolio')}`;
+        setState({ loading: false, t, pf: pr, projects });
+      } catch (e) {
+        setState({ loading: false, error: String(e) });
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (view !== 'shelf' || !state.projects) return;
+      if (e.target && e.target.closest && e.target.closest('input,textarea,select')) return;
+      if (e.key === 'ArrowRight') setActive((a) => (a + 1) % state.projects.length);
+      if (e.key === 'ArrowLeft') setActive((a) => (a - 1 + state.projects.length) % state.projects.length);
+    };
+    addEventListener('keydown', onKey);
+    return () => removeEventListener('keydown', onKey);
+  }, [view, state.projects]);
+
+  if (state.loading) return <p className="p-10 lbl text-muted">Loading…</p>;
+  if (state.error) return <p className="p-10 text-[14px]">데이터를 읽지 못했습니다. 로컬 서버로 열었는지, <code className="ic">/portfolio-build</code>를 했는지 확인해 주세요. ({state.error})</p>;
+
+  const { t, pf, projects } = state;
+  const P = pf.profile || {};
+  const n = projects.length;
+  const go = (d) => setActive((a) => (a + d + n) % n);
+  const pick = (i) => { setActive(i); setView('shelf'); document.getElementById('projects')?.scrollIntoView(); };
+  const byId = Object.fromEntries(projects.map((p, i) => [p.id, i]));
+
+  const nav = [
+    ['#intro', t('page.nav-intro')], ['#projects', t('page.nav-projects'), 'shelf'], ['#glance', t('page.nav-glance'), 'glance'],
+    ['#stack', t('page.nav-stack')], ['#contact', t('page.nav-contact')],
+  ];
+
+  return (
+    <>
+      {/* 머리 막대 */}
+      <header className="sticky top-0 z-30 bg-paper/90 backdrop-blur-[2px] border-b border-rule">
+        <div className="mx-auto max-w-[1360px] h-16 px-4 md:px-8 flex items-center justify-between gap-4">
+          <a href="#top" className="flex flex-col leading-none">
+            <span className="font-serif text-[20px] font-medium text-cobalt">{P.name}</span>
+            {P.nameEn && <span className="lbl text-[9px] tracking-[.3em] text-cobalt mt-1">{P.nameEn}</span>}
+          </a>
+          <nav className="hidden md:flex items-center gap-6" aria-label="섹션">
+            {nav.map(([href, label, v]) => (
+              <a key={label} href={href} className="lbl text-ink hover:text-cobalt" onClick={() => v && setView(v)}>{label}</a>
+            ))}
+          </nav>
+          <span className="lbl text-muted hidden sm:inline">{t('page.updated', { date: pf.generatedAt || '' })}</span>
+        </div>
+      </header>
+
+      <main id="top" className="mx-auto max-w-[1360px] px-4 md:px-8">
+        {/* 머리 */}
+        <section id="intro" className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-16 pt-16 md:pt-24 pb-16 border-b border-ink">
+          <div className="min-w-0">
+            <span className="lbl text-cobalt">{t('en.portfolio')}</span>
+            <h1 className="font-serif font-bold text-[56px] md:text-[84px] leading-[1] tracking-[-.03em] mt-5">{P.name}</h1>
+            {P.nameEn && <p className="font-serif font-medium text-[22px] md:text-[26px] text-muted mt-3">{P.nameEn}</p>}
+            {P.headline && <p className="text-[18px] md:text-[20px] font-semibold mt-8">{P.headline}</p>}
+            <div className="flex flex-wrap gap-2 mt-8">
+              {P.email && <a className="btn" href={`mailto:${P.email}`}>{P.email}</a>}
+              {P.github && <a className="btn" href={P.github} target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>}
+              {(P.links || []).filter((l) => l.url).map((l) => <a key={l.url} className="btn" href={l.url} target="_blank" rel="noopener">{l.label} ↗</a>)}
+            </div>
+          </div>
+          {P.intro && (
+            <div className="min-w-0 lg:pt-10">
+              <span className="lbl text-muted">{t('en.about')} · {t('page.intro')}</span>
+              <p className="font-serif text-[20px] md:text-[23px] leading-[1.6] mt-5 whitespace-pre-line">{P.intro}</p>
+            </div>
+          )}
+        </section>
+
+        {/* 프로젝트: 선반 · 한번에 보기 */}
+        <section id="projects" className="pt-14 pb-20 border-b border-ink scroll-mt-16">
+          <span id="glance" className="block scroll-mt-24" aria-hidden="true" />
+          <div className="flex flex-wrap items-end justify-between gap-5 mb-8">
+            <div>
+              <span className="lbl text-cobalt">{t('en.project')} · {pad(n)}</span>
+              <h2 className="font-serif font-bold text-[36px] md:text-[44px] leading-[1.05] tracking-[-.02em] mt-3">{t('page.nav-projects')}</h2>
+            </div>
+            <Seg value={view} onChange={setView} items={[{ value: 'shelf', label: '선반으로 보기' }, { value: 'glance', label: '한번에 보기' }]} />
+          </div>
+
+          {view === 'shelf' ? (
+            <>
+              <div className="shelf" ref={shelfRef}>
+                {projects.map((p, i) => <Tape key={p.id} p={p} i={i} total={n} open={i === active} onOpen={setActive} t={t} />)}
+              </div>
+              <div className="flex items-center justify-between gap-4 mt-6">
+                <button type="button" className="btn !w-11 !px-0 justify-center" onClick={() => go(-1)} aria-label="이전 프로젝트"><Arrow dir={-1} /></button>
+                <div className="flex gap-[6px]" role="tablist" aria-label="프로젝트">
+                  {projects.map((p, i) => (
+                    <button key={p.id} type="button" role="tab" aria-selected={i === active} onClick={() => setActive(i)}
+                            className={'lbl h-8 px-3 border transition-colors ' + (i === active ? 'bg-cobalt border-cobalt text-white' : 'border-btn text-ink')}>
+                      {pad(i + 1)}<span className="hidden sm:inline">&nbsp;{p.title}</span>
+                    </button>
+                  ))}
+                </div>
+                <button type="button" className="btn !w-11 !px-0 justify-center" onClick={() => go(1)} aria-label="다음 프로젝트"><Arrow dir={1} /></button>
+              </div>
+            </>
+          ) : (
+            <Glance projects={projects} t={t} onPick={pick} />
+          )}
+        </section>
+
+        {/* 기술 스택 */}
+        {(pf.skills || []).length > 0 && (
+          <section id="stack" className="pt-14 pb-20 border-b border-ink scroll-mt-16">
+            <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+              <div>
+                <span className="lbl text-cobalt">{t('en.skills')}</span>
+                <h2 className="font-serif font-bold text-[36px] md:text-[44px] leading-[1.05] tracking-[-.02em] mt-3">{t('page.stack')}</h2>
+              </div>
+              <span className="lbl text-muted">{t('page.stack-note')}</span>
+            </div>
+            <div className="border-t border-ink">
+              {pf.skills.map((s) => (
+                <div key={s.name} className="grid md:grid-cols-[260px_1fr] gap-3 md:gap-8 py-5 border-b border-rule">
+                  <h3 className="font-serif font-semibold text-[22px] leading-[1.2]">{s.name}</h3>
+                  <ul className="flex flex-col gap-2 min-w-0">
+                    {(s.evidence || []).map((e, k) => {
+                      const pi = byId[e.project];
+                      return (
+                        <li key={k} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[14px] leading-[1.6] text-body">
+                          <span className="min-w-0"><Rich text={e.text} /></span>
+                          {pi !== undefined && (
+                            <button type="button" className="lbl text-cobalt border-b border-cobalt/40 hover:border-cobalt pb-[2px]" onClick={() => pick(pi)}>
+                              {projects[pi].title}
+                            </button>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 연락처 */}
+        <section id="contact" className="pt-14 pb-16 scroll-mt-16">
+          <span className="lbl text-cobalt">{t('en.contact')}</span>
+          <h2 className="font-serif font-bold text-[36px] md:text-[44px] leading-[1.05] tracking-[-.02em] mt-3">{t('page.nav-contact')}</h2>
+          <div className="flex flex-wrap gap-2 mt-8">
+            {P.email && <a className="btn primary" href={`mailto:${P.email}`}>{P.email}</a>}
+            {P.github && <a className="btn" href={P.github} target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>}
+            <a className="btn" href="../index.html">{t('name.portfolio') || '포트폴리오'} PDF <span aria-hidden="true">↗</span></a>
+          </div>
+        </section>
+      </main>
+
+      <footer className="mx-auto max-w-[1360px] px-4 md:px-8 pb-8 flex flex-wrap justify-between gap-3 lbl text-muted">
+        <span>© {P.nameEn || P.name}</span>
+        <span>{t('page.updated', { date: pf.generatedAt || '' })}</span>
+      </footer>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
