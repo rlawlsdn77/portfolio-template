@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>포트폴리오</title>
+<!-- /portfolio-custom 직접 생성 모드(temp2) — 레트로 게임풍 다크.
+     배치 참고: junhy96.github.io/Portfoliojunhy 의 골격(왼쪽 세로 절 번호 레일 · 위 고정 메뉴 · 절마다 "번호 — 이름" + 큰 영문 제목 ·
+     첫 화면 그림 왼쪽/글 오른쪽 + 번호 타일 3개 + 2열 목록 · 가로 타임라인 · 연락처 3단 + 큰 제목). 레퍼런스의 글·그림·로고는 쓰지 않음.
+     절 순서: 머리 → 자기소개 → 기술 스택 → 한눈에 보기(가로 타임라인 + 대표 이미지, 프로젝트 앞) → 프로젝트마다 소개 + 기능 소개 → 연락처.
+     프로젝트 순서는 data/portfolio.json(profile.md "프로젝트 순서")을 따름. 위 메뉴 [포트폴리오 PDF]는 원본 포트폴리오 문서(../index.html, A4)를
+     보이지 않는 틀에 불러 그 문서의 인쇄 창을 띄움(실패하면 원본을 새 탭으로).
+     레트로 요소: 픽셀 글꼴(Press Start 2P · Galmuri11), 모서리가 깎인 픽셀 테두리, 주사선, CRT 화면(대표 이미지 순환), RPG 대화창(자기소개·개발 의도).
+     내용은 ../data/*.json, UI 문구는 ../theme/strings.tsv에서 읽습니다(이 파일에 내용을 복사하지 않음).
+     색 3개: 바탕 --bg · 글자 --ink · 강조 --acc(CRT 초록). 프로필 강조색(settings.accent)을 쓰려면 아래 USE_PROFILE_ACCENT = true. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --bg: #0A0D0B;
+    --ink: #E9EEE6;
+    --acc: #7BE38F;
+    --body: rgba(233, 238, 230, .80);
+    --muted: rgba(233, 238, 230, .56);
+    --line: rgba(233, 238, 230, .12);
+    --line2: rgba(233, 238, 230, .24);
+    --panel: rgba(233, 238, 230, .04);
+    --acc-deep: color-mix(in srgb, var(--acc) 30%, var(--bg));
+    --acc-soft: color-mix(in srgb, var(--acc) 13%, transparent);
+    --arcade: 'Press Start 2P', 'Galmuri11', monospace;
+    --pixel: 'Galmuri11', 'Pretendard Variable', Pretendard, system-ui, sans-serif;
+    --sans: 'Pretendard Variable', Pretendard, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  body {
+    margin: 0; background-color: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden;
+    background-image: linear-gradient(rgba(233, 238, 230, .026) 1px, transparent 1px), linear-gradient(90deg, rgba(233, 238, 230, .026) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  /* 주사선(CRT) — 화면 전체에 아주 옅게 */
+  body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 80;
+    background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, .14) 2px 3px); }
+  ::selection { background: var(--acc); color: var(--bg); }
+  a:focus-visible, button:focus-visible { outline: 2px dashed var(--acc); outline-offset: 5px; }
+
+  .f-arcade { font-family: var(--arcade); }
+  .f-pixel { font-family: var(--pixel); }
+  .acc { color: var(--acc); }
+  .muted { color: var(--muted); }
+  .txt { color: var(--body); }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
+  @media (min-width: 768px) { .wrap { padding: 0 40px; } }
+  @media (min-width: 1280px) { .wrap { padding: 0 56px; } }
+  .sec { border-top: 1px solid var(--line); }
+
+  /* 픽셀 테두리: 네 모서리가 한 칸씩 깎인 사각형 (그림자 4개) */
+  .pxb { --pc: var(--line2); box-shadow: 0 -3px 0 0 var(--pc), 0 3px 0 0 var(--pc), -3px 0 0 0 var(--pc), 3px 0 0 0 var(--pc); }
+  .pxb2 { --pc: var(--line2); box-shadow: 0 -2px 0 0 var(--pc), 0 2px 0 0 var(--pc), -2px 0 0 0 var(--pc), 2px 0 0 0 var(--pc); }
+
+  @keyframes blink { 50% { opacity: 0; } }
+  .blink { animation: blink 1.05s steps(1) infinite; }
+
+  .eyebrow { font-family: var(--pixel); font-weight: 700; font-size: 12px; line-height: 1.6; color: var(--acc); letter-spacing: .02em; }
+  .eyebrow .n { font-family: var(--arcade); font-weight: 400; font-size: 10px; }
+  .giant { font-family: var(--arcade); font-size: clamp(26px, 5.2vw, 76px); line-height: 1.14; color: var(--ink);
+    text-shadow: .07em .07em 0 var(--acc-deep); overflow-wrap: anywhere; }
+  .name-xl { font-family: var(--arcade); font-size: clamp(36px, 5.4vw, 84px); line-height: 1.14; color: var(--ink);
+    text-shadow: .07em .07em 0 var(--acc-deep); }
+  .ptitle { font-family: var(--arcade); font-size: clamp(26px, 4.4vw, 62px); line-height: 1.2; color: var(--ink);
+    text-shadow: .07em .07em 0 var(--acc-deep); overflow-wrap: anywhere; }
+
+  /* 버튼 */
+  .pbtn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; font-family: var(--pixel); font-weight: 700; font-size: 13px;
+    color: var(--ink); background: var(--panel); white-space: nowrap; transition: color .15s, background-color .15s; }
+  .pbtn:hover { --pc: var(--acc); color: var(--acc); }
+  .pbtn:active { transform: translate(2px, 2px); }
+  .pbtn.pri { background: var(--acc); color: var(--bg); --pc: var(--acc); }
+  .pbtn.pri:hover { color: var(--bg); filter: brightness(1.08); }
+  .pbtn.sm { height: 32px; padding: 0 11px; font-size: 12px; }
+  .pbtn:disabled { cursor: progress; color: var(--muted); }
+
+  /* 첫 화면 번호 타일(메뉴 고르기) */
+  .tile { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; min-height: 108px; padding: 14px 16px;
+    background: var(--panel); color: var(--ink); transition: background-color .15s; }
+  .tile .no { font-family: var(--arcade); font-size: 10px; color: var(--muted); }
+  .tile .lb { display: flex; align-items: center; gap: 6px; font-family: var(--pixel); font-weight: 700; font-size: 16px; line-height: 1.35; }
+  .tile .cur { width: 0; overflow: hidden; color: inherit; }
+  .tile .arr { margin-left: auto; font-family: var(--sans); font-weight: 600; }
+  .tile:hover { --pc: var(--acc); }
+  .tile:hover .cur, .tile:focus-visible .cur { width: auto; animation: blink 1.05s steps(1) infinite; }
+  .tile:active { transform: translate(2px, 2px); }
+  .tile.pri { background: var(--acc); color: var(--bg); --pc: var(--acc); }
+  .tile.pri .no { color: color-mix(in srgb, var(--bg) 62%, transparent); }
+
+  /* CRT 화면 */
+  .crt { background: color-mix(in srgb, var(--ink) 6%, var(--bg)); padding: 14px 14px 0; }
+  .crt .screen { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 18px / 14px; background: #000; }
+  .crt .glass, .thumb .glass { position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, .5) 100%),
+                repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, .25) 2px 3px); }
+  .crt .bar { display: flex; align-items: center; gap: 12px; min-height: 52px; }
+  .crt .led { width: 8px; height: 8px; background: var(--acc); flex: none; }
+  .crt .dot { width: 10px; height: 10px; background: var(--line2); }
+  .crt .dot.on { background: var(--acc); }
+
+  /* 한눈에 보기 카드의 작은 화면 */
+  .thumb { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 12px / 9px; background: #000; }
+  .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
+  .thumb:hover img { transform: scale(1.04); }
+  .thumb:hover { box-shadow: 0 0 0 2px var(--acc); }
+
+  /* RPG 대화창 */
+  .dialog { position: relative; padding: 26px 24px 30px; background: rgba(10, 13, 11, .94); --pc: var(--ink); }
+  .dialog .who { position: absolute; top: -13px; left: 18px; padding: 3px 10px; background: var(--bg); font-family: var(--pixel); font-weight: 700; font-size: 12px;
+    color: var(--acc); --pc: var(--acc); }
+  .dialog .more { position: absolute; right: 16px; bottom: 9px; font-size: 11px; color: var(--acc); }
+
+  /* 표·칩 */
+  .status { padding: 4px 20px; background: var(--panel); }
+  .status .row { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 14px; padding: 12px 0; border-bottom: 1px dashed var(--line); }
+  .status .row:last-child { border-bottom: 0; }
+  .status dt { font-family: var(--pixel); font-weight: 700; font-size: 12px; color: var(--acc); padding-top: 3px; }
+  .status dd { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--ink); word-break: keep-all; overflow-wrap: anywhere; }
+  .tag { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; font-family: var(--pixel); font-size: 11px; color: var(--body);
+    background: var(--panel); white-space: nowrap; }
+  .chip { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; font-family: var(--pixel); font-weight: 700; font-size: 11px;
+    color: var(--acc); background: var(--acc-soft); white-space: nowrap; --pc: color-mix(in srgb, var(--acc) 45%, transparent); }
+  a.chip:hover { background: var(--acc); color: var(--bg); }
+  .slot { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex: none; font-family: var(--arcade); font-size: 10px;
+    color: var(--acc); background: var(--acc-soft); --pc: color-mix(in srgb, var(--acc) 50%, transparent); }
+  .ic { font-family: var(--mono); font-size: .88em; padding: 1px 5px; background: rgba(233, 238, 230, .08); color: var(--ink); }
+  .tlink { font-family: var(--pixel); font-weight: 700; font-size: 12px; color: var(--acc); }
+  .tlink:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .clamp3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* 왼쪽 세로 레일 (넓은 화면) */
+  .rail { position: fixed; left: 0; top: 0; bottom: 0; width: 64px; z-index: 45; border-right: 1px solid var(--line); background: rgba(10, 13, 11, .94);
+    display: none; flex-direction: column; align-items: center; justify-content: space-between; padding: 14px 0 20px; }
+  @media (min-width: 1024px) { .rail { display: flex; } }
+  .rail .logo { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; font-family: var(--arcade); font-size: 10px; color: var(--acc); }
+  .rail ol { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; margin: 0; padding: 0; list-style: none; }
+  .rail ol::before { content: ''; position: absolute; left: -7px; top: 2px; bottom: 2px; border-left: 2px dotted var(--line2); }
+  .rail .it { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; font-family: var(--arcade); font-size: 9px; color: var(--muted); }
+  .rail .it:hover { color: var(--ink); }
+  .rail .it.on { color: var(--acc); }
+  .rail .it.on::before { content: ''; position: absolute; left: -11px; top: 0; width: 10px; height: 10px; background: var(--acc); }
+  .rail .lbl { max-width: 56px; text-align: center; font-family: var(--pixel); font-weight: 700; font-size: 10px; line-height: 1.35; word-break: keep-all; }
+  .rail .ico { display: flex; width: 32px; height: 32px; align-items: center; justify-content: center; color: var(--muted); }
+  .rail .ico:hover { color: var(--acc); }
+
+  /* 머리 막대 */
+  .nav { position: fixed; top: 0; right: 0; left: 0; z-index: 40; height: 64px; border-bottom: 1px solid var(--line); background: rgba(10, 13, 11, .86);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  @media (min-width: 1024px) { .nav { left: 64px; } }
+  .nav .m { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 64px; font-family: var(--pixel); font-weight: 700; font-size: 13px; color: var(--muted); }
+  .nav .m:hover { color: var(--ink); }
+  .nav .m .cur { visibility: hidden; color: var(--acc); font-size: 10px; }
+  .nav .m.on { color: var(--ink); }
+  .nav .m.on .cur { visibility: visible; }
+  .nav .m.on::after { content: ''; position: absolute; left: 16px; right: 0; bottom: 14px; height: 2px; background: var(--acc); }
+
+  /* 가로 타임라인 */
+  .tl-item { position: relative; }
+  .tl-axis { position: relative; height: 44px; }
+  .tl-axis::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 2px dashed var(--line2); }
+  .tl-axis .node { position: absolute; left: 12px; top: 50%; width: 14px; height: 14px; margin-top: -7px; background: var(--acc); }
+  /* 넓은 화면: 카드 사이 여백까지 축을 이어 그림(카드 폭은 셋 다 같게) */
+  @media (min-width: 768px) { .tl-axis { margin: 0 -12px; } .tl-axis .node { left: 24px; } }
+  @media (max-width: 767px) {
+    .tl-item { padding-left: 24px; border-left: 2px dashed var(--line2); padding-bottom: 36px; margin-left: 6px; }
+    .tl-item:last-child { padding-bottom: 0; }
+    .tl-item::before { content: ''; position: absolute; left: -8px; top: 4px; width: 14px; height: 14px; background: var(--acc); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .blink, .tile:hover .cur, .tile:focus-visible .cur { animation: none; }
+    .fade, .thumb img { transition: none !important; }
+  }
+  @media print {
+    body::after, .rail, .nav { display: none !important; }
+    body { background-image: none; }
+  }
+</style>
+</head>
+<body>
+<div id="root"><p style="padding:96px 24px;color:rgba(233,238,230,.56);font-family:system-ui,sans-serif">불러오는 중…</p></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect } = React;
+const USE_PROFILE_ACCENT = false;   // true면 강조색을 profile.md 색(settings.accent)으로
+
+// ── 문구 표(theme/strings.tsv): 맨 끝 "내 문구" 칸 → 없으면 기본 문구 ──
+const FALLBACK = {
+  'name.portfolio': '포트폴리오', 'name.deck': '발표 덱', 'name.doc': '상세 기술문서', 'name.doc-short': '상세 문서', 'name.video': '시연 영상',
+  'name.role': '내 역할', 'name.role-short': '역할', 'name.intent': '개발 의도', 'name.team': '팀 프로젝트', 'name.solo': '개인 프로젝트',
+  'page.updated': '업데이트 {date}', 'page.intro': '자기소개', 'page.stack': '기술 스택', 'page.stack-note': '근거 프로젝트와 함께',
+  'page.project-no': '{en.project} {no} / {total}', 'page.features': '기능 소개', 'page.see-in-deck': '{name.deck}에서 보기', 'page.deck-all': '{name.deck} 전체',
+  'page.glance': '프로젝트 요약', 'page.nav-intro': '소개', 'page.nav-stack': '{page.stack}', 'page.nav-projects': '프로젝트', 'page.nav-glance': '한눈에 보기',
+  'page.nav-contact': '연락처', 'page.print-email': '이메일', 'ui.preparing': '준비 중…',
+  'en.portfolio': 'PORTFOLIO', 'en.about': 'ABOUT ME', 'en.skills': 'SKILLS', 'en.project': 'PROJECT', 'en.feature': 'FEATURE', 'en.glance': 'AT A GLANCE', 'en.contact': 'CONTACT',
+};
+async function loadStrings() {
+  const table = { ...FALLBACK };
+  try {
+    const r = await fetch('../theme/strings.tsv', { cache: 'no-cache' });
+    if (r.ok) {
+      const txt = (await r.text()).replace(/^﻿/, '');
+      for (const line of txt.split(/\r?\n/)) {
+        if (!line || line.startsWith('#')) continue;
+        const c = line.split('\t');
+        if (c.length < 3 || c[0] === '키') continue;
+        const mine = (c[3] || '').trim();
+        table[c[0].trim()] = mine || c[2].trim();
+      }
+    }
+  } catch (e) { /* 표가 없으면 기본 문구 */ }
+  const resolve = (k, depth = 0) => String(table[k] ?? '').replace(/\{([a-z0-9-]+\.[a-z0-9-]+)\}/g, (m, ref) => depth > 4 ? m : resolve(ref, depth + 1));
+  return (k, vars = {}) => resolve(k).replace(/\{([a-z0-9-]+)\}/g, (m, v) => (v in vars ? vars[v] : m));
+}
+
+// `백틱` → 코드 글자
+function Rich({ text }) {
+  if (!text) return null;
+  return String(text).split(/(`[^`]+`)/g).map((p, i) => p.startsWith('`') && p.endsWith('`') && p.length > 1
+    ? <code key={i} className="ic">{p.slice(1, -1)}</code> : <React.Fragment key={i}>{p}</React.Fragment>);
+}
+const pad = (n) => String(n).padStart(2, '0');
+const isUrl = (u) => /^https?:\/\//.test(u || '');
+const img = (p, src) => `../src/${p.id}/${src}`;
+// 발표 덱은 temp2 전용 레트로 덱(deck.html — 원본 렌더러 + temp2/deck-theme.css). 원본 덱은 ../project.html
+const deckUrl = (p, sid = '') => `deck.html?p=${encodeURIComponent(p.id)}${sid ? `#s=${sid}` : ''}`;
+const docUrl = (p) => `../doc.html?p=${encodeURIComponent(p.id)}`;
+const shortUrl = (u) => String(u || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+const teamLabel = (team, t) => (team?.type === 'team' ? `${t('name.team')}${team.size ? ' · ' + team.size : ''}` : t('name.solo'));
+const metaOf = (p, re) => ((p.meta || []).find((m) => re.test(m.label || '')) || {}).value || '';
+// 기간 값에서 날짜 범위·시작 연월만 꺼냄(값의 일부 그대로 — 새 날짜를 만들지 않음)
+const rangeOf = (v) => (String(v).match(/\d{4}\.\d{1,2}(?:\.\d{1,2})?\s*~\s*(?:\d{4}\.)?\d{1,2}(?:\.\d{1,2})?/) || [String(v || '')])[0];
+const startOf = (v) => { const m = String(v).match(/(\d{4})\.(\d{1,2})/); return m ? `${m[1]}.${m[2].padStart(2, '0')}` : ''; };
+// 기능 절(section) → 발표 덱 장면 id (원본 포트폴리오 문서와 같은 규칙)
+const norm = (s) => String(s || '').replace(/[`*_~]/g, '').replace(/\s+/g, ' ').trim();
+const keyOk = (k) => /^[a-z][a-z0-9-]{1,31}$/.test(k || '') && !/^s-\d+$/.test(k);
+function deckScene(p, section) {
+  const want = norm(section);
+  if (!want || !p.deck?.slides?.length) return '';
+  const last = (x) => norm((x.sectionPath || []).slice(-1)[0]);
+  const find = (list) => list.find((x) => last(x) === want) || list.find((x) => (x.sectionPath || []).some((s) => norm(s) === want));
+  const sl = find(p.deck.slides);
+  if (sl) return keyOk(sl.key) ? `d-${sl.key}` : '';
+  const hid = find(p.deck.base || []);
+  return hid && keyOk(hid.chapter) && p.deck.slides.some((x) => x.chapter === hid.chapter) ? `ch-${hid.chapter}` : '';
+}
+const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// [포트폴리오 PDF] — 원본 포트폴리오 문서(../index.html)는 A4 인쇄용으로 짜여 있음(제출 PDF).
+// 그 문서를 보이지 않는 틀에 불러 다 그려지고 그림까지 받은 뒤, 그 틀의 인쇄 창을 띄움. 이 페이지는 그대로 머묾.
+const waitMax = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(r, ms))]);
+let printFrame = null;
+async function printOriginal() {
+  if (!printFrame) {
+    const f = document.createElement('iframe');
+    f.title = '인쇄용 포트폴리오 문서';
+    f.tabIndex = -1;
+    f.setAttribute('aria-hidden', 'true');
+    Object.assign(f.style, { position: 'fixed', left: '-12000px', top: '0', width: '1200px', height: '900px', border: '0' });
+    const loaded = new Promise((res, rej) => { f.onload = res; f.onerror = rej; });
+    f.src = '../index.html';
+    document.body.appendChild(f);
+    await waitMax(loaded, 20000);
+    printFrame = f;
+  }
+  const w = printFrame.contentWindow;
+  if (!w || !w.PFPage) { printFrame.remove(); printFrame = null; throw new Error('원본 포트폴리오 문서를 불러오지 못했습니다'); }
+  await waitMax(w.PFPage.whenReady(), 15000);
+  const imgs = [...w.document.images];
+  imgs.forEach((i) => { i.loading = 'eager'; });
+  await waitMax(Promise.all(imgs.map((i) => (i.complete ? null : new Promise((r) => {
+    i.addEventListener('load', r, { once: true }); i.addEventListener('error', r, { once: true }); })))), 15000);
+  try { await waitMax(w.document.fonts.ready, 5000); } catch (e) { /* 글꼴 대기 실패는 무시 */ }
+  w.focus();
+  w.print();
+}
+
+function Ext() { return <span aria-hidden="true" style={{ fontFamily: 'var(--sans)' }}>↗</span>; }
+function IconGithub() {
+  return <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" /></svg>;
+}
+function IconSave() {
+  return <svg width="12" height="12" viewBox="0 0 6 6" fill="currentColor" shapeRendering="crispEdges" aria-hidden="true"><path d="M2 0h2v2h1v1H4v1H2V3H1V2h1zM0 5h6v1H0z" /></svg>;
+}
+function PdfButton({ t }) {
+  const [busy, setBusy] = useState(false);
+  const go = async () => {
+    if (busy) return;
+    setBusy(true);
+    try { await printOriginal(); }
+    catch (e) { console.warn('[temp2] 인쇄 창을 띄우지 못해 원본 포트폴리오 문서를 새 탭으로 엽니다:', e); window.open('../index.html', '_blank', 'noopener'); }
+    finally { setBusy(false); }
+  };
+  return (
+    <button type="button" className="pbtn pxb2 sm ml-auto md:ml-0" onClick={go} disabled={busy} aria-busy={busy} title="제출용 포트폴리오 문서(A4)를 PDF로 저장">
+      {busy ? t('ui.preparing') : <>{t('name.portfolio')} PDF <IconSave /></>}
+    </button>
+  );
+}
+function IconMail() {
+  return <svg width="18" height="14" viewBox="0 0 12 9" fill="currentColor" shapeRendering="crispEdges" aria-hidden="true"><path d="M0 0h12v1H0zM0 8h12v1H0zM0 1h1v7H0zM11 1h1v7h-1zM1 1h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 5h2v1H5zM7 4h1v1H7zM8 3h1v1H8zM9 2h1v1H9zM10 1h1v1h-1z" /></svg>;
+}
+
+function ProjectButtons({ p, t, small }) {
+  const L = p.links || {};
+  const cls = `pbtn pxb2${small ? ' sm' : ''}`;
+  return (
+    <div className="flex flex-wrap gap-3">
+      <a className={`${cls} pri`} href={deckUrl(p)} target="_blank" rel="noopener">{t('name.deck')} <Ext /></a>
+      <a className={cls} href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc')} <Ext /></a>
+      {isUrl(L.github) && <a className={cls} href={L.github} target="_blank" rel="noopener">GitHub <Ext /></a>}
+      {isUrl(L.video) && <a className={cls} href={L.video} target="_blank" rel="noopener">{t('name.video')} <Ext /></a>}
+      {(L.extra || []).filter((l) => isUrl(l.url)).map((l, k) => <a key={k} className={cls} href={l.url} target="_blank" rel="noopener">{l.label} <Ext /></a>)}
+    </div>
+  );
+}
+
+function Eyebrow({ no, children, className = '' }) {
+  return <p className={`eyebrow ${className}`}>{no && <><span className="n">{no}</span> — </>}{children}</p>;
+}
+
+// 지금 보고 있는 절
+function useActive(ids) {
+  const [active, setActive] = useState(ids[0]);
+  useEffect(() => {
+    const els = ids.map((id) => document.getElementById(id)).filter(Boolean);
+    if (!('IntersectionObserver' in window) || !els.length) return;
+    const io = new IntersectionObserver((ents) => ents.forEach((e) => e.isIntersecting && setActive(e.target.id)), { rootMargin: '-40% 0px -55% 0px' });
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [ids.join('|')]);
+  return active;
+}
+
+function Rail({ prof, secs, active }) {
+  const initials = (prof.nameEn || '').split(/\s+/).filter(Boolean).map((w) => w[0].toUpperCase()).join('').slice(0, 3);
+  return (
+    <aside className="rail" aria-label="절 이동">
+      <a href="#cover" className="logo pxb2" aria-label="맨 위로">{initials || '▶'}</a>
+      <ol>
+        {secs.map((s) => (
+          <li key={s.id}>
+            <a href={`#${s.id}`} className={`it ${active === s.id ? 'on' : ''}`} aria-current={active === s.id ? 'true' : undefined} title={s.label}>
+              <span>{s.no}</span>
+              {active === s.id && <span className="lbl">{s.label}</span>}
+            </a>
+          </li>
+        ))}
+      </ol>
+      <div className="flex flex-col items-center gap-1">
+        {isUrl(prof.github) && <a className="ico" href={prof.github} target="_blank" rel="noopener" aria-label="GitHub"><IconGithub /></a>}
+        {prof.email && <a className="ico" href={`mailto:${prof.email}`} aria-label={prof.email}><IconMail /></a>}
+      </div>
+    </aside>
+  );
+}
+
+function Nav({ prof, projects, t, active }) {
+  const inProjects = active.startsWith('p-');
+  const items = [
+    ['intro', t('page.nav-intro'), active === 'intro'],
+    ['stack', t('page.nav-stack'), active === 'stack'],
+    [projects.length ? 'glance' : '', t('page.nav-glance'), active === 'glance'],
+    [projects[0] ? `p-${projects[0].id}` : '', t('page.nav-projects'), inProjects],
+    ['contact', t('page.nav-contact'), active === 'contact'],
+  ].filter((x) => x[0]);
+  return (
+    <header className="nav">
+      <div className="h-full px-5 md:px-10 flex items-center gap-6">
+        <a href="#cover" className="min-w-0 leading-tight">
+          <span className="block f-pixel font-bold text-[15px]">{prof.name}</span>
+          {prof.job && <span className="hidden sm:block f-pixel text-[11px] acc truncate">{prof.job}</span>}
+        </a>
+        <nav className="ml-auto hidden md:flex items-center gap-6">
+          {items.map(([id, label, on]) => <a key={id} href={`#${id}`} className={`m ${on ? 'on' : ''}`}><span className="cur" aria-hidden="true">▶</span>{label}</a>)}
+        </nav>
+        <PdfButton t={t} />
+      </div>
+    </header>
+  );
+}
+
+// CRT 화면: 프로젝트 대표 이미지를 차례로
+function Crt({ projects, t }) {
+  const shots = projects.filter((p) => p.cover);
+  const [k, setK] = useState(0);
+  const [hold, setHold] = useState(false);
+  useEffect(() => {
+    if (shots.length < 2 || hold || reduceMotion()) return;
+    const id = setInterval(() => setK((x) => (x + 1) % shots.length), 4200);
+    return () => clearInterval(id);
+  }, [shots.length, hold]);
+  if (!shots.length) return null;
+  const cur = shots[k];
+  const no = projects.indexOf(cur) + 1;
+  return (
+    <div className="crt pxb" onMouseEnter={() => setHold(true)} onMouseLeave={() => setHold(false)} onFocus={() => setHold(true)} onBlur={() => setHold(false)}>
+      <a href={`#p-${cur.id}`} className="screen" aria-label={`${cur.title}(으)로 이동`}>
+        {shots.map((p, i) => (
+          <img key={p.id} src={img(p, p.cover)} alt={i === k ? `${p.title} 대표 이미지` : ''} aria-hidden={i === k ? undefined : 'true'}
+            className={`fade absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${i === k ? 'opacity-100' : 'opacity-0'}`} />
+        ))}
+        <span className="glass" aria-hidden="true" />
+      </a>
+      <div className="bar">
+        <span className="led blink" aria-hidden="true" />
+        <span className="f-arcade text-[9px] acc whitespace-nowrap">{t('en.project')} {pad(no)}/{pad(projects.length)}</span>
+        <span className="f-pixel font-bold text-[14px] truncate min-w-0">{cur.title}</span>
+        <div className="ml-auto flex gap-2.5 flex-none">
+          {shots.map((p, i) => <button key={p.id} type="button" className={`dot ${i === k ? 'on' : ''}`} aria-label={p.title} aria-pressed={i === k} onClick={() => setK(i)} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Cover({ pf, prof, projects, t, no }) {
+  const nameLines = (prof.nameEn || '').split(/\s+/).filter(Boolean);
+  const links = (prof.links || []).filter((l) => isUrl(l.url));
+  const first = projects[0];
+  const tiles = [
+    first && { href: `#p-${first.id}`, no: no(`p-${first.id}`), label: t('page.nav-projects'), arr: '→', pri: true },
+    { href: '#stack', no: no('stack'), label: t('page.stack'), arr: '→' },
+    { href: '#glance', no: no('glance'), label: t('page.nav-glance'), arr: '→' },
+  ].filter(Boolean);
+  return (
+    <section id="cover" className="min-h-screen flex items-center pt-24 pb-16 lg:pt-28">
+      <div className="wrap w-full grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16 items-center">
+        <div className="min-w-0 order-2 lg:order-1"><Crt projects={projects} t={t} /></div>
+        <div className="min-w-0 order-1 lg:order-2">
+          <div className="flex items-baseline justify-between gap-4">
+            <Eyebrow no={no('cover')}>{t('en.portfolio')}</Eyebrow>
+            {pf.generatedAt && <p className="f-pixel text-[11px] muted">{t('page.updated', { date: pf.generatedAt })}</p>}
+          </div>
+          {nameLines.length
+            ? <h1 className="name-xl mt-6" aria-label={`${prof.name} ${prof.nameEn}`}>{nameLines.map((w, i) => <span key={i} className="block">{w.toUpperCase()}</span>)}</h1>
+            : <h1 className="name-xl mt-6">{prof.name}</h1>}
+          <p className="mt-6 f-pixel text-[15px]">
+            <span className="font-bold">{prof.name}</span>
+            {prof.job && <><span className="muted mx-2">·</span><span className="acc">{prof.job}</span></>}
+          </p>
+          {prof.headline && <p className="mt-5 f-pixel font-bold text-[22px] leading-[1.55] md:text-[26px] break-keep"><Rich text={prof.headline} /></p>}
+          <div className="mt-8 grid grid-cols-3 gap-3">
+            {tiles.map((x, i) => (
+              <a key={i} href={x.href} className={`tile pxb2 ${x.pri ? 'pri' : ''}`}>
+                <span className="no">{x.no}</span>
+                <span className="lb"><span className="cur" aria-hidden="true">▶</span><span className="break-keep">{x.label}</span><span className="arr" aria-hidden="true">{x.arr}</span></span>
+              </a>
+            ))}
+          </div>
+          {projects.length > 0 && (
+            <div className="mt-10">
+              <p className="f-pixel font-bold text-[12px] muted">{t('page.nav-projects')}</p>
+              <ul className="mt-3 grid sm:grid-cols-2 gap-x-8 border-t border-[color:var(--line2)]">
+                {projects.map((p) => {
+                  const period = metaOf(p, /기간/), genre = metaOf(p, /장르/);
+                  return (
+                    <li key={p.id} className="border-b border-[color:var(--line)]">
+                      <a href={`#p-${p.id}`} className="group block py-3">
+                        {period && <span className="block f-pixel text-[11px] muted">{rangeOf(period)}</span>}
+                        <span className="block mt-1 text-[15px] font-bold group-hover:text-[color:var(--acc)] break-keep">{p.title}{genre && <span className="font-medium muted"> · {genre}</span>}</span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+          <div className="mt-8 flex flex-wrap gap-3 lg:hidden">
+            {prof.email && <a className="pbtn pxb2 sm" href={`mailto:${prof.email}`}>{prof.email}</a>}
+            {isUrl(prof.github) && <a className="pbtn pxb2 sm" href={prof.github} target="_blank" rel="noopener">GitHub <Ext /></a>}
+            {links.map((l, k) => <a key={k} className="pbtn pxb2 sm" href={l.url} target="_blank" rel="noopener">{l.label} <Ext /></a>)}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Intro({ prof, t, no }) {
+  if (!prof.intro) return null;
+  return (
+    <section id="intro" className="sec">
+      <div className="wrap py-24 md:py-32 grid gap-12 lg:grid-cols-[minmax(0,.85fr)_minmax(0,1.15fr)] lg:gap-16 items-center">
+        <div className="min-w-0">
+          <Eyebrow no={no('intro')}>{t('page.intro')}</Eyebrow>
+          <h2 className="giant mt-5">{t('en.about')}</h2>
+        </div>
+        <div className="dialog pxb min-w-0">
+          <span className="who pxb2">{prof.name}</span>
+          <div className="space-y-3 text-[17px] md:text-[19px] leading-[1.8] break-keep">
+            {prof.intro.split(/\n+/).filter((l) => l.trim()).map((l, i) => <p key={i}><Rich text={l} /></p>)}
+          </div>
+          <span className="more blink" aria-hidden="true">▼</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Stack({ pf, byId, t, no }) {
+  const skills = pf.skills || [];
+  if (!skills.length) return null;
+  return (
+    <section id="stack" className="sec">
+      <div className="wrap py-24 md:py-32 grid gap-12 lg:grid-cols-[minmax(0,.85fr)_minmax(0,1.15fr)] lg:gap-16">
+        <div className="min-w-0 lg:sticky lg:top-28 self-start">
+          <Eyebrow no={no('stack')}>{t('page.stack')}</Eyebrow>
+          <h2 className="giant mt-5">{t('en.skills')}</h2>
+          <p className="mt-6 f-pixel text-[14px] txt">{t('page.stack-note')}</p>
+          <p className="mt-2 f-pixel text-[12px] muted"><span className="f-arcade text-[9px] acc">×N</span> = 근거 프로젝트 수</p>
+        </div>
+        <div className="min-w-0 grid gap-6">
+          {skills.map((s, i) => {
+            const ev = s.evidence || [];
+            const n = new Set(ev.map((e) => e.project).filter(Boolean)).size;
+            return (
+              <article key={i} className="pxb p-5 md:p-6" style={{ background: 'var(--panel)' }}>
+                <div className="flex items-center gap-4">
+                  <span className="slot pxb2" aria-hidden="true">{pad(i + 1)}</span>
+                  <h3 className="flex-1 min-w-0 f-pixel font-bold text-[18px] leading-snug break-keep">{s.name}</h3>
+                  {n > 0 && <span className="f-arcade text-[12px] acc flex-none" title={`근거 프로젝트 ${n}개`} aria-label={`근거 프로젝트 ${n}개`}>×{n}</span>}
+                </div>
+                <ul className="mt-5 space-y-3">
+                  {ev.map((e, k) => (
+                    <li key={k} className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4 text-[15px] leading-[1.65] txt">
+                      <span className="flex-1 min-w-0 break-keep"><span className="acc mr-2" aria-hidden="true">▸</span><Rich text={e.text} /></span>
+                      {byId[e.project] && <a href={`#p-${e.project}`} className="chip pxb2 self-start ml-5 sm:ml-0">{byId[e.project].title}</a>}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Features({ p, i, t }) {
+  const hl = p.highlights || [];
+  if (!hl.length) return null;
+  return (
+    <div id={`p-${p.id}-core`} className="mt-20 md:mt-24">
+      <div className="flex flex-wrap items-end justify-between gap-3 pb-4 border-b border-[color:var(--line2)]">
+        <Eyebrow no={pad(i + 1)}>{t('page.features')}</Eyebrow>
+        <a className="tlink" href={deckUrl(p)} target="_blank" rel="noopener">{t('page.deck-all')} <Ext /></a>
+      </div>
+      <ol className="mt-8 grid gap-7">
+        {hl.map((h, k) => {
+          const sid = deckScene(p, h.section);
+          const pic = h.image?.src;
+          return (
+            <li key={k} className={`pxb p-5 md:p-6 grid gap-5 md:gap-8 items-center ${pic ? 'md:grid-cols-[minmax(0,1fr)_minmax(0,320px)]' : ''}`} style={{ background: 'var(--panel)' }}>
+              <div className="min-w-0 flex gap-4 md:gap-5 order-2 md:order-1">
+                <span className="slot pxb2" aria-hidden="true">{pad(k + 1)}</span>
+                <div className="min-w-0">
+                  <p className="f-arcade text-[9px] muted">{t('en.feature')} {pad(k + 1)}</p>
+                  <h4 className="mt-2 f-pixel font-bold text-[19px] leading-snug break-keep">{h.title}</h4>
+                  {h.what && <p className="mt-2 text-[15px] leading-[1.7] txt break-keep"><Rich text={h.what} /></p>}
+                  <a className="tlink inline-block mt-4" href={deckUrl(p, sid)} target="_blank" rel="noopener">▶ {t('page.see-in-deck')} <Ext /></a>
+                </div>
+              </div>
+              {pic && (
+                <figure className="min-w-0 order-1 md:order-2">
+                  <img src={img(p, pic)} alt={h.image.caption || h.title} loading="lazy" className="w-full aspect-video object-contain pxb2 bg-black" />
+                  {h.image.caption && <figcaption className="mt-2.5 f-pixel text-[11px] muted leading-snug break-keep">{h.image.caption}</figcaption>}
+                </figure>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
+function Project({ p, i, n, t, no }) {
+  const flip = i % 2 === 1;
+  const meta = (p.meta || []).filter((m) => m.value);
+  const role = p.team?.role;
+  return (
+    <section id={`p-${p.id}`} className="sec">
+      <div className="wrap py-24 md:py-32">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <Eyebrow no={no(`p-${p.id}`)}>{t('page.project-no', { no: pad(i + 1), total: pad(n) })}</Eyebrow>
+          <p className="f-pixel text-[12px] muted">{teamLabel(p.team, t)}</p>
+        </div>
+        <h2 className="ptitle mt-5">{p.title}</h2>
+        {p.tagline && <p className="mt-5 max-w-3xl text-[17px] leading-[1.75] txt break-keep"><Rich text={p.tagline} /></p>}
+
+        <div className="mt-12 grid gap-10 lg:grid-cols-2 lg:gap-14 items-start">
+          {p.cover && (
+            <figure className={`min-w-0 ${flip ? 'lg:order-2' : ''}`}>
+              <div className="crt pxb" style={{ paddingBottom: 14 }}>
+                <span className="screen"><img src={img(p, p.cover)} alt={`${p.title} 대표 이미지`} loading="lazy" className="absolute inset-0 w-full h-full object-cover" /><span className="glass" aria-hidden="true" /></span>
+              </div>
+            </figure>
+          )}
+          <div className={`min-w-0 ${flip ? 'lg:order-1' : ''} ${p.cover ? '' : 'lg:col-span-2'}`}>
+            {(meta.length > 0 || role) && (
+              <dl className="status pxb">
+                {meta.map((m, k) => <div key={k} className="row"><dt>{m.label}</dt><dd>{m.value}</dd></div>)}
+                {role && <div className="row"><dt>{t('name.role')}</dt><dd><Rich text={role} /></dd></div>}
+              </dl>
+            )}
+            {p.intent?.text && (
+              <div className="dialog pxb mt-10">
+                <span className="who pxb2">{t('name.intent')}</span>
+                <p className="text-[16px] leading-[1.75] break-keep"><Rich text={p.intent.text} /></p>
+                <span className="more blink" aria-hidden="true">▼</span>
+              </div>
+            )}
+            {(p.tags || []).length > 0 && <div className="mt-8 flex flex-wrap gap-2.5">{p.tags.map((g, k) => <span key={k} className="tag pxb2">{g}</span>)}</div>}
+            <div className="mt-8"><ProjectButtons p={p} t={t} /></div>
+          </div>
+        </div>
+
+        <Features p={p} i={i} t={t} />
+      </div>
+    </section>
+  );
+}
+
+function Glance({ projects, t, no }) {
+  if (!projects.length) return null;
+  // 기간의 시작 연월 순서(없으면 원래 순서)
+  const rows = projects.map((p, i) => ({ p, i, period: metaOf(p, /기간/) })).map((r) => ({ ...r, start: startOf(r.period) }))
+    .sort((a, b) => (a.start && b.start ? a.start.localeCompare(b.start) : a.i - b.i));
+  return (
+    <section id="glance" className="sec">
+      <div className="wrap py-24 md:py-32">
+        <Eyebrow no={no('glance')}>{t('page.glance')}</Eyebrow>
+        <h2 className="giant mt-5">{t('en.glance')}</h2>
+        <div className="mt-14">
+          <div className="grid md:grid-flow-col md:auto-cols-fr md:-mx-3">
+            {rows.map(({ p, period, start }) => (
+              <div key={p.id} className="tl-item min-w-0 flex flex-col md:px-3">
+                {start && <p className="order-1 md:order-3 f-arcade text-[18px] md:text-[24px] leading-none md:mt-1">{start}</p>}
+                {period && <p className="order-2 md:order-4 mt-2.5 f-pixel text-[11px] muted">{rangeOf(period)}</p>}
+                <div className="tl-axis hidden md:block md:order-2" aria-hidden="true"><span className="node" /></div>
+                <article className="order-3 md:order-1 mt-5 md:mt-0 flex-1 pxb p-5 flex flex-col" style={{ background: 'var(--panel)' }}>
+                  {p.cover && (
+                    <a href={`#p-${p.id}`} className="thumb mb-5" aria-label={`${p.title}(으)로 이동`}>
+                      <img src={img(p, p.cover)} alt="" loading="lazy" />
+                      <span className="glass" aria-hidden="true" />
+                    </a>
+                  )}
+                  <p className="f-arcade text-[9px] acc">{t('en.project')} {pad(projects.indexOf(p) + 1)}</p>
+                  <a href={`#p-${p.id}`} className="mt-2 f-pixel font-bold text-[19px] leading-snug hover:text-[color:var(--acc)] break-keep">{p.title}</a>
+                  {p.tagline && <p className="mt-2 text-[14px] leading-[1.65] txt break-keep clamp3"><Rich text={p.tagline} /></p>}
+                  {(p.tags || []).length > 0 && <div className="mt-4 flex flex-wrap gap-2">{p.tags.slice(0, 4).map((g, k) => <span key={k} className="tag pxb2">{g}</span>)}</div>}
+                  <p className="mt-4 text-[13px] leading-[1.6] txt break-keep flex-1">
+                    <span className="f-pixel font-bold text-[11px] acc mr-2">{t('name.role-short')}</span>
+                    {p.team?.role ? <Rich text={p.team.role} /> : teamLabel(p.team, t)}
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2">
+                    <a className="tlink" href={deckUrl(p)} target="_blank" rel="noopener">{t('name.deck')} <Ext /></a>
+                    <a className="tlink" href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc-short')} <Ext /></a>
+                    {isUrl(p.links?.github) && <a className="tlink" href={p.links.github} target="_blank" rel="noopener">GitHub <Ext /></a>}
+                  </div>
+                </article>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Contact({ prof, projects, t, no }) {
+  const links = (prof.links || []).filter((l) => isUrl(l.url));
+  return (
+    <footer id="contact" className="sec">
+      <div className="wrap pt-24 md:pt-32 pb-20">
+        <Eyebrow no={no('contact')}>{t('page.nav-contact')}</Eyebrow>
+        <div className="mt-10 grid gap-10 md:grid-cols-3 md:gap-12">
+          {prof.email && (
+            <div className="min-w-0">
+              <p className="f-pixel font-bold text-[12px] muted">{t('page.print-email')}</p>
+              <a className="mt-3 inline-block text-[15px] hover:text-[color:var(--acc)] break-all" href={`mailto:${prof.email}`}>{prof.email}</a>
+            </div>
+          )}
+          {(isUrl(prof.github) || links.length > 0) && (
+            <div className="min-w-0">
+              <p className="f-pixel font-bold text-[12px] muted">LINKS</p>
+              <ul className="mt-3 space-y-2 text-[15px]">
+                {isUrl(prof.github) && <li><a className="hover:text-[color:var(--acc)] break-all" href={prof.github} target="_blank" rel="noopener">GitHub · {shortUrl(prof.github)} <Ext /></a></li>}
+                {links.map((l, k) => <li key={k}><a className="hover:text-[color:var(--acc)] break-all" href={l.url} target="_blank" rel="noopener">{l.label} · {shortUrl(l.url)} <Ext /></a></li>)}
+              </ul>
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="f-pixel font-bold text-[12px] muted">{t('page.nav-projects')}</p>
+            <ul className="mt-3 space-y-3">
+              {projects.map((p) => (
+                <li key={p.id} className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                  <a href={`#p-${p.id}`} className="f-pixel font-bold text-[14px] hover:text-[color:var(--acc)]">{p.title}</a>
+                  <a className="tlink" href={deckUrl(p)} target="_blank" rel="noopener">{t('name.deck')} <Ext /></a>
+                  <a className="tlink" href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc-short')} <Ext /></a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        <div className="mt-24 md:mt-32 flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+          <h2 className="giant" style={{ fontSize: 'clamp(34px, 7.4vw, 112px)' }}>{t('en.contact')}</h2>
+          <div className="min-w-0 lg:text-right">
+            {prof.email && <a className="f-pixel font-bold text-[20px] md:text-[26px] hover:text-[color:var(--acc)] break-all" href={`mailto:${prof.email}`}><span className="acc blink mr-2" aria-hidden="true">▶</span>{prof.email}</a>}
+            <p className="mt-3 f-pixel text-[12px] muted">{prof.name}{prof.job ? ` · ${prof.job}` : ''}</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+function Page({ pf, prof, projects, t }) {
+  const byId = Object.fromEntries(projects.map((p) => [p.id, p]));
+  const secs = [
+    { id: 'cover', label: 'HOME' },
+    prof.intro && { id: 'intro', label: t('page.nav-intro') },
+    (pf.skills || []).length && { id: 'stack', label: t('page.nav-stack') },
+    projects.length && { id: 'glance', label: t('page.nav-glance') },
+    ...projects.map((p) => ({ id: `p-${p.id}`, label: p.title })),
+    { id: 'contact', label: t('page.nav-contact') },
+  ].filter(Boolean).map((s, i) => ({ ...s, no: pad(i + 1) }));
+  const no = (id) => (secs.find((s) => s.id === id) || {}).no || '';
+  const active = useActive(secs.map((s) => s.id));
+  return (
+    <>
+      <Rail prof={prof} secs={secs} active={active} />
+      <Nav prof={prof} projects={projects} t={t} active={active} />
+      <main className="lg:pl-16">
+        <Cover pf={pf} prof={prof} projects={projects} t={t} no={no} />
+        <Intro prof={prof} t={t} no={no} />
+        <Stack pf={pf} byId={byId} t={t} no={no} />
+        <Glance projects={projects} t={t} no={no} />
+        {projects.map((p, i) => <Project key={p.id} p={p} i={i} n={projects.length} t={t} no={no} />)}
+        <Contact prof={prof} projects={projects} t={t} no={no} />
+      </main>
+    </>
+  );
+}
+
+function App() {
+  const [state, setState] = useState({ ok: false });
+  useEffect(() => {
+    (async () => {
+      try {
+        const [t, pf] = await Promise.all([loadStrings(), fetch('../data/portfolio.json', { cache: 'no-cache' }).then((r) => r.json())]);
+        const projects = (await Promise.all((pf.projects || []).map((id) =>
+          fetch(`../data/projects/${encodeURIComponent(id)}.json`, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null)))).filter(Boolean);
+        if (USE_PROFILE_ACCENT && pf.settings?.accent) document.documentElement.style.setProperty('--acc', pf.settings.accent);
+        const prof = pf.profile || {};
+        document.title = `${prof.name ? prof.name + ' · ' : ''}${t('name.portfolio')}`;
+        setState({ ok: true, t, pf, prof, projects });
+      } catch (e) {
+        setState({ ok: false, err: String(e) });
+      }
+    })();
+  }, []);
+  if (state.err) return <p className="px-6 py-24 muted">데이터를 읽지 못했습니다. 로컬 서버로 열었는지 확인하세요. ({state.err})</p>;
+  if (!state.ok) return <p className="px-6 py-24 muted">불러오는 중…</p>;
+  return <Page {...state} />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

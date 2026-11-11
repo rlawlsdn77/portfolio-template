@@ -12,6 +12,7 @@
     "name": "홍길동",
     "nameEn": "Gildong Hong",
     "headline": "구조를 설명할 줄 아는 유니티 클라이언트 개발자",
+    "job": "profile.md '직무' 그대로(선택, 없으면 이 필드를 뺌) — 한 줄 정체성 아래 작고 흐린 줄",
     "intro": "profile.md 자기소개를 줄바꿈까지 그대로",
     "email": "you@example.com",
     "github": "https://github.com/your-id",

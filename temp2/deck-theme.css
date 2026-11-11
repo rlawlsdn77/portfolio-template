@@ -1,0 +1,43 @@
+/* ─────────────────────────────────────────────────────────────
+   temp2 전용 발표 덱 테마 (temp2/deck.html만 싣음 — 원본 project.html·doc.html·index.html은 theme/theme.css 그대로)
+   기준: temp2/index.html(레트로 게임풍 다크) — 검은 초록빛 바탕 · CRT 초록 강조 하나 · 각진 카드와 네모 버튼 · 고정폭 영문 라벨 · 광채 없음
+   규칙은 theme/theme.css와 같음(.claude/skills/portfolio-theme/rules.md): 영문 글꼴 @import + :root { --t-… } 한 블록만.
+   덱은 장면마다 글자 크기를 재서 배치하므로 크기·간격·한글 글꼴을 바꾸는 규칙은 넣지 않음(픽셀 한글 글꼴·주사선은 temp2 페이지에만).
+   ───────────────────────────────────────────────────────────── */
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.3.0/latin-700.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.3.0/latin-800.css");
+
+:root {
+  /* ① 바탕과 글자 — temp2 페이지의 --bg · --ink · 본문 80% · 보조 56% · 선 12%/24% · 판 4%를 바탕 위에서 섞은 색 */
+  --t-scheme: dark;
+  --t-bg: #0A0D0B;
+  --t-surface: #131614;
+  --t-ink: #E9EEE6;
+  --t-body: #BCC1BA;
+  --t-muted: #878B86;
+  --t-line: #252825;
+  --t-line-2: #404340;
+
+  /* ② 강조색 — CRT 초록 하나(짝 색 없음) */
+  --t-accent: #7BE38F;
+  --t-accent-2: #7BE38F;
+  --t-accent-3: #7BE38F;
+
+  /* ③ 모양 — 픽셀 화면처럼 모두 각지게 */
+  --t-radius: 0px;
+  --t-pill: 0px;
+  --t-shadow: rgb(0 0 0 / .8);
+
+  /* ④ 영문 라벨 글꼴 — 고정폭(터미널) */
+  --t-display: 'JetBrains Mono';
+
+  /* ⑤ 효과 — 단색 라벨 · 단색 배지 · 광채 없음 */
+  --t-grad: linear-gradient(var(--accent-ink), var(--accent-ink));
+  --t-badge: var(--accent-fill);
+  --t-glow: 0;
+  --t-mark: 0;
+
+  /* 코드 판 — 바탕보다 한 단 어둡게 */
+  --t-code-bg: #070908;
+  /* 다이어그램 판은 어두운 바탕이라 기본(밝은 판) 그대로 */
+}

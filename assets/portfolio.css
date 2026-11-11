@@ -105,6 +105,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .hero h1 { margin-top: 18px; font-size: clamp(44px, 7.5vw, 76px); font-weight: 800; line-height: 1.08; letter-spacing: -.035em; }
 .hero h1 .en { display: block; width: fit-content; margin-top: 12px; font-family: var(--display); font-size: clamp(17px, 2.1vw, 22px); font-weight: 800; letter-spacing: .02em; color: var(--accent-ink); }
 .headline { margin-top: 26px; max-width: 46rem; font-size: clamp(20px, 2.6vw, 27px); font-weight: 700; line-height: 1.45; letter-spacing: -.015em; }
+.job { margin-top: 10px; font-size: clamp(13px, 1.5vw, 15px); font-weight: 600; color: var(--muted); opacity: .8; }   /* 한 줄 정체성 아래 작고 흐린 직무 줄(profile.job) */
 .hero .btns { margin-top: 36px; }
 
 /* ② 자기소개 */
@@ -244,6 +245,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
   .hero h1 { font-size: 34pt; }
   .hero h1 .en { font-size: 13pt; }
   .headline { font-size: 15pt; margin-top: 12pt; }
+  .job { font-size: 9.5pt; margin-top: 4pt; }
   .upd { font-size: 9pt; }
   .purls { display: grid; grid-template-columns: max-content 1fr; gap: 3pt 12pt; margin-top: 14pt; font-size: 9pt; }
   .purls > div { display: contents; }
