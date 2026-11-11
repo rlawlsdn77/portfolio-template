@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>포트폴리오</title>
-<!-- /portfolio-custom 직접 생성 모드 — 종이 카탈로그 · 가로 선반 · 한번에 보기.
+<!-- /portfolio-custom 직접 생성 모드(temp1) — 종이 카탈로그 · 가로 선반 · 한번에 보기 · 기능 소개.
      내용은 ../data/*.json, UI 문구는 ../theme/strings.tsv에서 읽습니다(이 파일에 내용을 복사하지 않음). -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -63,6 +63,9 @@
   .seg { position: relative; display: inline-flex; border: 1px solid #A8A49B; }
   .seg button { position: relative; z-index: 1; height: 34px; padding: 0 14px; transition: color .45s var(--ease); white-space: nowrap; }
   .seg .ind { position: absolute; top: 0; bottom: 0; background: #1F3FB0; transition: transform .6s var(--ease), width .6s var(--ease); }
+  /* 기능 소개: 프로젝트를 바꾸면 아래에서 밀려 올라오며 드러남(흐려지기 없음) */
+  .reveal { animation: reveal .8s var(--ease) both; }
+  @keyframes reveal { from { transform: translateY(28px); clip-path: inset(0 0 100% 0); } to { transform: none; clip-path: inset(0 0 -40px 0); } }
   .clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .clamp3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
@@ -96,6 +99,7 @@ const FALLBACK = {
   'page.stack-note': '근거 프로젝트와 함께', 'page.glance': '프로젝트 요약', 'page.nav-intro': '소개', 'page.nav-stack': '{page.stack}',
   'page.nav-projects': '프로젝트', 'page.nav-glance': '한눈에 보기', 'page.nav-contact': '연락처', 'en.portfolio': 'PORTFOLIO', 'en.about': 'ABOUT ME',
   'en.skills': 'SKILLS', 'en.project': 'PROJECT', 'en.feature': 'FEATURE', 'en.glance': 'AT A GLANCE', 'en.contact': 'CONTACT',
+  'name.portfolio': '포트폴리오', 'page.features': '기능 소개', 'page.see-in-deck': '{name.deck}에서 보기', 'page.deck-all': '{name.deck} 전체',
 };
 async function loadStrings() {
   const table = { ...FALLBACK };
@@ -125,6 +129,22 @@ function Rich({ text }) {
 const pad = (n) => String(n).padStart(2, '0');
 const img = (p, src) => `../src/${p.id}/${src}`;
 const metaOf = (p, label) => (p.meta || []).find((m) => m.label === label)?.value || '';
+const deckUrl = (p, sid = '') => `../project.html?p=${encodeURIComponent(p.id)}${sid ? `#s=${sid}` : ''}`;
+const docUrl = (p) => `../doc.html?p=${encodeURIComponent(p.id)}`;
+// 기능 절(section) → 발표 덱 장면 id (원본 포트폴리오 문서와 같은 규칙)
+const norm = (s) => String(s || '').replace(/[`*_~]/g, '').replace(/\s+/g, ' ').trim();
+const keyOk = (k) => /^[a-z][a-z0-9-]{1,31}$/.test(k || '') && !/^s-\d+$/.test(k);
+function deckScene(p, section) {
+  const want = norm(section);
+  if (!want || !p.deck?.slides?.length) return '';
+  const last = (x) => norm((x.sectionPath || []).slice(-1)[0]);
+  const find = (list) => list.find((x) => last(x) === want) || list.find((x) => (x.sectionPath || []).some((s) => norm(s) === want));
+  const sl = find(p.deck.slides);
+  if (sl) return keyOk(sl.key) ? `d-${sl.key}` : '';
+  const hid = find(p.deck.base || []);
+  return hid && keyOk(hid.chapter) && p.deck.slides.some((x) => x.chapter === hid.chapter) ? `ch-${hid.chapter}` : '';
+}
+const scrollToId = (id) => setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }), 30);
 
 function Arrow({ dir = 1 }) {
   return (
@@ -137,8 +157,8 @@ function Arrow({ dir = 1 }) {
 function ProjectLinks({ p, t, compact }) {
   const L = p.links || {};
   const items = [
-    { href: `../project.html?p=${encodeURIComponent(p.id)}`, label: t('name.deck'), primary: true },
-    { href: `../doc.html?p=${encodeURIComponent(p.id)}`, label: t('name.doc') },
+    { href: deckUrl(p), label: t('name.deck'), primary: true },
+    { href: docUrl(p), label: t('name.doc') },
     L.github ? { href: L.github, label: 'GitHub', ext: true } : null,
     L.video ? { href: L.video, label: t('name.video'), ext: true } : null,
     ...((L.extra || []).filter((x) => x && x.url).map((x) => ({ href: x.url, label: x.label, ext: true }))),
@@ -202,6 +222,12 @@ function Tape({ p, i, total, open, onOpen, t }) {
                   <span className="min-w-0 text-[14px] font-semibold">{h.title}</span>
                 </li>
               ))}
+              <li className="pt-[10px]">
+                <button type="button" className="lbl text-cobalt border-b border-cobalt/40 hover:border-cobalt pb-[3px]"
+                        onClick={(e) => { e.stopPropagation(); scrollToId('features'); }}>
+                  {t('page.features')} — 기능 · 구현 · 선택 이유 ↓
+                </button>
+              </li>
             </ol></div>
           )}
           <div className="mask"><div className="rise flex flex-wrap gap-[6px]" style={d(6)}>
@@ -215,7 +241,7 @@ function Tape({ p, i, total, open, onOpen, t }) {
 }
 
 // ── 한번에 보기: 세 프로젝트를 짧은 설명과 함께 ──
-function Glance({ projects, t, onPick }) {
+function Glance({ projects, t, onPick, onFeatures }) {
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {projects.map((p, i) => {
@@ -236,12 +262,105 @@ function Glance({ projects, t, onPick }) {
               <p className="text-[14px] leading-[1.6] text-body clamp3">{p.tagline}</p>
               <p className="text-[12.5px] text-muted">{metaOf(p, '기간')}</p>
               <div className="flex flex-wrap gap-[6px]">{(p.tags || []).slice(0, 4).map((g) => <span key={g} className="tag">{g}</span>)}</div>
+              {(p.highlights || []).length > 0 && (
+                <ol className="border-t border-rule mt-1">
+                  {p.highlights.map((h, k) => (
+                    <li key={k} className="flex items-baseline gap-3 py-[7px] border-b border-rule">
+                      <span className="lbl text-cobalt shrink-0">{pad(k + 1)}</span>
+                      <span className="min-w-0 text-[13.5px] font-semibold">{h.title}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+              <button type="button" className="self-start lbl text-cobalt border-b border-cobalt/40 hover:border-cobalt pb-[3px]" onClick={() => onFeatures(i)}>
+                {t('page.features')} ↓
+              </button>
               <div className="mt-auto pt-3"><ProjectLinks p={p} t={t} compact /></div>
             </div>
           </article>
         );
       })}
     </div>
+  );
+}
+
+// ── 기능 소개: 고른 프로젝트의 기능마다 기능 · 구현 · 선택 이유 (+ 그 기능 절의 화면) ──
+function Features({ projects, active, setActive, t }) {
+  const p = projects[active];
+  if (!p) return null;
+  const hl = (p.highlights || []).slice(0, 4);
+  const cap = (c) => (typeof c === 'string' ? c : c?.text || '');
+  const rows = [['기능', 'what'], ['구현', 'how'], ['선택 이유', 'why']];
+  return (
+    <section id="features" className="pt-14 pb-20 border-b border-ink scroll-mt-16">
+      <div className="flex flex-wrap items-end justify-between gap-5 mb-10">
+        <div>
+          <span className="lbl text-cobalt">{t('en.feature')} · {t('page.features')}</span>
+          <h2 className="font-serif font-bold text-[36px] md:text-[44px] leading-[1.05] tracking-[-.02em] mt-3">{t('page.features')}</h2>
+        </div>
+        <Seg value={active} onChange={setActive} items={projects.map((x, i) => ({ value: i, label: <>{pad(i + 1)}<span className="hidden sm:inline">&nbsp;{x.title}</span></> }))} />
+      </div>
+
+      <div key={p.id} className="grid lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] gap-10 lg:gap-14">
+        {/* 왼쪽: 프로젝트 · 개발 의도 · 링크 */}
+        <aside className="lg:sticky lg:top-24 self-start flex flex-col gap-5 min-w-0 reveal">
+          <span className="lbl text-muted">{t('en.project')} {pad(active + 1)} / {pad(projects.length)}</span>
+          <h3 className="font-serif font-bold text-[34px] leading-[1.08] tracking-[-.02em]">{p.title}</h3>
+          <p className="text-[14px] leading-[1.6] text-body">{p.tagline}</p>
+          {p.intent?.text && (
+            <div className="border-l-2 border-cobalt pl-4">
+              <span className="lbl text-cobalt">{t('name.intent')}</span>
+              <p className="text-[14px] leading-[1.65] text-ink mt-2"><Rich text={p.intent.text} /></p>
+            </div>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <a className="btn primary" href={deckUrl(p)} target="_blank" rel="noopener">{t('page.deck-all')} <span aria-hidden="true">↗</span></a>
+            <a className="btn" href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc')} <span aria-hidden="true">↗</span></a>
+          </div>
+        </aside>
+
+        {/* 오른쪽: 기능 목록 */}
+        <ol className="flex flex-col min-w-0">
+          {hl.map((h, k) => {
+            const sid = deckScene(p, h.section);
+            const has = h.image?.src;
+            return (
+              <li key={k} className="border-t border-ink pt-6 pb-9 reveal" style={{ animationDelay: `${80 + k * 90}ms` }}>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <span className="lbl text-cobalt">{t('en.feature')} {pad(k + 1)}</span>
+                    <h4 className="font-serif font-bold text-[26px] md:text-[30px] leading-[1.15] tracking-[-.015em] mt-2">{h.title}</h4>
+                  </div>
+                  <a className="btn !h-9 !px-3 !text-[12px]" href={deckUrl(p, sid)} target="_blank" rel="noopener"
+                     aria-label={`${norm(h.title)} — ${t('page.see-in-deck')} (새 탭)`}>
+                    {t('page.see-in-deck')} <span aria-hidden="true">↗</span>
+                  </a>
+                </div>
+                <div className={'grid gap-6 mt-5 ' + (has ? 'xl:grid-cols-[minmax(0,1fr)_minmax(0,340px)]' : '')}>
+                  <dl className="flex flex-col min-w-0">
+                    {rows.filter(([, f]) => h[f]).map(([label, f]) => (
+                      <div key={f} className="grid grid-cols-[76px_minmax(0,1fr)] md:grid-cols-[96px_minmax(0,1fr)] gap-3 py-3 border-b border-rule">
+                        <dt className="lbl text-muted pt-[5px]">{label}</dt>
+                        <dd className="text-[15px] leading-[1.7] text-body"><Rich text={h[f]} /></dd>
+                      </div>
+                    ))}
+                  </dl>
+                  {has && (
+                    <figure className="min-w-0">
+                      <div className="border border-rule bg-ink/5 overflow-hidden">
+                        <img src={img(p, h.image.src)} alt={cap(h.image.caption) || h.title} className="w-full h-auto block"
+                             {...(h.image.w && h.image.h ? { width: h.image.w, height: h.image.h } : {})} />
+                      </div>
+                      {cap(h.image.caption) && <figcaption className="text-[12.5px] leading-[1.5] text-muted mt-2">{cap(h.image.caption)}</figcaption>}
+                    </figure>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </section>
   );
 }
 
@@ -312,12 +431,13 @@ function App() {
   const P = pf.profile || {};
   const n = projects.length;
   const go = (d) => setActive((a) => (a + d + n) % n);
-  const pick = (i) => { setActive(i); setView('shelf'); document.getElementById('projects')?.scrollIntoView(); };
+  const pick = (i) => { setActive(i); setView('shelf'); scrollToId('projects'); };
+  const showFeatures = (i) => { setActive(i); scrollToId('features'); };
   const byId = Object.fromEntries(projects.map((p, i) => [p.id, i]));
 
   const nav = [
     ['#intro', t('page.nav-intro')], ['#projects', t('page.nav-projects'), 'shelf'], ['#glance', t('page.nav-glance'), 'glance'],
-    ['#stack', t('page.nav-stack')], ['#contact', t('page.nav-contact')],
+    ['#features', t('page.features')], ['#stack', t('page.nav-stack')], ['#contact', t('page.nav-contact')],
   ];
 
   return (
@@ -390,9 +510,12 @@ function App() {
               </div>
             </>
           ) : (
-            <Glance projects={projects} t={t} onPick={pick} />
+            <Glance projects={projects} t={t} onPick={pick} onFeatures={showFeatures} />
           )}
         </section>
+
+        {/* 기능 소개 */}
+        <Features projects={projects} active={active} setActive={setActive} t={t} />
 
         {/* 기술 스택 */}
         {(pf.skills || []).length > 0 && (
