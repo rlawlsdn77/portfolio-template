@@ -4,15 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>포트폴리오</title>
-<!-- /portfolio-custom 직접 생성 모드(temp2) — 레트로 게임풍 다크.
-     배치 참고: junhy96.github.io/Portfoliojunhy 의 골격(왼쪽 세로 절 번호 레일 · 위 고정 메뉴 · 절마다 "번호 — 이름" + 큰 영문 제목 ·
-     첫 화면 그림 왼쪽/글 오른쪽 + 번호 타일 3개 + 2열 목록 · 가로 타임라인 · 연락처 3단 + 큰 제목). 레퍼런스의 글·그림·로고는 쓰지 않음.
-     절 순서: 머리 → 자기소개 → 기술 스택 → 한눈에 보기(가로 타임라인 + 대표 이미지, 프로젝트 앞) → 프로젝트마다 소개 + 기능 소개 → 연락처.
-     프로젝트 순서는 data/portfolio.json(profile.md "프로젝트 순서")을 따름. 위 메뉴 [포트폴리오 PDF]는 원본 포트폴리오 문서(../index.html, A4)를
-     보이지 않는 틀에 불러 그 문서의 인쇄 창을 띄움(실패하면 원본을 새 탭으로).
-     레트로 요소: 픽셀 글꼴(Press Start 2P · Galmuri11), 모서리가 깎인 픽셀 테두리, 주사선, CRT 화면(대표 이미지 순환), RPG 대화창(자기소개·개발 의도).
-     내용은 ../data/*.json, UI 문구는 ../theme/strings.tsv에서 읽습니다(이 파일에 내용을 복사하지 않음).
-     색 3개: 바탕 --bg · 글자 --ink · 강조 --acc(CRT 초록). 프로필 강조색(settings.accent)을 쓰려면 아래 USE_PROFILE_ACCENT = true. -->
+<!-- /portfolio-custom 직접 생성 모드(temp2) — 레트로 게임풍 다크, "게임 한 판형" + 한 장씩 넘기는 스테이지.
+     세로(▲ ▼ · 휠 · PageUp/Down): 타이틀 → 상태창 → 스킬 → 월드맵 → 프로젝트마다 한 장 → 엔딩 크레딧. 넓고 높은 화면에서는 scroll-snap으로 한 번에 한 장.
+     가로(◀ ▶ 키 · 탭 · 막대 · 옆 화살표 · 휴대폰은 밀기): 프로젝트 한 장 안에서 01 시작 → 02 퀘스트(기능) → 03 보스전(트러블슈팅) → 04 클리어(결과·스크린샷).
+     월드맵에서는 ◀ ▶ 로 스테이지를 고르고 Enter(또는 고른 노드를 한 번 더 누르기)로 입장. 프로젝트가 5개를 넘으면 WORLD 1 · 2 …로 나뉨.
+     레트로 요소: 픽셀 글꼴(Press Start 2P · Galmuri11), 모서리가 깎인 픽셀 테두리, 주사선(바탕에만), CRT 화면, RPG 대화창, 픽셀 커서, 눌림 버튼, 클릭 불꽃.
+     내용은 ../data/*.json(기능 = highlights, 보스전 = troubleshooting, 클리어 = retro.achieved, 스크린샷 = screenshots), UI 문구는 ../theme/strings.tsv.
+     BOSS·QUEST·STAGE CLEAR 같은 게임 라벨은 이 파일에 적혀 있음(문구 표에 없는 temp2 전용 라벨).
+     위 메뉴 [포트폴리오 PDF]는 원본 포트폴리오 문서(../index.html, A4)를 보이지 않는 틀에 불러 그 문서의 인쇄 창을 띄움(실패하면 원본을 새 탭으로).
+     색 3개: 바탕 --bg · 글자 --ink · 강조 --acc(CRT 초록). 프로필 강조색(settings.accent)을 쓰려면 아래 USE_PROFILE_ACCENT = true(커서 색은 CSS --cur-hot에 따로 적혀 있음).
+     배치 원칙: ../theme/layout-principles.md ("temp2 — 한 장씩 넘기는 스테이지") -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
@@ -31,23 +32,31 @@
     --panel: rgba(233, 238, 230, .04);
     --acc-deep: color-mix(in srgb, var(--acc) 30%, var(--bg));
     --acc-soft: color-mix(in srgb, var(--acc) 13%, transparent);
+    --acc-line: color-mix(in srgb, var(--acc) 45%, transparent);
     --arcade: 'Press Start 2P', 'Galmuri11', monospace;
     --pixel: 'Galmuri11', 'Pretendard Variable', Pretendard, system-ui, sans-serif;
     --sans: 'Pretendard Variable', Pretendard, system-ui, -apple-system, 'Segoe UI', sans-serif;
     --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+    --ease: cubic-bezier(.2, .8, .2, 1);
+    /* 픽셀 커서: 평소 = 흰 화살표, 누를 수 있는 곳 = 초록 화살표 */
+    --cur: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='30' viewBox='0 0 10 15' shape-rendering='crispEdges'%3E%3Cpath d='M.5.5v11l3-3 2 5 2-1-2-4.5h4z' fill='%23E9EEE6' stroke='%230A0D0B'/%3E%3C/svg%3E") 1 1, auto;
+    --cur-hot: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='30' viewBox='0 0 10 15' shape-rendering='crispEdges'%3E%3Cpath d='M.5.5v11l3-3 2 5 2-1-2-4.5h4z' fill='%237BE38F' stroke='%230A0D0B'/%3E%3C/svg%3E") 1 1, pointer;
   }
-  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; cursor: var(--cur); }
+  a, button, summary, [role="button"] { cursor: var(--cur-hot); }
+  button:disabled { cursor: var(--cur); }
   body {
     margin: 0; background-color: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden;
     background-image: linear-gradient(rgba(233, 238, 230, .026) 1px, transparent 1px), linear-gradient(90deg, rgba(233, 238, 230, .026) 1px, transparent 1px);
     background-size: 32px 32px;
   }
   /* 주사선(CRT) — 바탕에만 아주 옅게. z-index -1 = 글·그림·상자 "아래"(본문 바탕 무늬 위).
-     화면 맨 위를 덮으면(예전 z-index 80) 스크린샷마다 검은 가로줄이 그어지고, 화면 배율 125%·150%에서는 줄 간격이 들쭉날쭉해져 더 눈에 띕니다. */
+     화면 맨 위를 덮으면 스크린샷마다 검은 가로줄이 그어지고, 화면 배율 125%·150%에서는 줄 간격이 들쭉날쭉해져 더 눈에 띕니다. */
   body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1;
     background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, .14) 2px 3px); }
+  body.lb-open { overflow: hidden; }
   ::selection { background: var(--acc); color: var(--bg); }
-  a:focus-visible, button:focus-visible { outline: 2px dashed var(--acc); outline-offset: 5px; }
+  a:focus-visible, button:focus-visible { outline: 2px dashed var(--acc); outline-offset: 4px; }
 
   .f-arcade { font-family: var(--arcade); }
   .f-pixel { font-family: var(--pixel); }
@@ -58,89 +67,233 @@
   @media (min-width: 768px) { .wrap { padding: 0 40px; } }
   @media (min-width: 1280px) { .wrap { padding: 0 56px; } }
   .sec { border-top: 1px solid var(--line); }
+  .pad { padding-top: 64px; padding-bottom: 64px; }
 
-  /* 픽셀 테두리: 네 모서리가 한 칸씩 깎인 사각형 (그림자 4개) */
   .pxb { --pc: var(--line2); box-shadow: 0 -3px 0 0 var(--pc), 0 3px 0 0 var(--pc), -3px 0 0 0 var(--pc), 3px 0 0 0 var(--pc); }
   .pxb2 { --pc: var(--line2); box-shadow: 0 -2px 0 0 var(--pc), 0 2px 0 0 var(--pc), -2px 0 0 0 var(--pc), 2px 0 0 0 var(--pc); }
+  .panel { background: var(--panel); }
+
+  /* 눌림 버튼: 올리면 떠오르며 그림자, 누르면 꺼짐 (pxb2 테두리와 함께 씀) */
+  .lift { transition: transform .1s steps(2), box-shadow .1s steps(2), background-color .15s, color .15s; }
+  .lift:hover:not(:disabled) { transform: translate(-2px, -2px);
+    box-shadow: 0 -2px 0 0 var(--pc), 0 2px 0 0 var(--pc), -2px 0 0 0 var(--pc), 2px 0 0 0 var(--pc), 4px 4px 0 2px var(--acc-deep); }
+  .lift:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 0 -2px 0 0 var(--pc), 0 2px 0 0 var(--pc), -2px 0 0 0 var(--pc), 2px 0 0 0 var(--pc); }
 
   @keyframes blink { 50% { opacity: 0; } }
+  @keyframes bob { 50% { translate: 0 -4px; } }
+  @keyframes slidein { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+  @keyframes popin { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes hit { 0% { opacity: 0; transform: translateX(-4px); } 25% { opacity: 1; transform: translateX(4px); } 50% { transform: translateX(-2px); } 100% { transform: none; } }
+  @keyframes drain { from { width: 100%; } to { width: 0; } }
+  @keyframes pop { 0% { transform: scale(1.6); } 100% { transform: scale(1); } }
+  @keyframes checkin { from { transform: scale(0); } to { transform: scale(1); } }
+  @keyframes spark { to { transform: translate(var(--dx), var(--dy)); opacity: 0; } }
+  @keyframes fadein { from { opacity: 0; } }
+  @keyframes bump { 30% { transform: translateX(-8px); } 60% { transform: translateX(5px); } 100% { transform: none; } }
   .blink { animation: blink 1.05s steps(1) infinite; }
+  .pop-in { animation: popin .3s var(--ease); }
 
-  .eyebrow { font-family: var(--pixel); font-weight: 700; font-size: 12px; line-height: 1.6; color: var(--acc); letter-spacing: .02em; }
+  .eyebrow { margin: 0; font-family: var(--pixel); font-weight: 700; font-size: 12px; line-height: 1.6; color: var(--acc); letter-spacing: .02em; }
   .eyebrow .n { font-family: var(--arcade); font-weight: 400; font-size: 10px; }
-  /* 큰 영문 제목은 들어 있는 칸 폭에 맞춰 줄임(원칙 2: "ABOUT / ME"처럼 짧은 낱말 하나 때문에 줄이 바뀌지 않게).
-     픽셀 글꼴은 한 글자 = 1em이라, 칸 폭의 12%(12cqi)면 8글자 제목이 한 줄에 들어감. 칸(container)이 없으면 화면 폭 기준 */
   :where(div, section, header):has(> .giant) { container-type: inline-size; }
-  .giant { font-family: var(--arcade); font-size: clamp(26px, min(5.2vw, 12cqi), 76px); line-height: 1.14; color: var(--ink);
+  .giant { margin: 0; font-family: var(--arcade); font-weight: 400; font-size: clamp(26px, min(5.2vw, 12cqi), 64px); line-height: 1.14; color: var(--ink);
     text-shadow: .07em .07em 0 var(--acc-deep); overflow-wrap: anywhere; }
-  .name-xl { font-family: var(--arcade); font-size: clamp(36px, 5.4vw, 84px); line-height: 1.14; color: var(--ink);
+  .name-xl { margin: 0; font-family: var(--arcade); font-weight: 400; font-size: clamp(36px, 5vw, 76px); line-height: 1.14; color: var(--ink);
     text-shadow: .07em .07em 0 var(--acc-deep); }
-  .ptitle { font-family: var(--arcade); font-size: clamp(26px, 4.4vw, 62px); line-height: 1.2; color: var(--ink);
+  .ptitle { margin: 0; font-family: var(--arcade); font-weight: 400; font-size: clamp(26px, 4.2vw, 56px); line-height: 1.2; color: var(--ink);
     text-shadow: .07em .07em 0 var(--acc-deep); overflow-wrap: anywhere; }
+  .h-arc { margin: 0; font-family: var(--arcade); font-weight: 400; line-height: 1.25; }
 
   /* 버튼 */
   .pbtn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; font-family: var(--pixel); font-weight: 700; font-size: 13px;
-    color: var(--ink); background: var(--panel); white-space: nowrap; transition: color .15s, background-color .15s; }
-  .pbtn:hover { --pc: var(--acc); color: var(--acc); }
-  .pbtn:active { transform: translate(2px, 2px); }
+    color: var(--ink); background: var(--panel); white-space: nowrap; }
+  .pbtn:hover:not(:disabled) { --pc: var(--acc); color: var(--acc); }
   .pbtn.pri { background: var(--acc); color: var(--bg); --pc: var(--acc); }
   .pbtn.pri:hover { color: var(--bg); filter: brightness(1.08); }
   .pbtn.sm { height: 32px; padding: 0 11px; font-size: 12px; }
-  .pbtn:disabled { cursor: progress; color: var(--muted); }
+  .pbtn:disabled { color: var(--muted); opacity: .45; }
+  .tlink { font-family: var(--pixel); font-weight: 700; font-size: 12px; color: var(--acc); }
+  .tlink:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .keyhint { margin: 0; font-family: var(--arcade); font-size: 8px; line-height: 1.8; color: var(--muted); }
+  .key { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 4px; margin: 0 2px; font-family: var(--arcade);
+    font-size: 8px; color: var(--ink); background: var(--panel); --pc: var(--line2); }
 
-  /* 첫 화면 번호 타일(메뉴 고르기) */
-  .tile { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; min-height: 108px; padding: 14px 16px;
-    background: var(--panel); color: var(--ink); transition: background-color .15s; }
-  .tile .no { font-family: var(--arcade); font-size: 10px; color: var(--muted); }
+  /* 타이틀 화면 */
+  .bezel { background: color-mix(in srgb, var(--ink) 5%, var(--bg)); padding: clamp(20px, 3vw, 40px); }
+  .press { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; }
+  .press .cur { visibility: hidden; }
+  .press:hover, .press:focus-visible { animation: none; }
+  .press:hover .cur, .press:focus-visible .cur { visibility: visible; animation: blink .5s steps(1) infinite; }
+  .tile { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; min-height: 88px; padding: 14px 16px;
+    background: var(--panel); color: var(--ink); }
+  .tile .no { font-family: var(--arcade); font-size: 9px; color: var(--muted); }
   .tile .lb { display: flex; align-items: center; gap: 6px; font-family: var(--pixel); font-weight: 700; font-size: 16px; line-height: 1.35; }
   .tile .cur { width: 0; overflow: hidden; color: inherit; }
-  .tile .arr { margin-left: auto; font-family: var(--sans); font-weight: 600; }
+  .tile .arr { margin-left: auto; font-family: var(--sans); font-weight: 600; transition: transform .15s steps(2); }
   .tile:hover { --pc: var(--acc); }
   .tile:hover .cur, .tile:focus-visible .cur { width: auto; animation: blink 1.05s steps(1) infinite; }
-  .tile:active { transform: translate(2px, 2px); }
+  .tile:hover .arr { transform: translateX(4px); }
   .tile.pri { background: var(--acc); color: var(--bg); --pc: var(--acc); }
   .tile.pri .no { color: color-mix(in srgb, var(--bg) 62%, transparent); }
+  .title-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; padding-top: 14px; border-top: 1px dashed var(--line);
+    font-family: var(--arcade); font-size: 9px; line-height: 1.8; color: var(--muted); }
 
   /* CRT 화면 */
-  .crt { background: color-mix(in srgb, var(--ink) 6%, var(--bg)); padding: 14px 14px 0; }
-  .crt .screen { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 18px / 14px; background: #000; }
+  .crt { background: color-mix(in srgb, var(--ink) 7%, var(--bg)); padding: 14px 14px 0; }
+  .crt.solo { padding-bottom: 14px; }
+  .crt .screen { position: relative; display: block; overflow: hidden; border-radius: 18px / 14px; background: #000; }
+  .crt .screen img { display: block; }
   /* 화면 유리: 가장자리만 어둡게(볼록 화면 느낌). 주사선은 그림 위에 검은 줄로 보여 넣지 않음 */
-  .crt .glass, .thumb .glass { position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, .5) 100%); }
-  .crt .bar { display: flex; align-items: center; gap: 12px; min-height: 52px; }
+  .glass { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, .5) 100%); }
+  .crt .bar { display: flex; align-items: center; gap: 12px; min-height: 48px; }
   .crt .led { width: 8px; height: 8px; background: var(--acc); flex: none; }
-  .crt .dot { width: 10px; height: 10px; background: var(--line2); }
-  .crt .dot.on { background: var(--acc); }
-
-  /* 한눈에 보기 카드의 작은 화면 */
-  .thumb { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 12px / 9px; background: #000; }
-  .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
-  .thumb:hover img { transform: scale(1.04); }
-  .thumb:hover { box-shadow: 0 0 0 2px var(--acc); }
+  .crt .dot { width: 28px; height: 28px; padding: 9px; background-clip: content-box; background-color: var(--line2); transition: background-color .15s; }
+  .crt .dot:hover { background-color: var(--acc-line); }
+  .crt .dot.on { background-color: var(--acc); }
 
   /* RPG 대화창 */
   .dialog { position: relative; padding: 26px 24px 30px; background: rgba(10, 13, 11, .94); --pc: var(--ink); }
   .dialog .who { position: absolute; top: -13px; left: 18px; padding: 3px 10px; background: var(--bg); font-family: var(--pixel); font-weight: 700; font-size: 12px;
     color: var(--acc); --pc: var(--acc); }
-  .dialog .more { position: absolute; right: 16px; bottom: 9px; font-size: 11px; color: var(--acc); }
+  .dialog .more { position: absolute; right: 16px; bottom: 8px; font-size: 11px; color: var(--acc); }
 
   /* 표·칩 */
-  .status { padding: 4px 20px; background: var(--panel); }
-  .status .row { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 14px; padding: 12px 0; border-bottom: 1px dashed var(--line); }
+  .status { margin: 0; padding: 2px 18px; background: var(--panel); }
+  .status .row { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
   .status .row:last-child { border-bottom: 0; }
   .status dt { font-family: var(--pixel); font-weight: 700; font-size: 12px; color: var(--acc); padding-top: 3px; }
-  .status dd { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--ink); word-break: keep-all; overflow-wrap: anywhere; }
-  .tag { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; font-family: var(--pixel); font-size: 11px; color: var(--body);
+  .status dd { margin: 0; font-size: 14px; line-height: 1.6; color: var(--ink); word-break: keep-all; overflow-wrap: anywhere; }
+  .tag { display: inline-flex; align-items: center; height: 26px; padding: 0 9px; font-family: var(--pixel); font-size: 11px; color: var(--body);
     background: var(--panel); white-space: nowrap; }
-  .chip { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; font-family: var(--pixel); font-weight: 700; font-size: 11px;
-    color: var(--acc); background: var(--acc-soft); white-space: nowrap; --pc: color-mix(in srgb, var(--acc) 45%, transparent); }
+  .chip { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; vertical-align: 1px; font-family: var(--pixel); font-weight: 700; font-size: 11px;
+    color: var(--acc); background: var(--acc-soft); white-space: nowrap; --pc: var(--acc-line); transition: background-color .12s, color .12s; }
   a.chip:hover { background: var(--acc); color: var(--bg); }
   .slot { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex: none; font-family: var(--arcade); font-size: 10px;
-    color: var(--acc); background: var(--acc-soft); --pc: color-mix(in srgb, var(--acc) 50%, transparent); }
+    color: var(--acc); background: var(--acc-soft); --pc: var(--acc-line); }
   .ic { font-family: var(--mono); font-size: .88em; padding: 1px 5px; background: rgba(233, 238, 230, .08); color: var(--ink); }
-  .tlink { font-family: var(--pixel); font-weight: 700; font-size: 12px; color: var(--acc); }
-  .tlink:hover { text-decoration: underline; text-underline-offset: 3px; }
-  .clamp3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* 상태창 · 스킬 */
+  .portrait { display: flex; align-items: center; justify-content: center; width: 84px; height: 84px; flex: none; font-family: var(--arcade); font-size: 20px;
+    color: var(--acc); background: var(--acc-soft); --pc: var(--acc-line); }
+  .skill:hover { --pc: var(--acc-line); }
+
+  /* 월드맵: 넓은 화면은 지도 + 옆 정보창, 좁은 화면은 위아래. 노드는 계단 길 위에(좁은 화면은 한 줄에 하나) */
+  .mapgrid { display: grid; gap: 28px; }
+  @media (min-width: 1024px) { .mapgrid { grid-template-columns: minmax(0, 1fr) 360px; align-items: stretch; } }
+  .map { position: relative; min-height: 420px; background-color: rgba(233, 238, 230, .03);
+    background-image: linear-gradient(rgba(233, 238, 230, .035) 1px, transparent 1px), linear-gradient(90deg, rgba(233, 238, 230, .035) 1px, transparent 1px);
+    background-size: 16px 16px; }
+  .map .path { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .map .path polyline { fill: none; stroke: rgba(233, 238, 230, .30); stroke-width: 4px; stroke-dasharray: 4 10; vector-effect: non-scaling-stroke; }
+  .map .world { position: absolute; left: 16px; top: 12px; display: flex; align-items: center; gap: 10px; }
+  .map .wbtn { width: 32px; justify-content: center; padding: 0; }
+  .node { position: absolute; transform: translate(-50%, -50%); padding: 0; border: 0; background: transparent; color: var(--ink); text-align: left; }
+  .node .thumb { position: relative; display: block; overflow: hidden; border-radius: 10px / 8px; background: #000; box-shadow: 0 0 0 2px var(--line2);
+    transition: box-shadow .15s; }
+  .node .thumb img { display: block; width: 100%; height: auto; }
+  .node .lbl { display: block; margin-top: 12px; padding: 8px 10px; background: rgba(10, 13, 11, .92); transition: background-color .15s; }
+  .node .you { position: absolute; left: 50%; top: -30px; transform: translateX(-50%); font-family: var(--arcade); font-size: 9px; color: var(--acc); white-space: nowrap;
+    animation: bob .7s steps(2) infinite; }
+  .node:hover .thumb, .node:focus-visible .thumb { box-shadow: 0 0 0 2px var(--acc); animation: bob .5s steps(2) infinite; }
+  .node:hover .lbl { --pc: var(--acc-line); }
+  .node[aria-pressed="true"] .thumb { box-shadow: 0 0 0 3px var(--acc); }
+  .node[aria-pressed="true"] .lbl { --pc: var(--acc); background: color-mix(in srgb, var(--acc) 10%, var(--bg)); }
+  .node:active .thumb { translate: 0 2px; animation: none; }
+  .node:focus-visible { outline-offset: 8px; }
+  @media (max-width: 719px) {
+    .map { display: grid; gap: 40px; padding: 64px 16px 24px; }
+    .map .path { display: none; }
+    .node { position: relative; left: auto !important; top: auto !important; transform: none; width: auto !important; max-width: none !important; }
+  }
+  /* 옆 정보창: 지도가 화면에 들어오면 미끄러져 나오고, 스테이지를 바꿀 때마다 내용이 다시 미끄러져 들어옴 */
+  .stage-info { position: relative; display: flex; flex-direction: column; padding: 22px; background: var(--panel); opacity: 0; transform: translateX(32px);
+    transition: opacity .5s var(--ease), transform .5s var(--ease); }
+  .stage-info.show { opacity: 1; transform: none; }
+  .stage-info .body { display: flex; flex-direction: column; flex: 1; animation: slidein .4s var(--ease); }
+  @media (min-width: 1024px) {
+    .stage-info::before { content: ''; position: absolute; left: -15px; top: 50%; margin-top: -6px; width: 6px; height: 12px; background: var(--acc);
+      clip-path: polygon(100% 0, 0 50%, 100% 100%); }
+  }
+
+  /* 프로젝트 한 장: 탭 + 막대 + 옆 화살표로 가로 넘김 */
+  .thead { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+  .tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .tab { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; font-family: var(--pixel); font-weight: 700; font-size: 12.5px;
+    color: var(--muted); background: var(--panel); white-space: nowrap; }
+  .tab .tn { font-family: var(--arcade); font-size: 8px; }
+  .tab:hover { color: var(--ink); --pc: var(--acc-line); }
+  .tab[aria-current="step"] { color: var(--bg); background: var(--acc); --pc: var(--acc); }
+  .tarr { width: 36px; height: 36px; justify-content: center; padding: 0; }
+  .tbar { position: relative; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 4px; height: 8px; margin-top: 14px; }
+  .tbar button { height: 8px; padding: 0; border: 0; background: rgba(233, 238, 230, .10); transition: background-color .12s; }
+  .tbar button:hover { background: var(--acc-line); }
+  .tbar .thumbbar { position: absolute; left: 0; top: 0; bottom: 0; width: calc((100% - (var(--n) - 1) * 4px) / var(--n)); background: var(--acc);
+    transform: translateX(calc(var(--k) * (100% + 4px))); transition: transform .45s var(--ease); pointer-events: none; }
+  .tview { position: relative; overflow: hidden; margin: 10px -8px 0; touch-action: pan-y; }
+  .tview.bump { animation: bump .3s steps(3); }
+  .track { display: flex; align-items: stretch; transition: transform .45s var(--ease); }
+  .pane { flex: 0 0 100%; min-width: 0; padding: 8px; box-sizing: border-box; transition: opacity .35s; }
+  .pane[aria-hidden="true"] { opacity: .2; }
+  .side { position: absolute; top: 50%; z-index: 3; width: 40px; height: 64px; margin-top: -32px; justify-content: center; padding: 0; display: none; font-size: 14px; }
+  @media (min-width: 1280px) { .side { display: inline-flex; } }
+  .side.l { left: 6px; } .side.r { right: 6px; }
+  .side:disabled { visibility: hidden; }
+  .side:not(:disabled) span { animation: blink 1.4s steps(1) infinite; }
+
+  /* 퀘스트 · 보스전 */
+  .qbtn { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 60px; padding: 10px 14px; text-align: left; color: var(--ink); background: var(--panel); }
+  .qbtn .cur { visibility: hidden; flex: none; font-size: 11px; color: var(--acc); }
+  .qbtn:hover { --pc: var(--acc-line); }
+  .qbtn:hover .cur { visibility: visible; animation: blink .6s steps(1) infinite; }
+  .qbtn[aria-pressed="true"] { background: var(--acc-soft); --pc: var(--acc); }
+  .qbtn[aria-pressed="true"] .cur { visibility: visible; animation: none; }
+  .qimg { display: block; max-width: 100%; max-height: clamp(160px, 30vh, 300px); width: auto; height: auto; }
+  .zoom { position: relative; display: inline-block; max-width: 100%; padding: 0; border: 0; background: transparent; vertical-align: top; transition: transform .1s steps(2); }
+  .zoom:hover { transform: translate(-2px, -2px); }
+  .zoom:hover img, .zoom:focus-visible img { --pc: var(--acc); }
+  .boss { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 11px 14px; text-align: left; color: var(--ink); background: var(--panel); }
+  .boss .bt { color: var(--muted); }
+  .boss .hp { display: block; height: 6px; background: rgba(233, 238, 230, .10); box-shadow: inset 0 0 0 1px rgba(233, 238, 230, .22); }
+  .boss .hp i { display: block; height: 100%; width: 0; background: var(--acc); }
+  .boss .hp i.drain { animation: drain .7s steps(7) forwards; }
+  .boss .cl { display: inline-block; }
+  .boss .cl.pop { color: var(--acc); animation: pop .45s steps(3); }
+  .boss:hover { --pc: var(--acc-line); }
+  .boss[aria-pressed="true"] { background: rgba(10, 13, 11, .94); --pc: var(--acc); }
+  .boss[aria-pressed="true"] .bt { color: var(--acc); }
+  .log { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 12px; }
+  .hit-in { animation: hit .32s steps(4); }
+  .clear { background: var(--acc-soft); --pc: var(--acc); }
+  /* 결과 글은 처음부터 그대로 보임(지연 없음). 클리어 화면으로 넘어올 때 체크 표시만 한 번에 톡 들어옴 */
+  .pane[aria-hidden="false"] .clear li svg { animation: checkin .25s var(--ease); }
+
+  /* 스크린샷: 올리면 아래 설명칸에 설명, 누르면 크게 (그림 위에는 아무것도 얹지 않음) */
+  .shots { display: flex; flex-wrap: wrap; gap: 12px; }
+  .shot { position: relative; display: block; padding: 0; border: 0; background: transparent; transition: transform .1s steps(2); }
+  .shot img { display: block; height: 76px; width: auto; }
+  .shot:hover { transform: translate(-2px, -2px); }
+  .shot:hover img, .shot:focus-visible img, .shot.on img { --pc: var(--acc); }
+  .shot-cap { min-height: 44px; margin-top: 14px; padding: 8px 12px; font-family: var(--pixel); font-size: 12px; line-height: 1.5; color: var(--body); word-break: keep-all;
+    background: rgba(10, 13, 11, .9); --pc: var(--line2); }
+
+  /* 크게 보기 */
+  .lbx { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 72px 76px; background: rgba(5, 7, 6, .93);
+    animation: fadein .2s ease-out; }
+  .lbx figure { margin: 0; max-width: min(1120px, 100%); padding: 12px; background: var(--bg); }
+  .lbx img { display: block; max-width: 100%; max-height: calc(100vh - 230px); width: auto; height: auto; margin: 0 auto; }
+  .lbx figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-top: 12px; font-family: var(--pixel); font-size: 13px; line-height: 1.5;
+    color: var(--ink); word-break: keep-all; }
+  .lbx .x { position: absolute; top: 16px; right: 16px; }
+  .lbx .nv { position: absolute; top: 50%; width: 44px; height: 44px; margin-top: -22px; justify-content: center; padding: 0; }
+  .lbx .nv.l { left: 16px; } .lbx .nv.r { right: 16px; }
+  @media (max-width: 719px) {
+    .lbx { padding: 64px 12px 84px; }
+    .lbx .nv { top: auto; bottom: 20px; margin-top: 0; }
+  }
+
+  /* 클릭 불꽃 */
+  .sparks { position: fixed; inset: 0; pointer-events: none; z-index: 95; }
+  .sparks i { position: absolute; width: 4px; height: 4px; margin: -2px 0 0 -2px; background: var(--acc); animation: spark .42s steps(5) forwards; }
 
   /* 왼쪽 세로 레일 (넓은 화면) */
   .rail { position: fixed; left: 0; top: 0; bottom: 0; width: 64px; z-index: 45; border-right: 1px solid var(--line); background: rgba(10, 13, 11, .94);
@@ -154,8 +307,12 @@
   .rail .it.on { color: var(--acc); }
   .rail .it.on::before { content: ''; position: absolute; left: -11px; top: 0; width: 10px; height: 10px; background: var(--acc); }
   .rail .lbl { max-width: 56px; text-align: center; font-family: var(--pixel); font-weight: 700; font-size: 10px; line-height: 1.35; word-break: keep-all; }
-  .rail .ico { display: flex; width: 32px; height: 32px; align-items: center; justify-content: center; color: var(--muted); }
-  .rail .ico:hover { color: var(--acc); }
+  .rail .tip { position: absolute; left: 30px; top: -5px; padding: 4px 8px; background: var(--bg); font-family: var(--pixel); font-weight: 700; font-size: 11px; color: var(--ink);
+    white-space: nowrap; opacity: 0; transform: translateX(-4px); pointer-events: none; transition: opacity .12s, transform .12s; --pc: var(--acc); }
+  .rail .it:hover .tip, .rail .it:focus-visible .tip { opacity: 1; transform: none; }
+  .rail .it.on .tip { display: none; }
+  .rail .ico { display: flex; width: 32px; height: 32px; align-items: center; justify-content: center; color: var(--muted); transition: color .12s, transform .1s steps(2); }
+  .rail .ico:hover { color: var(--acc); transform: translateY(-2px); }
 
   /* 머리 막대 */
   .nav { position: fixed; top: 0; right: 0; left: 0; z-index: 40; height: 64px; border-bottom: 1px solid var(--line); background: rgba(10, 13, 11, .86);
@@ -164,26 +321,14 @@
   .nav .m { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 64px; font-family: var(--pixel); font-weight: 700; font-size: 13px; color: var(--muted); }
   .nav .m:hover { color: var(--ink); }
   .nav .m .cur { visibility: hidden; color: var(--acc); font-size: 10px; }
+  .nav .m:hover .cur { visibility: visible; animation: blink .6s steps(1) infinite; }
   .nav .m.on { color: var(--ink); }
-  .nav .m.on .cur { visibility: visible; }
+  .nav .m.on .cur { visibility: visible; animation: none; }
   .nav .m.on::after { content: ''; position: absolute; left: 16px; right: 0; bottom: 14px; height: 2px; background: var(--acc); }
 
-  /* 가로 타임라인 */
-  .tl-item { position: relative; }
-  .tl-axis { position: relative; height: 44px; }
-  .tl-axis::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; border-top: 2px dashed var(--line2); }
-  .tl-axis .node { position: absolute; left: 12px; top: 50%; width: 14px; height: 14px; margin-top: -7px; background: var(--acc); }
-  /* 넓은 화면: 카드 사이 여백까지 축을 이어 그림(카드 폭은 셋 다 같게) */
-  @media (min-width: 768px) { .tl-axis { margin: 0 -12px; } .tl-axis .node { left: 24px; } }
-  @media (max-width: 767px) {
-    .tl-item { padding-left: 24px; border-left: 2px dashed var(--line2); padding-bottom: 36px; margin-left: 6px; }
-    .tl-item:last-child { padding-bottom: 0; }
-    .tl-item::before { content: ''; position: absolute; left: -8px; top: 4px; width: 14px; height: 14px; background: var(--acc); }
-  }
-
-  /* ── 스테이지: 화면 한 장 = 절 하나(레이아웃 원칙 1, 포트폴리오 A안 "한 장씩 넘기는 절") ──
+  /* ── 스테이지: 화면 한 장 = 절 하나(레이아웃 원칙 1, temp2 "한 장씩 넘기는 스테이지") ──
      넓고 충분히 높은 화면에서만 스냅 — 휠·↑↓·PageUp/Down 한 번에 한 스테이지(scroll-snap-stop: always: 빠르게 굴려도 건너뛰지 않음).
-     내용은 스테이지 가운데. 화면보다 긴 스테이지는 그 안에서 스크롤된 뒤 다음으로. 휴대폰·좁은 화면·인쇄는 예전처럼 흐르는 페이지 */
+     내용은 스테이지 가운데. 화면보다 긴 스테이지는 그 안에서 스크롤된 뒤 다음으로. 휴대폰·좁은 화면·인쇄는 흐르는 페이지 */
   .stage { position: relative; }
   @media screen and (min-width: 1024px) and (min-height: 700px) {
     html { scroll-snap-type: y mandatory; scroll-padding-top: 64px; }
@@ -191,21 +336,14 @@
              display: flex; flex-direction: column; justify-content: center; }
     .stage > .wrap { width: 100%; padding-top: clamp(14px, 3vh, 28px); padding-bottom: clamp(14px, 3vh, 28px); }
     #cover.stage { min-height: 100vh; min-height: 100svh; padding-top: 72px; padding-bottom: 12px; }
-    /* 한 화면에 들어가게: 스테이지 안 큰 제목은 한 단계 작게(1366×768 노트북 = 스테이지 704px까지) */
-    .stage .ptitle, #glance .giant { font-size: clamp(26px, 3.6vw, 48px); }
-    #cover .name-xl { font-size: clamp(36px, min(4.8vw, 8vh), 84px); }
-    #cover .tile { min-height: 76px; }
-    #cover .cv-list a { padding-top: 8px; padding-bottom: 8px; }
-    #glance .clamp3 { -webkit-line-clamp: 2; }
-    #glance article { padding: 16px; }
-    #glance .tl-axis { height: 34px; }
-    #glance .thumb { aspect-ratio: auto; height: clamp(120px, 21vh, 210px); }   /* 낮은 화면에서만 썸네일 높이를 줄임(가로로 조금 잘림 — 대표 그림 전체는 프로젝트 스테이지에) */
-    .stage .status .row { padding-top: 9px; padding-bottom: 9px; }
-    .fgrid > li { padding: 16px; }
+    /* 한 화면에 들어가게: 큰 제목은 한 단계 작게(1366×768 노트북 = 스테이지 704px까지) */
+    .stage .ptitle { font-size: clamp(26px, 3.4vw, 46px); }
+    .stage .giant { font-size: clamp(26px, min(4.2vw, 12cqi), 54px); }
+    #cover .name-xl { font-size: clamp(36px, min(4.6vw, 8vh), 80px); }
   }
   /* 스테이지에 들어서면 절 번호가 몇 번 깜빡임(게임의 스테이지 진입). 그림·글 위에는 아무것도 얹지 않음 */
   .stage.enter .eyebrow .n { animation: blink .16s steps(1) 5; }
-  /* 오른쪽 아래 화면 이동 표시: STAGE 05/11 ▲ ▼ */
+  /* 오른쪽 아래 화면 이동 표시: STAGE 05/08 ▲ ▼ */
   .hud { position: fixed; right: 22px; bottom: 20px; z-index: 46; display: none; align-items: center; gap: 8px; padding: 6px 8px 6px 14px;
          background: rgba(10, 13, 11, .92); --pc: var(--line2); }
   .hud .ct { font-family: var(--arcade); font-size: 10px; color: var(--muted); white-space: nowrap; }
@@ -213,19 +351,19 @@
   .hud button { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 28px; font-family: var(--arcade); font-size: 10px;
                 color: var(--ink); background: var(--panel); }
   .hud button:hover:not(:disabled) { color: var(--acc); --pc: var(--acc); }
-  .hud button:disabled { opacity: .3; cursor: default; }
-  /* 기능 스테이지: 카드 2열, 홀수 개면 마지막 카드가 두 칸 */
+  .hud button:disabled { opacity: .3; }
   @media screen and (min-width: 1024px) and (min-height: 700px) { .hud { display: flex; } }
-  @media (min-width: 1024px) { .fgrid.two > li:last-child:nth-child(odd) { grid-column: 1 / -1; } }
 
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
-    .blink, .tile:hover .cur, .tile:focus-visible .cur, .stage.enter .eyebrow .n { animation: none; }
-    .fade, .thumb img { transition: none !important; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .stage-info { opacity: 1; transform: none; }
   }
   @media print {
-    body::after, .rail, .nav, .hud { display: none !important; }
+    body::after, .rail, .nav, .hud, .sparks, .tbar, .side, .tarr { display: none !important; }
     body { background-image: none; }
+    .stage-info, .pane { opacity: 1 !important; transform: none !important; }
+    .track { transform: none !important; flex-direction: column; }
   }
 </style>
 <link rel="stylesheet" href="../theme/typeset.css"><!-- 줄바꿈 규칙(짧은 끝줄 막기): ../theme/layout-principles.md 원칙 2 -->
@@ -237,7 +375,7 @@
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
 <script type="text/babel" data-presets="react">
-const { useState, useEffect } = React;
+const { useState, useEffect, useRef } = React;
 const USE_PROFILE_ACCENT = false;   // true면 강조색을 profile.md 색(settings.accent)으로
 
 // ── 문구 표(theme/strings.tsv): 맨 끝 "내 문구" 칸 → 없으면 기본 문구 ──
@@ -245,10 +383,9 @@ const FALLBACK = {
   'name.portfolio': '포트폴리오', 'name.deck': '발표 덱', 'name.doc': '상세 기술문서', 'name.doc-short': '상세 문서', 'name.video': '시연 영상',
   'name.role': '내 역할', 'name.role-short': '역할', 'name.intent': '개발 의도', 'name.team': '팀 프로젝트', 'name.solo': '개인 프로젝트',
   'page.updated': '업데이트 {date}', 'page.intro': '자기소개', 'page.stack': '기술 스택', 'page.stack-note': '근거 프로젝트와 함께',
-  'page.project-no': '{en.project} {no} / {total}', 'page.features': '기능 소개', 'page.see-in-deck': '{name.deck}에서 보기', 'page.deck-all': '{name.deck} 전체',
-  'page.glance': '프로젝트 요약', 'page.nav-intro': '소개', 'page.nav-stack': '{page.stack}', 'page.nav-projects': '프로젝트', 'page.nav-glance': '한눈에 보기',
-  'page.nav-contact': '연락처', 'page.print-email': '이메일', 'ui.preparing': '준비 중…',
-  'en.portfolio': 'PORTFOLIO', 'en.about': 'ABOUT ME', 'en.skills': 'SKILLS', 'en.project': 'PROJECT', 'en.feature': 'FEATURE', 'en.glance': 'AT A GLANCE', 'en.contact': 'CONTACT',
+  'page.features': '기능 소개', 'page.see-in-deck': '{name.deck}에서 보기', 'page.deck-all': '{name.deck} 전체',
+  'page.glance': '프로젝트 요약', 'page.nav-glance': '한눈에 보기', 'page.nav-contact': '연락처', 'page.print-email': '이메일', 'ui.preparing': '준비 중…',
+  'en.portfolio': 'PORTFOLIO', 'en.skills': 'SKILLS', 'en.project': 'PROJECT',
 };
 async function loadStrings() {
   const table = { ...FALLBACK };
@@ -269,7 +406,6 @@ async function loadStrings() {
   return (k, vars = {}) => resolve(k).replace(/\{([a-z0-9-]+)\}/g, (m, v) => (v in vars ? vars[v] : m));
 }
 
-// `백틱` → 코드 글자
 function Rich({ text }) {
   if (!text) return null;
   return String(text).split(/(`[^`]+`)/g).map((p, i) => p.startsWith('`') && p.endsWith('`') && p.length > 1
@@ -301,6 +437,75 @@ function deckScene(p, section) {
   return hid && keyOk(hid.chapter) && p.deck.slides.some((x) => x.chapter === hid.chapter) ? `ch-${hid.chapter}` : '';
 }
 const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+// 기간 순서(시작 연월). 없으면 원래 순서
+const byPeriod = (projects) => projects.map((p, i) => ({ p, i, start: startOf(metaOf(p, /기간/)) }))
+  .sort((a, b) => (a.start && b.start ? a.start.localeCompare(b.start) : a.i - b.i)).map((r) => r.p);
+// 절로 이동(부드럽게) + 주소창 #도 바꿈. 스크롤이 끝나기 전에 누른 ◀ ▶ 도 가는 절에 들어가게 잠깐 기억(goingTo)
+let goingTo = { id: '', until: 0 };
+function goTo(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  goingTo = { id, until: Date.now() + 1200 };
+  el.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
+  try { history.replaceState(null, '', `#${id}`); } catch (e) { /* file:// 등 */ }
+}
+// 프로젝트 한 장으로 들어갈 때는 첫 세부 화면(01 시작)부터
+function enterStage(id) {
+  window.dispatchEvent(new CustomEvent('pf-enter', { detail: id }));
+  goTo(id);
+}
+// 화면에 들어왔는지(한 번만)
+function useSeen(ref, threshold = 0.3) {
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    if (!ref.current || !('IntersectionObserver' in window)) { setSeen(true); return; }
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setSeen(true); io.disconnect(); } }, { threshold });
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, []);
+  return seen;
+}
+
+// ── 키보드: ▲ ▼ = 스테이지(브라우저 기본 스크롤 + scroll-snap), ◀ ▶ = 지금 스테이지 안에서 고르기 ──
+// 스테이지마다 ◀ ▶ 처리기를 등록(월드맵 = 노드 고르기, 프로젝트 = 세부 화면 넘기기). Enter는 월드맵에서 입장
+const keyReg = new Map();
+function useKeyReg(id, handlers) {
+  const ref = useRef(handlers);
+  ref.current = handlers;
+  useEffect(() => {
+    keyReg.set(id, { move: (d) => ref.current.move?.(d), enter: () => ref.current.enter?.() });
+    return () => keyReg.delete(id);
+  }, [id]);
+}
+function useGameKeys(active) {
+  const cur = useRef(active);
+  cur.current = active;
+  useEffect(() => {
+    const on = (e) => {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (document.body.classList.contains('lb-open')) return;
+      const tg = e.target;
+      if (tg && tg.closest && tg.closest('input, textarea, select, [contenteditable="true"]')) return;
+      const h = keyReg.get(Date.now() < goingTo.until ? goingTo.id : cur.current);
+      if (!h) return;
+      const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+      if (d) { e.preventDefault(); h.move(d); return; }
+      if (e.key === 'Enter' && !(tg && tg.closest && tg.closest('a, button'))) { e.preventDefault(); h.enter(); }
+    };
+    window.addEventListener('keydown', on);
+    return () => window.removeEventListener('keydown', on);
+  }, []);
+}
+// 세로 목록(퀘스트·보스) 안 ▲ ▼: 키보드로 들어와 있을 때(:focus-visible)만 목록 안에서 고름. 마우스로 누른 뒤의 ▲ ▼ 는 스테이지 넘김 그대로
+function listKeys(e, k, n, pick, refs) {
+  const d = { ArrowDown: 1, ArrowUp: -1 }[e.key];
+  if (!d || !e.target.matches || !e.target.matches(':focus-visible')) return;
+  const to = k + d;
+  if (to < 0 || to >= n) return;
+  e.preventDefault();
+  pick(to);
+  requestAnimationFrame(() => refs.current[to]?.focus({ preventScroll: true }));
+}
 
 // [포트폴리오 PDF] — 원본 포트폴리오 문서(../index.html)는 A4 인쇄용으로 짜여 있음(제출 PDF).
 // 그 문서를 보이지 않는 틀에 불러 다 그려지고 그림까지 받은 뒤, 그 틀의 인쇄 창을 띄움. 이 페이지는 그대로 머묾.
@@ -338,7 +543,13 @@ function IconGithub() {
 function IconSave() {
   return <svg width="12" height="12" viewBox="0 0 6 6" fill="currentColor" shapeRendering="crispEdges" aria-hidden="true"><path d="M2 0h2v2h1v1H4v1H2V3H1V2h1zM0 5h6v1H0z" /></svg>;
 }
-function PdfButton({ t }) {
+function IconMail() {
+  return <svg width="18" height="14" viewBox="0 0 12 9" fill="currentColor" shapeRendering="crispEdges" aria-hidden="true"><path d="M0 0h12v1H0zM0 8h12v1H0zM0 1h1v7H0zM11 1h1v7h-1zM1 1h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 5h2v1H5zM7 4h1v1H7zM8 3h1v1H8zM9 2h1v1H9zM10 1h1v1h-1z" /></svg>;
+}
+function IconCheck() {
+  return <svg width="14" height="10" viewBox="0 0 7 5" fill="currentColor" shapeRendering="crispEdges" aria-hidden="true" className="flex-none mt-[7px] acc"><path d="M6 0h1v1H6zM5 1h1v1H5zM0 2h1v1H0zM4 2h1v1H4zM1 3h1v1H1zM3 3h1v1H3zM2 4h1v1H2z" /></svg>;
+}
+function PdfButton({ t, className = '' }) {
   const [busy, setBusy] = useState(false);
   const go = async () => {
     if (busy) return;
@@ -348,31 +559,41 @@ function PdfButton({ t }) {
     finally { setBusy(false); }
   };
   return (
-    <button type="button" className="pbtn pxb2 sm ml-auto md:ml-0" onClick={go} disabled={busy} aria-busy={busy} title="제출용 포트폴리오 문서(A4)를 PDF로 저장">
+    <button type="button" className={`pbtn pxb2 sm lift ${className}`} onClick={go} disabled={busy} aria-busy={busy} title="제출용 포트폴리오 문서(A4)를 PDF로 저장">
       {busy ? t('ui.preparing') : <>{t('name.portfolio')} PDF <IconSave /></>}
     </button>
-  );
-}
-function IconMail() {
-  return <svg width="18" height="14" viewBox="0 0 12 9" fill="currentColor" shapeRendering="crispEdges" aria-hidden="true"><path d="M0 0h12v1H0zM0 8h12v1H0zM0 1h1v7H0zM11 1h1v7h-1zM1 1h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 5h2v1H5zM7 4h1v1H7zM8 3h1v1H8zM9 2h1v1H9zM10 1h1v1h-1z" /></svg>;
-}
-
-function ProjectButtons({ p, t, small }) {
-  const L = p.links || {};
-  const cls = `pbtn pxb2${small ? ' sm' : ''}`;
-  return (
-    <div className="flex flex-wrap gap-3">
-      <a className={`${cls} pri`} href={deckUrl(p)} target="_blank" rel="noopener">{t('name.deck')} <Ext /></a>
-      <a className={cls} href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc')} <Ext /></a>
-      {isUrl(L.github) && <a className={cls} href={L.github} target="_blank" rel="noopener">GitHub <Ext /></a>}
-      {isUrl(L.video) && <a className={cls} href={L.video} target="_blank" rel="noopener">{t('name.video')} <Ext /></a>}
-      {(L.extra || []).filter((l) => isUrl(l.url)).map((l, k) => <a key={k} className={cls} href={l.url} target="_blank" rel="noopener">{l.label} <Ext /></a>)}
-    </div>
   );
 }
 
 function Eyebrow({ no, children, className = '' }) {
   return <p className={`eyebrow ${className}`}>{no && <><span className="n">{no}</span> — </>}{children}</p>;
+}
+
+// 클릭 불꽃: 링크·버튼을 누르면 그 자리에서 작은 픽셀 8개가 튐(움직임 줄이기 설정이면 없음)
+function useSparks() {
+  useEffect(() => {
+    if (reduceMotion()) return;
+    const layer = document.createElement('div');
+    layer.className = 'sparks';
+    layer.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(layer);
+    const on = (e) => {
+      if (e.button !== 0 || !e.target.closest || !e.target.closest('a, button')) return;
+      for (let i = 0; i < 8; i++) {
+        const s = document.createElement('i');
+        const ang = (Math.PI * 2 * i) / 8 + Math.random() * 0.5;
+        const d = 16 + Math.random() * 16;
+        s.style.left = `${e.clientX}px`;
+        s.style.top = `${e.clientY}px`;
+        s.style.setProperty('--dx', `${Math.round(Math.cos(ang) * d)}px`);
+        s.style.setProperty('--dy', `${Math.round(Math.sin(ang) * d)}px`);
+        layer.appendChild(s);
+        setTimeout(() => s.remove(), 460);
+      }
+    };
+    document.addEventListener('pointerdown', on);
+    return () => { document.removeEventListener('pointerdown', on); layer.remove(); };
+  }, []);
 }
 
 // 지금 보고 있는 절
@@ -388,16 +609,15 @@ function useActive(ids) {
   return active;
 }
 
-// 오른쪽 아래 화면 이동: STAGE 05/11 ▲ ▼ (넓고 높은 화면에서만 — CSS .hud)
+// 오른쪽 아래 화면 이동: STAGE 05/08 ▲ ▼ (넓고 높은 화면에서만 — CSS .hud)
 function Hud({ secs, active }) {
   const i = Math.max(0, secs.findIndex((s) => s.id === active));
-  const go = (k) => { const s = secs[k]; if (s) document.getElementById(s.id)?.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' }); };
   const last = i >= secs.length - 1;
   return (
     <div className="hud pxb2" role="group" aria-label="화면 이동">
       <span className="ct" aria-live="polite">STAGE <b>{secs[i]?.no}</b>/{pad(secs.length)}</span>
-      <button type="button" className="pxb2" onClick={() => go(i - 1)} disabled={i === 0} aria-label="이전 화면">▲</button>
-      <button type="button" className="pxb2" onClick={() => go(i + 1)} disabled={last} aria-label="다음 화면"><span className={last ? '' : 'blink'}>▼</span></button>
+      <button type="button" className="pxb2 lift" onClick={() => secs[i - 1] && goTo(secs[i - 1].id)} disabled={i === 0} aria-label="이전 화면">▲</button>
+      <button type="button" className="pxb2 lift" onClick={() => secs[i + 1] && goTo(secs[i + 1].id)} disabled={last} aria-label="다음 화면"><span className={last ? '' : 'blink'}>▼</span></button>
     </div>
   );
 }
@@ -406,13 +626,14 @@ function Rail({ prof, secs, active }) {
   const initials = (prof.nameEn || '').split(/\s+/).filter(Boolean).map((w) => w[0].toUpperCase()).join('').slice(0, 3);
   return (
     <aside className="rail" aria-label="절 이동">
-      <a href="#cover" className="logo pxb2" aria-label="맨 위로">{initials || '▶'}</a>
+      <a href="#cover" className="logo pxb2 lift" aria-label="맨 위로">{initials || '▶'}</a>
       <ol>
         {secs.map((s) => (
           <li key={s.id}>
-            <a href={`#${s.id}`} className={`it ${active === s.id ? 'on' : ''}`} aria-current={active === s.id ? 'true' : undefined} title={s.label}>
+            <a href={`#${s.id}`} className={`it ${active === s.id ? 'on' : ''}`} aria-current={active === s.id ? 'true' : undefined} aria-label={`${s.no} ${s.label}`}>
               <span>{s.no}</span>
               {active === s.id && <span className="lbl">{s.label}</span>}
+              <span className="tip pxb2" aria-hidden="true">{s.label}</span>
             </a>
           </li>
         ))}
@@ -426,13 +647,11 @@ function Rail({ prof, secs, active }) {
 }
 
 function Nav({ prof, projects, t, active }) {
-  const inProjects = active.startsWith('p-');
   const items = [
-    ['intro', t('page.nav-intro'), active === 'intro'],
-    ['stack', t('page.nav-stack'), active === 'stack'],
-    [projects.length ? 'glance' : '', t('page.nav-glance'), active === 'glance'],
-    [projects[0] ? `p-${projects[0].id}` : '', t('page.nav-projects'), inProjects],
-    ['contact', t('page.nav-contact'), active === 'contact'],
+    ['status', '상태창', active === 'status' || active === 'skills'],
+    ['map', '월드맵', active === 'map'],
+    [projects[0] ? `p-${projects[0].id}` : '', '스테이지', active.startsWith('p-')],
+    ['credits', '크레딧', active === 'credits'],
   ].filter((x) => x[0]);
   return (
     <header className="nav">
@@ -444,17 +663,69 @@ function Nav({ prof, projects, t, active }) {
         <nav className="ml-auto hidden md:flex items-center gap-6">
           {items.map(([id, label, on]) => <a key={id} href={`#${id}`} className={`m ${on ? 'on' : ''}`}><span className="cur" aria-hidden="true">▶</span>{label}</a>)}
         </nav>
-        <PdfButton t={t} />
+        <PdfButton t={t} className="ml-auto md:ml-0" />
       </div>
     </header>
   );
 }
 
-// CRT 화면: 프로젝트 대표 이미지를 차례로
-function Crt({ projects, t }) {
+function ProjectButtons({ p, t }) {
+  const L = p.links || {};
+  return (
+    <div className="flex flex-wrap gap-3">
+      <a className="pbtn pxb2 lift pri" href={deckUrl(p)} target="_blank" rel="noopener">{t('name.deck')} <Ext /></a>
+      <a className="pbtn pxb2 lift" href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc')} <Ext /></a>
+      {isUrl(L.github) && <a className="pbtn pxb2 lift" href={L.github} target="_blank" rel="noopener">GitHub <Ext /></a>}
+      {isUrl(L.video) && <a className="pbtn pxb2 lift" href={L.video} target="_blank" rel="noopener">{t('name.video')} <Ext /></a>}
+      {(L.extra || []).filter((l) => isUrl(l.url)).map((l, k) => <a key={k} className="pbtn pxb2 lift" href={l.url} target="_blank" rel="noopener">{l.label} <Ext /></a>)}
+    </div>
+  );
+}
+
+// 크게 보기: 그림 비율 그대로(화면 안에 맞춤). ◀ ▶ 로 넘기고 Esc·바깥 누르기로 닫음. 가로 넘김 틀(transform) 밖 body에 그림
+function Lightbox({ p, items, start, onClose }) {
+  const [k, setK] = useState(start);
+  const closeRef = useRef(null);
+  const n = items.length;
+  const move = (d) => setK((x) => (x + d + n) % n);
+  useEffect(() => {
+    const back = document.activeElement;
+    document.body.classList.add('lb-open');
+    closeRef.current?.focus();
+    const on = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+      else if (e.key === 'ArrowRight' && n > 1) { e.preventDefault(); move(1); }
+      else if (e.key === 'ArrowLeft' && n > 1) { e.preventDefault(); move(-1); }
+    };
+    window.addEventListener('keydown', on);
+    return () => { window.removeEventListener('keydown', on); document.body.classList.remove('lb-open'); back?.focus?.({ preventScroll: true }); };
+  }, []);
+  const it = items[k];
+  return ReactDOM.createPortal(
+    <div className="lbx" role="dialog" aria-modal="true" aria-label={it.caption || p.title} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <figure className="pxb">
+        <img key={it.src} src={img(p, it.src)} alt={it.caption || ''} className="pop-in" />
+        <figcaption>
+          {n > 1 && <span className="f-arcade text-[9px] acc">SHOT {pad(k + 1)}/{pad(n)}</span>}
+          <span>{it.caption}</span>
+        </figcaption>
+      </figure>
+      <button ref={closeRef} type="button" className="x pbtn pxb2 sm lift" onClick={onClose}>✕ <span className="f-arcade text-[8px]">ESC</span></button>
+      {n > 1 && <>
+        <button type="button" className="nv l pbtn pxb2 lift" onClick={() => move(-1)} aria-label="이전 그림">◀</button>
+        <button type="button" className="nv r pbtn pxb2 lift" onClick={() => move(1)} aria-label="다음 그림">▶</button>
+      </>}
+    </div>,
+    document.body,
+  );
+}
+
+// ── 01 타이틀 화면: 로고 + PRESS START + DEMO 화면(대표 그림 순환) + 메뉴 + 조작법 ──
+function DemoCrt({ projects }) {
   const shots = projects.filter((p) => p.cover);
   const [k, setK] = useState(0);
   const [hold, setHold] = useState(false);
+  const [ar, setAr] = useState('16 / 9');
   useEffect(() => {
     if (shots.length < 2 || hold || reduceMotion()) return;
     const id = setInterval(() => setK((x) => (x + 1) % shots.length), 4200);
@@ -462,21 +733,22 @@ function Crt({ projects, t }) {
   }, [shots.length, hold]);
   if (!shots.length) return null;
   const cur = shots[k];
-  const no = projects.indexOf(cur) + 1;
   return (
     <div className="crt pxb" onMouseEnter={() => setHold(true)} onMouseLeave={() => setHold(false)} onFocus={() => setHold(true)} onBlur={() => setHold(false)}>
-      <a href={`#p-${cur.id}`} className="screen" aria-label={`${cur.title}(으)로 이동`}>
+      {/* 틀 비율 = 첫 대표 그림 비율(그림 틀 = 그림 비율) */}
+      <a href={`#p-${cur.id}`} className="screen" style={{ aspectRatio: ar }} aria-label={`${cur.title}(으)로 이동`} onClick={(e) => { e.preventDefault(); enterStage(`p-${cur.id}`); }}>
         {shots.map((p, i) => (
           <img key={p.id} src={img(p, p.cover)} alt={i === k ? `${p.title} 대표 이미지` : ''} aria-hidden={i === k ? undefined : 'true'}
-            className={`fade absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${i === k ? 'opacity-100' : 'opacity-0'}`} />
+               onLoad={i === 0 ? (e) => setAr(`${e.currentTarget.naturalWidth} / ${e.currentTarget.naturalHeight}`) : undefined}
+               className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${i === k ? 'opacity-100' : 'opacity-0'}`} />
         ))}
         <span className="glass" aria-hidden="true" />
       </a>
       <div className="bar">
         <span className="led blink" aria-hidden="true" />
-        <span className="f-arcade text-[9px] acc whitespace-nowrap">{t('en.project')} {pad(no)}/{pad(projects.length)}</span>
+        <span className="f-arcade text-[9px] acc whitespace-nowrap">DEMO {pad(k + 1)}/{pad(shots.length)}</span>
         <span className="f-pixel font-bold text-[14px] truncate min-w-0">{cur.title}</span>
-        <div className="ml-auto flex gap-2.5 flex-none">
+        <div className="ml-auto flex flex-none">
           {shots.map((p, i) => <button key={p.id} type="button" className={`dot ${i === k ? 'on' : ''}`} aria-label={p.title} aria-pressed={i === k} onClick={() => setK(i)} />)}
         </div>
       </div>
@@ -484,125 +756,133 @@ function Crt({ projects, t }) {
   );
 }
 
-function Cover({ pf, prof, projects, t, no }) {
+function TitleScreen({ pf, prof, projects, t, no }) {
   const nameLines = (prof.nameEn || '').split(/\s+/).filter(Boolean);
-  const links = (prof.links || []).filter((l) => isUrl(l.url));
   const first = projects[0];
   const tiles = [
-    first && { href: `#p-${first.id}`, no: no(`p-${first.id}`), label: t('page.nav-projects'), arr: '→', pri: true },
-    { href: '#stack', no: no('stack'), label: t('page.stack'), arr: '→' },
-    { href: '#glance', no: no('glance'), label: t('page.nav-glance'), arr: '→' },
+    first && { href: `#p-${first.id}`, tag: '▶ NEW GAME', label: `프로젝트 ${projects.length}개`, pri: true },
+    { href: '#status', tag: 'STATUS', label: `소개 · ${t('page.stack')}` },
+    { href: '#map', tag: 'WORLD MAP', label: t('page.nav-glance') },
+    { href: '#credits', tag: 'CREDITS', label: t('page.nav-contact') },
   ].filter(Boolean);
   return (
-    <section id="cover" className="stage min-h-screen flex items-center pt-24 pb-16 lg:pt-24 lg:pb-12">
-      <div className="wrap w-full grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16 items-center">
-        <div className="min-w-0 order-2 lg:order-1"><Crt projects={projects} t={t} /></div>
-        <div className="min-w-0 order-1 lg:order-2">
-          <div className="flex items-baseline justify-between gap-4">
-            <Eyebrow no={no('cover')}>{t('en.portfolio')}</Eyebrow>
-            {pf.generatedAt && <p className="f-pixel text-[11px] muted">{t('page.updated', { date: pf.generatedAt })}</p>}
+    <section id="cover" className="stage pt-[88px] pb-12">
+      <div className="wrap">
+        <div className="bezel pxb flex flex-col gap-6">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,.92fr)] lg:gap-12 items-center">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <Eyebrow no={no('cover')}>{t('en.portfolio')}</Eyebrow>
+                {pf.generatedAt && <p className="f-pixel text-[11px] muted">{t('page.updated', { date: pf.generatedAt })}</p>}
+              </div>
+              {nameLines.length
+                ? <h1 className="name-xl mt-5" aria-label={`${prof.name} ${prof.nameEn}`}>{nameLines.map((w, i) => <span key={i} className="block">{w.toUpperCase()}</span>)}</h1>
+                : <h1 className="name-xl mt-5">{prof.name}</h1>}
+              <p className="mt-5 f-pixel text-[15px]">
+                <span className="font-bold">{prof.name}</span>
+                {prof.job && <><span className="muted mx-2">·</span><span className="acc">{prof.job}</span></>}
+              </p>
+              {prof.headline && <p className="mt-3 f-pixel font-bold text-[21px] leading-[1.5] md:text-[24px] break-keep"><Rich text={prof.headline} /></p>}
+              <a href="#status" className="press mt-3 f-arcade text-[13px] acc blink"><span className="cur" aria-hidden="true">▶</span>PRESS START</a>
+            </div>
+            <div className="min-w-0"><DemoCrt projects={projects} /></div>
           </div>
-          {nameLines.length
-            ? <h1 className="name-xl mt-6" aria-label={`${prof.name} ${prof.nameEn}`}>{nameLines.map((w, i) => <span key={i} className="block">{w.toUpperCase()}</span>)}</h1>
-            : <h1 className="name-xl mt-6">{prof.name}</h1>}
-          <p className="mt-6 f-pixel text-[15px]">
-            <span className="font-bold">{prof.name}</span>
-            {prof.job && <><span className="muted mx-2">·</span><span className="acc">{prof.job}</span></>}
-          </p>
-          {prof.headline && <p className="mt-5 f-pixel font-bold text-[22px] leading-[1.55] md:text-[26px] break-keep"><Rich text={prof.headline} /></p>}
-          <div className="mt-8 lg:mt-6 grid grid-cols-3 gap-3">
+          <nav aria-label="타이틀 메뉴" className="grid gap-4 grid-cols-2 lg:grid-cols-4">
             {tiles.map((x, i) => (
-              <a key={i} href={x.href} className={`tile pxb2 ${x.pri ? 'pri' : ''}`}>
-                <span className="no">{x.no}</span>
-                <span className="lb"><span className="cur" aria-hidden="true">▶</span><span className="break-keep">{x.label}</span><span className="arr" aria-hidden="true">{x.arr}</span></span>
+              <a key={i} href={x.href} className={`tile pxb2 lift ${x.pri ? 'pri' : ''}`}
+                 onClick={x.pri ? (e) => { e.preventDefault(); enterStage(x.href.slice(1)); } : undefined}>
+                <span className="no">{x.tag}</span>
+                <span className="lb"><span className="cur" aria-hidden="true">▶</span><span className="break-keep">{x.label}</span><span className="arr" aria-hidden="true">→</span></span>
               </a>
             ))}
+          </nav>
+          <div className="title-foot">
+            <span>STAGES {pad(projects.length)}</span>
+            <span className="hidden md:inline"><span className="key pxb2">▲</span><span className="key pxb2">▼</span> 이동 · <span className="key pxb2">◀</span><span className="key pxb2">▶</span> 고르기 · <span className="key pxb2">ENTER</span> 입장</span>
+            {pf.generatedAt && <span>UPDATED {pf.generatedAt.replace(/-/g, '.')}</span>}
           </div>
-          {projects.length > 0 && (
-            <div className="mt-10 lg:mt-7">
-              <p className="f-pixel font-bold text-[12px] muted">{t('page.nav-projects')}</p>
-              <ul className="cv-list mt-3 grid sm:grid-cols-2 gap-x-8 border-t border-[color:var(--line2)]">
-                {projects.map((p) => {
-                  const period = metaOf(p, /기간/), genre = metaOf(p, /장르/);
-                  return (
-                    <li key={p.id} className="border-b border-[color:var(--line)]">
-                      <a href={`#p-${p.id}`} className="group block py-3">
-                        {period && <span className="block f-pixel text-[11px] muted">{rangeOf(period)}</span>}
-                        <span className="block mt-1 text-[15px] font-bold group-hover:text-[color:var(--acc)] break-keep">{p.title}{genre && <span className="font-medium muted"> · {genre}</span>}</span>
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── 02 상태창: 캐릭터 카드 + 자기소개 대화창 ──
+function Status({ prof, projects, t, no }) {
+  const initials = (prof.nameEn || '').split(/\s+/).filter(Boolean).map((w) => w[0].toUpperCase()).join('').slice(0, 3);
+  const solo = projects.filter((p) => p.team?.type !== 'team').length;
+  const team = projects.length - solo;
+  return (
+    <section id="status" className="sec stage">
+      <div className="wrap pad">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+          <div className="flex-1 min-w-0"><Eyebrow no={no('status')}>상태창</Eyebrow><h2 className="giant mt-4">STATUS</h2></div>
+          <p className="f-pixel text-[12px] muted">{t('page.intro')}</p>
+        </div>
+        <div className="mt-9 grid gap-10 lg:grid-cols-[minmax(0,.8fr)_minmax(0,1.2fr)] items-stretch">
+          <article className="panel pxb p-6 min-w-0">
+            <div className="flex items-center gap-[18px]">
+              <span className="portrait pxb2" aria-hidden="true">{initials || '▶'}</span>
+              <div className="min-w-0">
+                <p className="f-arcade text-[9px] muted">PLAYER 1</p>
+                <p className="mt-2.5 f-pixel font-bold text-[22px]">{prof.name}</p>
+                {prof.job && <p className="mt-1.5 f-pixel text-[13px] leading-normal acc">{prof.job}</p>}
+              </div>
+            </div>
+            <dl className="status mt-6" style={{ padding: '2px 16px', background: 'rgba(233,238,230,.03)' }}>
+              {prof.email && <div className="row"><dt>{t('page.print-email')}</dt><dd><a href={`mailto:${prof.email}`} className="hover:text-[color:var(--acc)]">{prof.email}</a></dd></div>}
+              {isUrl(prof.github) && <div className="row"><dt>GitHub</dt><dd><a href={prof.github} target="_blank" rel="noopener" className="hover:text-[color:var(--acc)]">{shortUrl(prof.github)} <Ext /></a></dd></div>}
+              {projects.length > 0 && <div className="row"><dt>프로젝트</dt><dd>{projects.length}개 ({[solo && `개인 ${solo}`, team && `팀 ${team}`].filter(Boolean).join(' · ')})</dd></div>}
+            </dl>
+          </article>
+          {prof.intro && (
+            <div className="min-w-0 flex items-center">
+              <div className="dialog pxb w-full" style={{ padding: '32px 28px 36px' }}>
+                <span className="who pxb2">{prof.name}</span>
+                <div className="space-y-3 text-[17px] md:text-[18px] leading-[1.8] break-keep">
+                  {prof.intro.split(/\n+/).filter((l) => l.trim()).map((l, i) => <p key={i}><Rich text={l} /></p>)}
+                </div>
+                <span className="more blink" aria-hidden="true">▼</span>
+              </div>
             </div>
           )}
-          <div className="mt-8 flex flex-wrap gap-3 lg:hidden">
-            {prof.email && <a className="pbtn pxb2 sm" href={`mailto:${prof.email}`}>{prof.email}</a>}
-            {isUrl(prof.github) && <a className="pbtn pxb2 sm" href={prof.github} target="_blank" rel="noopener">GitHub <Ext /></a>}
-            {links.map((l, k) => <a key={k} className="pbtn pxb2 sm" href={l.url} target="_blank" rel="noopener">{l.label} <Ext /></a>)}
-          </div>
         </div>
       </div>
     </section>
   );
 }
 
-function Intro({ prof, t, no }) {
-  if (!prof.intro) return null;
-  return (
-    <section id="intro" className="sec stage">
-      <div className="wrap py-20 lg:py-10 grid gap-12 lg:grid-cols-[minmax(0,.85fr)_minmax(0,1.15fr)] lg:gap-16 items-center">
-        <div className="min-w-0">
-          <Eyebrow no={no('intro')}>{t('page.intro')}</Eyebrow>
-          <h2 className="giant mt-5">{t('en.about')}</h2>
-        </div>
-        <div className="dialog pxb min-w-0">
-          <span className="who pxb2">{prof.name}</span>
-          <div className="space-y-3 text-[17px] md:text-[19px] leading-[1.8] break-keep">
-            {prof.intro.split(/\n+/).filter((l) => l.trim()).map((l, i) => <p key={i}><Rich text={l} /></p>)}
-          </div>
-          <span className="more blink" aria-hidden="true">▼</span>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Stack({ pf, byId, t, no }) {
+// ── 03 스킬: 기술 스택 카드(근거 프로젝트와 함께) ──
+function Skills({ pf, byId, t, no }) {
   const skills = pf.skills || [];
   if (!skills.length) return null;
-  // 한 화면에: 제목은 위 한 줄, 기술 카드는 나란히(3개까지 한 줄)
-  const cols = skills.length >= 3 ? 'lg:grid-cols-3' : skills.length === 2 ? 'lg:grid-cols-2' : '';
+  const cols = skills.length >= 3 ? 'md:grid-cols-2 xl:grid-cols-3' : skills.length === 2 ? 'md:grid-cols-2' : '';
   return (
-    <section id="stack" className="sec stage">
-      <div className="wrap py-20 lg:py-10">
-        <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
-          {/* 큰 제목 칸은 글자 폭 맞춤용 컨테이너(cqi)라 내용으로 폭이 정해지지 않음 → 남는 폭을 다 씀(flex-1). 안 그러면 폭 0으로 줄어 글자가 세로로 쌓임 */}
-          <div className="min-w-0 flex-1 basis-[320px]">
-            <Eyebrow no={no('stack')}>{t('page.stack')}</Eyebrow>
-            <h2 className="giant mt-4">{t('en.skills')}</h2>
-          </div>
+    <section id="skills" className="sec stage">
+      <div className="wrap pad">
+        <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-3">
+          <div className="flex-1 min-w-0 basis-[320px]"><Eyebrow no={no('skills')}>{t('page.stack')}</Eyebrow><h2 className="giant mt-4">{t('en.skills')}</h2></div>
           <div className="min-w-0 pb-1 lg:text-right">
-            <p className="f-pixel text-[14px] txt">{t('page.stack-note')}</p>
+            <p className="f-pixel text-[13px] txt">SKILL SLOTS — {t('page.stack-note')}</p>
             <p className="mt-1 f-pixel text-[12px] muted"><span className="f-arcade text-[9px] acc">×N</span> = 근거 프로젝트 수</p>
           </div>
         </div>
-        <div className={`mt-8 grid gap-5 ${cols}`}>
+        <div className={`mt-8 grid gap-6 ${cols}`}>
           {skills.map((s, i) => {
             const ev = s.evidence || [];
             const n = new Set(ev.map((e) => e.project).filter(Boolean)).size;
             return (
-              <article key={i} className="pxb p-5 flex flex-col min-w-0" style={{ background: 'var(--panel)' }}>
-                <div className="flex items-center gap-3">
+              <article key={i} className="skill panel pxb p-5 min-w-0">
+                <div className="flex items-center gap-3.5">
                   <span className="slot pxb2" aria-hidden="true">{pad(i + 1)}</span>
                   <h3 className="flex-1 min-w-0 f-pixel font-bold text-[17px] leading-snug break-keep">{s.name}</h3>
-                  {n > 0 && <span className="f-arcade text-[12px] acc flex-none" title={`근거 프로젝트 ${n}개`} aria-label={`근거 프로젝트 ${n}개`}>×{n}</span>}
+                  {n > 0 && <span className="f-arcade text-[12px] acc flex-none" aria-label={`근거 프로젝트 ${n}개`}>×{n}</span>}
                 </div>
-                <ul className="mt-4 space-y-3">
+                <ul className="mt-[18px] space-y-3.5">
                   {ev.map((e, k) => (
-                    <li key={k} className="text-[14px] leading-[1.6] txt break-keep">
+                    <li key={k} className="text-[14px] leading-[1.7] txt break-keep">
                       <span className="acc mr-1.5" aria-hidden="true">▸</span><Rich text={e.text} />
-                      {byId[e.project] && <a href={`#p-${e.project}`} className="chip pxb2 ml-2 align-middle">{byId[e.project].title}</a>}
+                      {byId[e.project] && <> <a href={`#p-${e.project}`} className="chip pxb2 ml-1" onClick={(ev2) => { ev2.preventDefault(); enterStage(`p-${e.project}`); }}>{byId[e.project].title}</a></>}
                     </li>
                   ))}
                 </ul>
@@ -615,185 +895,423 @@ function Stack({ pf, byId, t, no }) {
   );
 }
 
-// 기능 스테이지: 프로젝트 소개 다음 화면. 기능 카드 2열(그림은 카드 오른쪽, 그림 비율 그대로)
-function Features({ p, t, no }) {
-  const hl = p.highlights || [];
-  if (!hl.length) return null;
-  const id = `p-${p.id}-core`;
+// ── 04 월드맵: 프로젝트를 기간 순서로 계단 길 위에. 고르면 옆 정보창이 미끄러져 바뀌고, 고른 노드를 한 번 더 누르면(Enter) 입장.
+// 한 월드에 5개까지. 더 많으면 WORLD 1 · 2 …로 나눠 ◀ ▶(키는 월드 끝을 넘으면 다음 월드로) ──
+const PER_WORLD = 5;
+function mapSpots(n) {
+  // 왼쪽 → 오른쪽으로 아래·위를 번갈아(계단)
+  return Array.from({ length: n }, (_, i) => ({
+    x: n === 1 ? 50 : 14 + (72 * i) / (n - 1),
+    y: n === 1 ? 50 : (i % 2 ? 33 : 69),
+  }));
+}
+function stairPoints(spots) {
+  return spots.reduce((acc, s, i) => {
+    if (!i) return [`${s.x},${s.y}`];
+    const p = spots[i - 1];
+    const mx = p.x + (s.x - p.x) / 2;
+    return acc.concat([`${mx},${p.y}`, `${mx},${s.y}`, `${s.x},${s.y}`]);
+  }, []).join(' ');
+}
+function WorldMap({ projects, t, no }) {
+  const rows = byPeriod(projects);
+  const [sel, setSel] = useState(0);
+  const boxRef = useRef(null);
+  const nodeRefs = useRef([]);
+  const seen = useSeen(boxRef, 0.35);
+  const selRef = useRef(0);
+  selRef.current = sel;
+  const move = (d, focus = true) => {
+    const k = Math.max(0, Math.min(rows.length - 1, selRef.current + d));
+    setSel(k);
+    if (focus) requestAnimationFrame(() => nodeRefs.current[k]?.focus({ preventScroll: true }));
+  };
+  useKeyReg('map', { move, enter: () => rows[selRef.current] && enterStage(`p-${rows[selRef.current].id}`) });
+  if (!rows.length) return null;
+  const worlds = Math.ceil(rows.length / PER_WORLD);
+  const w = Math.floor(sel / PER_WORLD);
+  const inWorld = rows.slice(w * PER_WORLD, (w + 1) * PER_WORLD);
+  const spots = mapSpots(inWorld.length);
+  const nodeW = Math.min(22, Math.floor(88 / Math.max(inWorld.length, 1)));
+  const sp = rows[sel];
+  const stageNo = projects.indexOf(sp) + 1;
+  const info = [['장르', metaOf(sp, /장르/)], ['기간', rangeOf(metaOf(sp, /기간/))], ['인원', metaOf(sp, /인원/)]].filter((m) => m[1]);
+  const counts = [['QUEST', (sp.highlights || []).length], ['BOSS', (sp.troubleshooting || []).length], ['SHOT', (sp.screenshots || []).length]].filter((c) => c[1]);
   return (
-    <section id={id} className="sec stage">
-      <div className="wrap py-20 lg:py-10">
-        <div className="flex flex-wrap items-end justify-between gap-3 pb-4 border-b border-[color:var(--line2)]">
-          <div className="min-w-0">
-            <Eyebrow no={no(id)}>{t('page.features')}</Eyebrow>
-            <p className="mt-3 f-pixel font-bold text-[22px] leading-snug break-keep">{p.title}</p>
-          </div>
-          <a className="tlink" href={deckUrl(p)} target="_blank" rel="noopener">{t('page.deck-all')} <Ext /></a>
+    <section id="map" className="sec stage">
+      <div className="wrap pad">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+          <div className="flex-1 min-w-0"><Eyebrow no={no('map')}>{t('page.nav-glance')}</Eyebrow><h2 className="giant mt-4">WORLD MAP</h2></div>
+          <p className="f-pixel text-[12px] muted"><span className="acc blink" aria-hidden="true">▶</span> 스테이지를 고르세요 · 기간 순서</p>
         </div>
-        <ol className={`fgrid mt-6 grid gap-5 ${hl.length > 1 ? 'two lg:grid-cols-2' : ''}`}>
-          {hl.map((h, k) => {
-            const sid = deckScene(p, h.section);
-            const pic = h.image?.src;
-            return (
-              <li key={k} className={`pxb p-5 grid gap-5 items-center min-w-0 ${pic ? 'sm:grid-cols-[minmax(0,1fr)_minmax(0,40%)]' : ''}`} style={{ background: 'var(--panel)' }}>
-                <div className="min-w-0 flex gap-4">
-                  <span className="slot pxb2" aria-hidden="true">{pad(k + 1)}</span>
-                  <div className="min-w-0">
-                    <p className="f-arcade text-[9px] muted">{t('en.feature')} {pad(k + 1)}</p>
-                    <h4 className="mt-2 f-pixel font-bold text-[18px] leading-snug break-keep">{h.title}</h4>
-                    {h.what && <p className="mt-2 text-[14px] leading-[1.65] txt break-keep"><Rich text={h.what} /></p>}
-                    <a className="tlink inline-block mt-3" href={deckUrl(p, sid)} target="_blank" rel="noopener">▶ {t('page.see-in-deck')} <Ext /></a>
+        <div ref={boxRef} className="mapgrid mt-8">
+          <div className="map pxb" role="group" aria-label="월드맵 — ◀ ▶ 로 고르고 Enter로 입장">
+            <svg className="path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points={stairPoints(spots)} /></svg>
+            <div className="world">
+              {worlds > 1 && <button type="button" className="wbtn pbtn pxb2 sm lift" onClick={() => setSel((w - 1) * PER_WORLD)} disabled={w === 0} aria-label="이전 월드">◀</button>}
+              <span className="f-arcade text-[9px] muted">WORLD {w + 1}{worlds > 1 && ` / ${worlds}`}</span>
+              {worlds > 1 && <button type="button" className="wbtn pbtn pxb2 sm lift" onClick={() => setSel((w + 1) * PER_WORLD)} disabled={w === worlds - 1} aria-label="다음 월드">▶</button>}
+            </div>
+            {inWorld.map((p, j) => {
+              const i = w * PER_WORLD + j;
+              const on = i === sel;
+              const st = projects.indexOf(p) + 1;
+              return (
+                <button key={p.id} ref={(el) => { nodeRefs.current[i] = el; }} type="button" className="node" tabIndex={on ? 0 : -1}
+                        style={{ left: `${spots[j].x}%`, top: `${spots[j].y}%`, width: `${nodeW}%`, maxWidth: 230 }}
+                        aria-pressed={on} title={on ? '한 번 더 누르면 입장' : undefined}
+                        onClick={() => (on ? enterStage(`p-${p.id}`) : setSel(i))}>
+                  {on && <span className="you" aria-hidden="true">▼ YOU</span>}
+                  <span className="thumb">{p.cover && <img src={img(p, p.cover)} alt="" loading="lazy" />}</span>
+                  <span className="lbl pxb2">
+                    <span className="flex justify-between gap-2 f-arcade text-[8px] leading-[1.6]"><span className="acc">STAGE {pad(st)}</span><span className="muted">{startOf(metaOf(p, /기간/))}</span></span>
+                    <span className="block mt-1 f-pixel font-bold text-[15px] leading-snug break-keep">{p.title}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <aside className={`stage-info pxb ${seen ? 'show' : ''}`} aria-live="polite" aria-label="고른 스테이지 정보">
+            <div key={sp.id} className="body">
+              <p className="f-arcade text-[9px] leading-[1.6] acc">STAGE {pad(stageNo)} <span className="f-pixel text-[12px] muted">· {teamLabel(sp.team, t)}</span></p>
+              <p className="mt-2 f-pixel font-bold text-[23px] leading-snug break-keep">{sp.title}</p>
+              {sp.tagline && <p className="mt-2 text-[14px] leading-[1.65] txt break-keep"><Rich text={sp.tagline} /></p>}
+              <dl className="mt-3 m-0">
+                {info.map(([l, v], k) => (
+                  <div key={l} className={`grid grid-cols-[44px_minmax(0,1fr)] gap-3 py-[7px] ${k < info.length - 1 ? 'border-b border-dashed border-[color:var(--line)]' : ''}`}>
+                    <dt className="f-pixel font-bold text-[12px] acc pt-0.5">{l}</dt><dd className="m-0 text-[13.5px] leading-[1.6] break-keep">{v}</dd>
                   </div>
+                ))}
+              </dl>
+              {counts.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {counts.map(([l, c]) => <span key={l} className="chip pxb2"><span className="f-arcade text-[8px]">{l}</span>&nbsp;×{c}</span>)}
                 </div>
-                {pic && (
-                  <figure className="min-w-0">
-                    {/* 그림 비율 그대로(16:9 검은 틀에 넣으면 가로로 긴 비교 그림·4:3 화면 위아래·양옆에 검은 띠가 생김) */}
-                    <img src={img(p, pic)} alt={h.image.caption || h.title} loading="lazy" className="w-full h-auto pxb2"
-                         {...(h.image.w && h.image.h ? { width: h.image.w, height: h.image.h } : {})} />
-                    {h.image.caption && <figcaption className="mt-2 f-pixel text-[11px] muted leading-snug break-keep">{h.image.caption}</figcaption>}
-                  </figure>
-                )}
-              </li>
-            );
-          })}
-        </ol>
+              )}
+              <div className="mt-auto pt-4 flex flex-wrap gap-3">
+                <button type="button" className="pbtn pxb2 lift pri" onClick={() => enterStage(`p-${sp.id}`)}>▶ 스테이지 입장</button>
+                <a className="pbtn pxb2 lift" href={deckUrl(sp)} target="_blank" rel="noopener">{t('name.deck')} <Ext /></a>
+              </div>
+              <p className="keyhint mt-3"><span className="key pxb2">◀</span><span className="key pxb2">▶</span> 고르기 · <span className="key pxb2">ENTER</span> 입장</p>
+            </div>
+          </aside>
+        </div>
       </div>
     </section>
   );
 }
 
-function Project({ p, i, n, t, no }) {
-  const flip = i % 2 === 1;
+// ── 프로젝트 한 장: 01 시작 · 02 퀘스트 · 03 보스전 · 04 클리어 를 가로로 넘김 ──
+function StartPane({ p, t }) {
   const meta = (p.meta || []).filter((m) => m.value);
   const role = p.team?.role;
   return (
-    <section id={`p-${p.id}`} className="sec stage">
-      <div className="wrap py-20 lg:py-10">
-        <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <Eyebrow no={no(`p-${p.id}`)}>{t('page.project-no', { no: pad(i + 1), total: pad(n) })}</Eyebrow>
-          <p className="f-pixel text-[12px] muted">{teamLabel(p.team, t)}</p>
-        </div>
-        <h2 className="ptitle mt-4">{p.title}</h2>
-        {p.tagline && <p className="mt-4 max-w-3xl text-[16px] leading-[1.7] txt break-keep"><Rich text={p.tagline} /></p>}
-
-        <div className="mt-6 grid gap-10 lg:grid-cols-2 lg:gap-12 items-start">
-          {p.cover && (
-            <figure className={`min-w-0 ${flip ? 'lg:order-2' : ''}`}>
-              <div className="crt pxb" style={{ paddingBottom: 14 }}>
-                <span className="screen"><img src={img(p, p.cover)} alt={`${p.title} 대표 이미지`} loading="lazy" className="absolute inset-0 w-full h-full object-cover" /><span className="glass" aria-hidden="true" /></span>
-              </div>
-            </figure>
-          )}
-          <div className={`min-w-0 ${flip ? 'lg:order-1' : ''} ${p.cover ? '' : 'lg:col-span-2'}`}>
-            {(meta.length > 0 || role) && (
-              <dl className="status pxb">
-                {meta.map((m, k) => <div key={k} className="row"><dt>{m.label}</dt><dd>{m.value}</dd></div>)}
-                {role && <div className="row"><dt>{t('name.role')}</dt><dd><Rich text={role} /></dd></div>}
-              </dl>
-            )}
-            {p.intent?.text && (
-              <div className="dialog pxb mt-5">
-                <span className="who pxb2">{t('name.intent')}</span>
-                <p className="text-[15px] leading-[1.7] break-keep"><Rich text={p.intent.text} /></p>
-                <span className="more blink" aria-hidden="true">▼</span>
-              </div>
-            )}
-            {(p.tags || []).length > 0 && <div className="mt-4 flex flex-wrap gap-2">{p.tags.map((g, k) => <span key={k} className="tag pxb2">{g}</span>)}</div>}
-            <div className="mt-4"><ProjectButtons p={p} t={t} small /></div>
+    <div className="grid gap-8 lg:grid-cols-2 lg:gap-10 items-start">
+      <div className="min-w-0 flex flex-col gap-6">
+        {p.cover && (
+          <div className="crt solo pxb">
+            <span className="screen"><img src={img(p, p.cover)} alt={`${p.title} 대표 이미지`} loading="lazy" className="w-full h-auto" /><span className="glass" aria-hidden="true" /></span>
           </div>
-        </div>
+        )}
+        {p.intent?.text && (
+          <div className="dialog pxb">
+            <span className="who pxb2">{t('name.intent')}</span>
+            <p className="text-[15px] leading-[1.7] break-keep"><Rich text={p.intent.text} /></p>
+            <span className="more blink" aria-hidden="true">▼</span>
+          </div>
+        )}
       </div>
-    </section>
+      <div className="min-w-0 flex flex-col gap-5">
+        {p.tagline && <p className="text-[16px] leading-[1.7] txt break-keep"><Rich text={p.tagline} /></p>}
+        {(meta.length > 0 || role) && (
+          <dl className="status pxb">
+            {meta.map((m, k) => <div key={k} className="row"><dt>{m.label}</dt><dd>{m.value}</dd></div>)}
+            {role && <div className="row"><dt>{t('name.role')}</dt><dd><Rich text={role} /></dd></div>}
+          </dl>
+        )}
+        {(p.tags || []).length > 0 && <div className="flex flex-wrap gap-2">{p.tags.map((g, k) => <span key={k} className="tag pxb2">{g}</span>)}</div>}
+        <ProjectButtons p={p} t={t} />
+      </div>
+    </div>
   );
 }
 
-function Glance({ projects, t, no }) {
-  if (!projects.length) return null;
-  // 기간의 시작 연월 순서(없으면 원래 순서)
-  const rows = projects.map((p, i) => ({ p, i, period: metaOf(p, /기간/) })).map((r) => ({ ...r, start: startOf(r.period) }))
-    .sort((a, b) => (a.start && b.start ? a.start.localeCompare(b.start) : a.i - b.i));
+function QuestPane({ p, t }) {
+  const hl = p.highlights || [];
+  const [k, setK] = useState(0);
+  const [zoom, setZoom] = useState(false);
+  const refs = useRef([]);
+  const h = hl[Math.min(k, hl.length - 1)];
+  const pic = h.image?.src;
+  const sid = deckScene(p, h.section);
   return (
-    <section id="glance" className="sec stage">
-      <div className="wrap py-20 lg:py-10">
-        <Eyebrow no={no('glance')}>{t('page.glance')}</Eyebrow>
-        <h2 className="giant mt-4">{t('en.glance')}</h2>
-        <div className="mt-8 lg:mt-6">
-          <div className="grid md:grid-flow-col md:auto-cols-fr md:-mx-3">
-            {rows.map(({ p, period, start }) => (
-              <div key={p.id} className="tl-item min-w-0 flex flex-col md:px-3">
-                {start && <p className="order-1 md:order-3 f-arcade text-[18px] md:text-[24px] leading-none md:mt-1">{start}</p>}
-                {period && <p className="order-2 md:order-4 mt-2.5 f-pixel text-[11px] muted">{rangeOf(period)}</p>}
-                <div className="tl-axis hidden md:block md:order-2" aria-hidden="true"><span className="node" /></div>
-                <article className="order-3 md:order-1 mt-5 md:mt-0 flex-1 pxb p-5 flex flex-col" style={{ background: 'var(--panel)' }}>
-                  {p.cover && (
-                    <a href={`#p-${p.id}`} className="thumb mb-4" aria-label={`${p.title}(으)로 이동`}>
-                      <img src={img(p, p.cover)} alt="" loading="lazy" />
-                      <span className="glass" aria-hidden="true" />
-                    </a>
-                  )}
-                  <p className="f-arcade text-[9px] acc">{t('en.project')} {pad(projects.indexOf(p) + 1)}</p>
-                  <a href={`#p-${p.id}`} className="mt-2 f-pixel font-bold text-[19px] leading-snug hover:text-[color:var(--acc)] break-keep">{p.title}</a>
-                  {p.tagline && <p className="mt-2 text-[14px] leading-[1.65] txt break-keep clamp3"><Rich text={p.tagline} /></p>}
-                  {(p.tags || []).length > 0 && <div className="mt-3 flex flex-wrap gap-2">{p.tags.slice(0, 4).map((g, k) => <span key={k} className="tag pxb2">{g}</span>)}</div>}
-                  <p className="mt-3 text-[13px] leading-[1.6] txt break-keep flex-1">
-                    <span className="f-pixel font-bold text-[11px] acc mr-2">{t('name.role-short')}</span>
-                    {p.team?.role ? <Rich text={p.team.role} /> : teamLabel(p.team, t)}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2">
-                    <a className="tlink" href={deckUrl(p)} target="_blank" rel="noopener">{t('name.deck')} <Ext /></a>
-                    <a className="tlink" href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc-short')} <Ext /></a>
-                    {isUrl(p.links?.github) && <a className="tlink" href={p.links.github} target="_blank" rel="noopener">GitHub <Ext /></a>}
-                  </div>
-                </article>
-              </div>
+    <div className="grid gap-7 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] lg:gap-8 items-start">
+      <div className="min-w-0">
+        <div className="flex items-baseline justify-between gap-3">
+          <h3 className="h-arc text-[16px] md:text-[18px]">QUEST LOG</h3>
+          <a className="tlink" href={deckUrl(p)} target="_blank" rel="noopener">{t('page.deck-all')} <Ext /></a>
+        </div>
+        <ol className="mt-4 flex flex-col gap-3" aria-label={`${t('page.features')} — 고르면 오른쪽에 설명`} onKeyDown={(e) => listKeys(e, k, hl.length, setK, refs)}>
+          {hl.map((x, j) => (
+            <li key={j}>
+              <button ref={(el) => { refs.current[j] = el; }} type="button" className="qbtn pxb2 lift" aria-pressed={j === k} onClick={() => setK(j)}>
+                <span className="slot pxb2" aria-hidden="true">{pad(j + 1)}</span>
+                <span className="flex-1 min-w-0">
+                  <span className="block f-arcade text-[8px] muted">QUEST {pad(j + 1)}</span>
+                  <span className="block mt-1.5 f-pixel font-bold text-[14.5px] leading-[1.4] break-keep">{x.title}</span>
+                </span>
+                <span className="cur" aria-hidden="true">▶</span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <article key={k} className="panel pxb p-6 min-w-0 pop-in" aria-live="polite">
+        <p className="f-arcade text-[9px] acc">QUEST {pad(k + 1)} / {pad(hl.length)} · {t('page.features')}</p>
+        <h4 className="mt-3 f-pixel font-bold text-[22px] leading-[1.4] break-keep">{h.title}</h4>
+        {h.what && <p className="mt-2.5 text-[16px] leading-[1.75] txt break-keep"><Rich text={h.what} /></p>}
+        {pic ? (
+          <figure className="mt-5">
+            <button type="button" className="zoom" onClick={() => setZoom(true)} aria-label={`크게 보기: ${h.image.caption || h.title}`}>
+              <img src={img(p, pic)} alt={h.image.caption || h.title} className="qimg pxb2" {...(h.image.w && h.image.h ? { width: h.image.w, height: h.image.h } : {})} />
+            </button>
+            {h.image.caption && <figcaption className="mt-2.5 f-pixel text-[11px] muted leading-snug break-keep">{h.image.caption} <span className="acc">· 누르면 크게</span></figcaption>}
+          </figure>
+        ) : (
+          <div className="mt-5 px-[18px] py-4 border border-dashed border-[color:var(--line2)] f-pixel text-[12px] leading-[1.6] muted">스크린샷이 없는 기능 · 원문 「{h.section}」</div>
+        )}
+        <div className="mt-4 flex flex-wrap items-center gap-x-[18px] gap-y-1">
+          <a className="tlink inline-flex items-center min-h-[40px]" href={deckUrl(p, sid)} target="_blank" rel="noopener">▶ {t('page.see-in-deck')} <Ext /></a>
+          {h.section && <span className="f-pixel text-[11px] muted">원문 {h.section}</span>}
+        </div>
+      </article>
+      {zoom && pic && <Lightbox p={p} items={[{ src: pic, caption: h.image.caption || h.title }]} start={0} onClose={() => setZoom(false)} />}
+    </div>
+  );
+}
+
+function BossPane({ p }) {
+  const ts = p.troubleshooting || [];
+  const [k, setK] = useState(0);
+  const [hit, setHit] = useState(0);       // 보스를 고를 때마다 +1 → HP가 깎이는 연출을 다시 틂
+  const refs = useRef([]);
+  const pick = (j) => { setK(j); setHit((x) => x + 1); };
+  const b = ts[Math.min(k, ts.length - 1)];
+  const rows = [['ENCOUNTER', '문제', b.problem], ['WEAKNESS', '원인', b.cause], ['STRATEGY', '해결', b.solution], ['RESULT', '결과', b.result], ['LOOT', '배운 점', b.lesson]].filter((r) => r[2]);
+  return (
+    <div className="grid gap-7 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] lg:gap-8 items-start">
+      <div className="min-w-0">
+        <h3 className="h-arc text-[16px] md:text-[18px]">BOSS BATTLE</h3>
+        <p className="mt-2 f-pixel text-[12px] muted">트러블슈팅 {ts.length}건 · 고르면 공략 기록</p>
+        <div className="mt-4 flex flex-col gap-3" role="group" aria-label="보스" onKeyDown={(e) => listKeys(e, k, ts.length, pick, refs)}>
+          {ts.map((x, j) => {
+            const on = j === k;
+            return (
+              <button key={j} ref={(el) => { refs.current[j] = el; }} type="button" className="boss pxb2 lift" aria-pressed={on} onClick={() => pick(j)}>
+                <span className="flex justify-between gap-2 f-arcade text-[8px] leading-[1.6]">
+                  <span className="bt">BOSS {pad(j + 1)}</span>
+                  <span key={on ? hit : 'x'} className={`cl ${on && hit ? 'pop' : 'muted'}`}>CLEAR</span>
+                </span>
+                <span className="hp" aria-hidden="true"><i key={on ? hit : 'x'} className={on && hit ? 'drain' : ''} /></span>
+                <span className="f-pixel font-bold text-[13px] leading-[1.45] break-keep">{x.title}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <article key={`${k}-${hit}`} className={`dialog pxb min-w-0 ${hit ? 'hit-in' : ''}`} style={{ padding: 24 }} aria-live="polite">
+        <p className="f-arcade text-[9px] acc">BATTLE LOG · BOSS {pad(k + 1)}</p>
+        <h4 className="mt-2.5 f-pixel font-bold text-[18px] leading-[1.45] break-keep">{b.title}</h4>
+        <dl className="mt-4 flex flex-col gap-3">
+          {rows.map(([tag, label, text]) => (
+            <div key={tag} className="log">
+              <dt><span className="block f-arcade text-[7px] leading-[1.6] muted">{tag}</span><span className="block mt-1 f-pixel font-bold text-[13px] acc">{label}</span></dt>
+              <dd className="m-0 text-[14.5px] leading-[1.65] txt break-keep"><Rich text={text} /></dd>
+            </div>
+          ))}
+        </dl>
+      </article>
+    </div>
+  );
+}
+
+function ClearPane({ p, i, projects, t }) {
+  const rt = p.retro || {};
+  const ach = rt.achieved || [];
+  const shots = p.screenshots || [];
+  const [cap, setCap] = useState(-1);
+  const [lb, setLb] = useState(-1);
+  const next = projects[i + 1];
+  const left = (rt.regrets || []).length, plans = (rt.plans || []).length;
+  return (
+    <div className={`grid gap-8 ${shots.length && ach.length ? 'lg:grid-cols-2 lg:gap-10' : ''} items-start`}>
+      {ach.length > 0 && (
+        <div className="clear pxb p-6 min-w-0">
+          <p className="h-arc text-[18px] md:text-[22px] acc" style={{ textShadow: '.07em .07em 0 var(--acc-deep)' }}>STAGE CLEAR!</p>
+          <p className="mt-2 f-pixel text-[12px] muted">결과 — 이룬 것</p>
+          <ul className="mt-4 flex flex-col gap-3">
+            {ach.map((a, j) => <li key={j} className="flex gap-3 text-[14px] leading-[1.65] break-keep"><IconCheck /><span className="flex-1 min-w-0"><Rich text={a} /></span></li>)}
+          </ul>
+          {(left > 0 || plans > 0) && (
+            <p className="mt-5 pt-3.5 border-t border-dashed border-[color:var(--line2)] f-pixel text-[12px] leading-[1.6] muted">
+              {left > 0 && <>남은 과제 {left}건</>}{left > 0 && plans > 0 && ' · '}{plans > 0 && <>다음 계획 {plans}건</>} → <a className="tlink" href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc')} <Ext /></a>
+            </p>
+          )}
+        </div>
+      )}
+      <div className="min-w-0">
+        {shots.length > 0 && (
+          <>
+            <div className="flex flex-wrap items-baseline gap-x-3.5 gap-y-1.5 pb-3 border-b border-[color:var(--line2)]">
+              <p className="f-arcade text-[10px] acc">SCREENSHOTS</p>
+              <p className="f-pixel text-[12px] muted">{shots.length}장</p>
+            </div>
+            <div className="shots mt-4" onMouseLeave={() => setCap(-1)}>
+              {shots.map((s, k) => (
+                <button key={k} type="button" className={`shot ${cap === k ? 'on' : ''}`} aria-label={`크게 보기: ${s.caption || `스크린샷 ${k + 1}`}`}
+                        onMouseEnter={() => setCap(k)} onFocus={() => setCap(k)} onClick={() => setLb(k)}>
+                  <img src={img(p, s.src)} alt="" loading="lazy" className="pxb2" {...(s.w && s.h ? { width: Math.round(76 * s.w / s.h), height: 76 } : {})} />
+                </button>
+              ))}
+            </div>
+            <p className="shot-cap pxb2" aria-live="polite">
+              {cap >= 0 ? <><span className="f-arcade text-[8px] acc mr-2">SHOT {pad(cap + 1)}</span>{shots[cap].caption}</> : <span className="muted">그림에 올리면 설명 · 누르면 크게</span>}
+            </p>
+          </>
+        )}
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <button type="button" className="pbtn pxb2 lift pri" onClick={() => enterStage(next ? `p-${next.id}` : 'credits')}>{next ? <>▼ NEXT STAGE · {next.title}</> : <>▼ ENDING · 크레딧</>}</button>
+          <span className="keyhint"><span className="key pxb2">▼</span> 키도 됨</span>
+        </div>
+      </div>
+      {lb >= 0 && <Lightbox p={p} items={shots} start={lb} onClose={() => setLb(-1)} />}
+    </div>
+  );
+}
+
+function ProjectStage({ p, i, projects, t, no }) {
+  const id = `p-${p.id}`;
+  const screens = [
+    { key: 'start', label: '시작', el: <StartPane p={p} t={t} /> },
+    (p.highlights || []).length > 0 && { key: 'quest', label: '퀘스트', el: <QuestPane p={p} t={t} /> },
+    (p.troubleshooting || []).length > 0 && { key: 'boss', label: '보스전', el: <BossPane p={p} /> },
+    ((p.retro?.achieved || []).length > 0 || (p.screenshots || []).length > 0) && { key: 'clear', label: '클리어', el: <ClearPane p={p} i={i} projects={projects} t={t} /> },
+  ].filter(Boolean);
+  const n = screens.length;
+  const [k, setK] = useState(0);
+  const kRef = useRef(0);
+  kRef.current = k;
+  const viewRef = useRef(null);
+  const paneRefs = useRef([]);
+  const bump = () => { const el = viewRef.current; if (!el || reduceMotion()) return; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); };
+  const go = (to) => { if (to < 0 || to >= n) { bump(); return; } setK(to); };
+  useKeyReg(id, { move: (d) => go(kRef.current + d), enter: () => {} });
+  useEffect(() => {
+    const on = (e) => { if (e.detail === id) setK(0); };
+    window.addEventListener('pf-enter', on);
+    return () => window.removeEventListener('pf-enter', on);
+  }, [id]);
+  // 보이지 않는 세부 화면은 Tab·화면 읽기에서 뺌
+  useEffect(() => { paneRefs.current.forEach((el, j) => { if (el) el.inert = j !== k; }); }, [k, n]);
+  // 휴대폰: 옆으로 밀기 · 트랙패드: 가로로 쓸기
+  const sw = useRef(null);
+  const wheelLock = useRef(0);
+  const onPointerDown = (e) => { if (e.pointerType !== 'mouse') sw.current = { x: e.clientX, y: e.clientY }; };
+  const onPointerUp = (e) => {
+    const s = sw.current; sw.current = null;
+    if (!s) return;
+    const dx = e.clientX - s.x, dy = e.clientY - s.y;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) go(kRef.current + (dx < 0 ? 1 : -1));
+  };
+  const onWheel = (e) => {
+    if (Math.abs(e.deltaX) < 30 || Math.abs(e.deltaX) < Math.abs(e.deltaY) * 1.5) return;
+    const now = Date.now();
+    if (now < wheelLock.current) return;
+    wheelLock.current = now + 650;
+    go(kRef.current + (e.deltaX > 0 ? 1 : -1));
+  };
+  return (
+    <section id={id} className="sec stage">
+      <div className="wrap pad relative">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1.5">
+          <Eyebrow no={no(id)}>STAGE {i + 1} / {projects.length} <span className="muted font-normal">· {teamLabel(p.team, t)}</span></Eyebrow>
+          <p className="keyhint hidden md:block"><span className="key pxb2">◀</span><span className="key pxb2">▶</span> 세부 화면 · <span className="key pxb2">▲</span><span className="key pxb2">▼</span> 스테이지</p>
+        </div>
+        <div className="thead mt-3">
+          <h2 className="ptitle min-w-0">{p.title}</h2>
+          <nav className="tabs" aria-label={`${p.title} 세부 화면`}>
+            <button type="button" className="tarr pbtn pxb2 lift" onClick={() => go(k - 1)} disabled={k === 0} aria-label="이전 세부 화면">◀</button>
+            {screens.map((s, j) => (
+              <button key={s.key} type="button" className="tab pxb2 lift" aria-current={j === k ? 'step' : undefined} onClick={() => go(j)}>
+                <span className="tn">{pad(j + 1)}</span>{s.label}
+              </button>
+            ))}
+            <button type="button" className="tarr pbtn pxb2 lift" onClick={() => go(k + 1)} disabled={k === n - 1} aria-label="다음 세부 화면">▶</button>
+          </nav>
+        </div>
+        {/* 가로 스크롤바: 지금 몇 번째 세부 화면인지. 칸을 눌러도 이동 */}
+        <div className="tbar" style={{ '--n': n, '--k': k }}>
+          {screens.map((s, j) => <button key={s.key} type="button" tabIndex={-1} aria-hidden="true" title={`${pad(j + 1)} ${s.label}`} onClick={() => go(j)} />)}
+          <span className="thumbbar" aria-hidden="true" />
+        </div>
+        <div ref={viewRef} className="tview" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onWheel={onWheel}>
+          <div className="track" style={{ transform: `translateX(-${k * 100}%)` }}>
+            {screens.map((s, j) => (
+              <div key={s.key} ref={(el) => { paneRefs.current[j] = el; }} className="pane" role="group" aria-label={`${pad(j + 1)} ${s.label}`} aria-hidden={j !== k ? 'true' : 'false'}>{s.el}</div>
             ))}
           </div>
         </div>
+        <button type="button" className="side l pbtn pxb2 lift" onClick={() => go(k - 1)} disabled={k === 0} aria-label="이전 세부 화면"><span>◀</span></button>
+        <button type="button" className="side r pbtn pxb2 lift" onClick={() => go(k + 1)} disabled={k === n - 1} aria-label="다음 세부 화면"><span>▶</span></button>
       </div>
     </section>
   );
 }
 
-function Contact({ prof, projects, t, no }) {
+// ── 엔딩 크레딧: 연락처 ──
+function Credits({ prof, projects, t, no }) {
   const links = (prof.links || []).filter((l) => isUrl(l.url));
   return (
-    <footer id="contact" className="sec stage">
-      <div className="wrap py-20 lg:py-10">
-        <Eyebrow no={no('contact')}>{t('page.nav-contact')}</Eyebrow>
-        <div className="mt-10 grid gap-10 md:grid-cols-3 md:gap-12">
-          {prof.email && (
-            <div className="min-w-0">
-              <p className="f-pixel font-bold text-[12px] muted">{t('page.print-email')}</p>
-              <a className="mt-3 inline-block text-[15px] hover:text-[color:var(--acc)] break-all" href={`mailto:${prof.email}`}>{prof.email}</a>
+    <footer id="credits" className="sec stage">
+      <div className="wrap pad">
+        <Eyebrow no={no('credits')}>{t('page.nav-contact')}</Eyebrow>
+        <div className="mt-8 grid gap-12 lg:grid-cols-2 lg:gap-14 items-center">
+          <div className="min-w-0 text-center lg:text-left">
+            <h2 className="h-arc text-[22px] md:text-[40px] leading-[1.4] acc" style={{ textShadow: '.07em .07em 0 var(--acc-deep)' }}><span className="block">THANK YOU</span><span className="block">FOR PLAYING</span></h2>
+            <p className="mt-10 f-arcade text-[15px] md:text-[18px]">CONTINUE?</p>
+            <div className="mt-5 flex flex-wrap justify-center lg:justify-start gap-3.5">
+              {prof.email && <a className="pbtn pxb2 lift pri" href={`mailto:${prof.email}`}>▶ YES — 메일 보내기</a>}
+              <PdfButton t={t} className="!h-10 !text-[13px] !px-4" />
             </div>
-          )}
-          {(isUrl(prof.github) || links.length > 0) && (
-            <div className="min-w-0">
-              <p className="f-pixel font-bold text-[12px] muted">LINKS</p>
-              <ul className="mt-3 space-y-2 text-[15px]">
-                {isUrl(prof.github) && <li><a className="hover:text-[color:var(--acc)] break-all" href={prof.github} target="_blank" rel="noopener">GitHub · {shortUrl(prof.github)} <Ext /></a></li>}
-                {links.map((l, k) => <li key={k}><a className="hover:text-[color:var(--acc)] break-all" href={l.url} target="_blank" rel="noopener">{l.label} · {shortUrl(l.url)} <Ext /></a></li>)}
+            <a href="#cover" className="mt-4 inline-flex items-center min-h-[44px] f-arcade text-[9px] muted hover:text-[color:var(--acc)]">▲ BACK TO TITLE</a>
+          </div>
+          <div className="min-w-0 flex flex-col gap-8 text-center">
+            <div>
+              <p className="f-arcade text-[9px] muted">DEVELOPED BY</p>
+              <p className="mt-3 f-pixel font-bold text-[22px]">{prof.name}</p>
+              {prof.job && <p className="mt-1.5 f-pixel text-[13px] acc">{prof.job}</p>}
+            </div>
+            <div>
+              <p className="f-arcade text-[9px] muted">STAGES</p>
+              <ul className="mt-3.5 flex flex-col gap-2.5">
+                {projects.map((p, i) => (
+                  <li key={p.id} className="flex flex-wrap justify-center items-baseline gap-x-3.5 gap-y-1">
+                    <span className="f-arcade text-[9px] acc">{pad(i + 1)}</span>
+                    <a href={`#p-${p.id}`} className="f-pixel font-bold text-[16px] hover:text-[color:var(--acc)]" onClick={(e) => { e.preventDefault(); enterStage(`p-${p.id}`); }}>{p.title}</a>
+                    <a className="tlink" href={deckUrl(p)} target="_blank" rel="noopener">{t('name.deck')} <Ext /></a>
+                    <a className="tlink" href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc-short')} <Ext /></a>
+                  </li>
+                ))}
               </ul>
             </div>
-          )}
-          <div className="min-w-0">
-            <p className="f-pixel font-bold text-[12px] muted">{t('page.nav-projects')}</p>
-            <ul className="mt-3 space-y-3">
-              {projects.map((p) => (
-                <li key={p.id} className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                  <a href={`#p-${p.id}`} className="f-pixel font-bold text-[14px] hover:text-[color:var(--acc)]">{p.title}</a>
-                  <a className="tlink" href={deckUrl(p)} target="_blank" rel="noopener">{t('name.deck')} <Ext /></a>
-                  <a className="tlink" href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc-short')} <Ext /></a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-        <div className="mt-16 lg:mt-14 flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-          <h2 className="giant" style={{ fontSize: 'clamp(34px, 7.4vw, 112px)' }}>{t('en.contact')}</h2>
-          <div className="min-w-0 lg:text-right">
-            {prof.email && <a className="f-pixel font-bold text-[20px] md:text-[26px] hover:text-[color:var(--acc)] break-all" href={`mailto:${prof.email}`}><span className="acc blink mr-2" aria-hidden="true">▶</span>{prof.email}</a>}
-            <p className="mt-3 f-pixel text-[12px] muted">{prof.name}{prof.job ? ` · ${prof.job}` : ''}</p>
+            <div>
+              <p className="f-arcade text-[9px] muted">CONTACT</p>
+              {prof.email && <p className="mt-3"><a href={`mailto:${prof.email}`} className="f-pixel font-bold text-[18px] md:text-[22px] hover:text-[color:var(--acc)] break-all"><span className="acc blink mr-2" aria-hidden="true">▶</span>{prof.email}</a></p>}
+              <ul className="mt-2 space-y-1.5 text-[14px] txt">
+                {isUrl(prof.github) && <li><a href={prof.github} target="_blank" rel="noopener" className="hover:text-[color:var(--acc)]">GitHub · {shortUrl(prof.github)} <Ext /></a></li>}
+                {links.map((l, k) => <li key={k}><a href={l.url} target="_blank" rel="noopener" className="hover:text-[color:var(--acc)]">{l.label} · {shortUrl(l.url)} <Ext /></a></li>)}
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -804,15 +1322,17 @@ function Contact({ prof, projects, t, no }) {
 function Page({ pf, prof, projects, t }) {
   const byId = Object.fromEntries(projects.map((p) => [p.id, p]));
   const secs = [
-    { id: 'cover', label: 'HOME' },
-    prof.intro && { id: 'intro', label: t('page.nav-intro') },
-    (pf.skills || []).length && { id: 'stack', label: t('page.nav-stack') },
-    projects.length && { id: 'glance', label: t('page.nav-glance') },
-    ...projects.flatMap((p) => [{ id: `p-${p.id}`, label: p.title }, (p.highlights || []).length && { id: `p-${p.id}-core`, label: `${p.title} ${t('page.features')}` }]),
-    { id: 'contact', label: t('page.nav-contact') },
+    { id: 'cover', label: 'TITLE' },
+    { id: 'status', label: '상태창' },
+    (pf.skills || []).length && { id: 'skills', label: '스킬' },
+    projects.length && { id: 'map', label: '월드맵' },
+    ...projects.map((p) => ({ id: `p-${p.id}`, label: p.title })),
+    { id: 'credits', label: '크레딧' },
   ].filter(Boolean).map((s, i) => ({ ...s, no: pad(i + 1) }));
   const no = (id) => (secs.find((s) => s.id === id) || {}).no || '';
   const active = useActive(secs.map((s) => s.id));
+  useGameKeys(active);
+  useSparks();
   // 스테이지에 들어설 때마다 절 번호 깜빡임(CSS .stage.enter)
   useEffect(() => {
     const el = document.getElementById(active);
@@ -827,12 +1347,12 @@ function Page({ pf, prof, projects, t }) {
       <Hud secs={secs} active={active} />
       <Nav prof={prof} projects={projects} t={t} active={active} />
       <main className="lg:pl-16">
-        <Cover pf={pf} prof={prof} projects={projects} t={t} no={no} />
-        <Intro prof={prof} t={t} no={no} />
-        <Stack pf={pf} byId={byId} t={t} no={no} />
-        <Glance projects={projects} t={t} no={no} />
-        {projects.map((p, i) => <React.Fragment key={p.id}><Project p={p} i={i} n={projects.length} t={t} no={no} /><Features p={p} t={t} no={no} /></React.Fragment>)}
-        <Contact prof={prof} projects={projects} t={t} no={no} />
+        <TitleScreen pf={pf} prof={prof} projects={projects} t={t} no={no} />
+        <Status prof={prof} projects={projects} t={t} no={no} />
+        <Skills pf={pf} byId={byId} t={t} no={no} />
+        <WorldMap projects={projects} t={t} no={no} />
+        {projects.map((p, i) => <ProjectStage key={p.id} p={p} i={i} projects={projects} t={t} no={no} />)}
+        <Credits prof={prof} projects={projects} t={t} no={no} />
       </main>
     </>
   );
@@ -855,6 +1375,12 @@ function App() {
       }
     })();
   }, []);
+  // 주소에 #절 이 있으면 그려진 뒤 그 절로
+  useEffect(() => {
+    if (!state.ok || !location.hash) return;
+    const id = decodeURIComponent(location.hash.slice(1));
+    requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }));
+  }, [state.ok]);
   if (state.err) return <p className="px-6 py-24 muted">데이터를 읽지 못했습니다. 로컬 서버로 열었는지 확인하세요. ({state.err})</p>;
   if (!state.ok) return <p className="px-6 py-24 muted">불러오는 중…</p>;
   return <Page {...state} />;
