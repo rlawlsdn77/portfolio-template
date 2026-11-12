@@ -1,0 +1,114 @@
+/* ─────────────────────────────────────────────────────────────
+   temp1 전용 발표 덱 배치 — 종이 카탈로그 (temp1/deck.html만 싣음, deck-theme.css 다음)
+   원본 덱(project.html)과 다른 점
+     · 왼쪽 책등: 장면마다 왼쪽 가장자리에 절 이름을 세로로(표지는 프로젝트 제목) — temp1 페이지의 테이프 책등
+     · 머리: 제목은 왼쪽 넓게, 장 이름·쪽 표시는 오른쪽 좁은 칸(세로 잉크 선) · 머리 아래 2px 잉크 선
+     · 바닥글: 쪽 번호를 왼쪽(세리프), 이름을 오른쪽 · 위에 잉크 선
+     · 표지: 대표 그림을 먼저(도판), 그 아래 큰 세리프 제목 · 메타는 잉크 선 목록
+     · 목차: 왼쪽 좁은 칸에 CONTENTS, 오른쪽에 목록 · 번호는 테두리만 있는 네모
+     · 장 표지: 큰 세리프 "CHAPTER / 01"을 두 줄로
+     · 맺음: 가운데 정렬 + 링크를 한 줄로
+     · 카드: 상자 대신 위 잉크 선만 있는 목록(신문·카탈로그 단)
+   덱은 장면마다 실제 크기를 재서 나누고 줄이므로 여기 값이 바뀌어도 배치 점검(PFScene.report().audit)으로 넘침을 확인합니다.
+   장면 안 금지(§9-4)는 그대로: vw·vh, 뷰포트 @media, fixed·sticky, overflow:auto 상자, url() 배경 그림.
+   ───────────────────────────────────────────────────────────── */
+
+/* ── 왼쪽 책등 ── */
+.pf-scene::before {
+  content: attr(data-sec) / "";
+  position: absolute; left: 0; top: 0; bottom: 0; width: 40px; z-index: 1; pointer-events: none;
+  writing-mode: vertical-rl; text-align: center; line-height: 40px; white-space: nowrap; overflow: hidden;
+  font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: .28em; color: var(--muted);
+  background: var(--card); border-right: 1px solid var(--line-2);
+}
+.pf-scene.t-P1::before { content: attr(data-title) / ""; font-family: var(--display); font-size: 15px; font-weight: 800; letter-spacing: .16em; color: var(--ink); }
+
+/* ── 머리(내용 장면): 제목 왼쪽 · 라벨 칸 오른쪽 ── */
+.pf-sum > .pf-head {
+  display: grid; grid-template-columns: minmax(0, 1fr) 232px; grid-template-rows: auto auto; column-gap: 36px; align-items: start;
+  padding-bottom: 14px; border-bottom: 2px solid var(--ink);
+}
+.pf-sum > .pf-head > .pf-headrow {
+  grid-column: 2; grid-row: 1 / span 2; align-self: stretch;
+  flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 6px;
+  padding: 2px 0 0 18px; border-bottom: 0; border-left: 1px solid var(--line-2);
+}
+.pf-sum > .pf-head > .pf-titlerow { grid-column: 1; grid-row: 1; margin-top: 0; }
+.pf-sum > .pf-head > .pf-lead { grid-column: 1; grid-row: 2; }
+.pf-headrow .pf-eyebrow { font-size: 13px; letter-spacing: .12em; }
+.pf-headrow .pf-rlabel { max-width: none; flex-shrink: 1; text-align: left; font-size: 14px; }
+.pf-title { letter-spacing: -.03em; }
+.pf-title .pf-part { color: var(--accent-ink); }
+
+/* ── 바닥글: 쪽 번호 왼쪽 ── */
+.pf-foot { flex-direction: row-reverse; border-top: 1px solid var(--line-2); height: 40px; }
+.pf-foot .pf-num { font-family: var(--display); font-size: 15px; font-weight: 800; color: var(--ink); letter-spacing: .04em; font-variant-numeric: lining-nums tabular-nums; }
+
+/* ── 머리 없는 장면의 윗줄 ── */
+.toprow { border-bottom: 2px solid var(--ink); }
+.toprow .pf-eyebrow { font-size: 13px; letter-spacing: .12em; }
+
+/* ── 점선 장식 → 잉크 선 + 네모 점 ── */
+.dotrule .ln { height: 1px; background: var(--ink); }
+.dotrule .dot { width: 9px; height: 9px; border-radius: 0; background: var(--accent); box-shadow: none; margin-left: 0; }
+
+/* ── 표지: 도판 먼저, 그 아래 제목 ── */
+.t-P1 .pi-main { gap: 48px; margin-top: 26px; }
+.t-P1 .pi-left { gap: 18px; }
+.t-P1 .pi-cover { order: -1; border-radius: 0; border: 1px solid var(--line-2); box-shadow: none; background: var(--card); }
+.t-P1 .pi-t { font-family: var(--display); font-size: 50px; font-weight: 800; letter-spacing: -.01em; line-height: 1.05; }
+.pi-tight .pi-t { font-size: 42px; }
+.pi-meta { border-top: 2px solid var(--ink); border-image: none; }
+.pi-meta .mi { border-bottom-color: var(--line); }
+.intent { border-left: 0; border-top: 1px solid var(--line-2); padding: 10px 0 0; }
+
+/* ── 목차: 왼쪽 칸 CONTENTS · 오른쪽 목록 ── */
+.pf-scene.t-P2 > .pf-body { display: grid; grid-template-columns: 300px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); column-gap: 56px; }
+.pf-scene.t-P2 > .pf-body > .toc-top {
+  grid-column: 1; grid-row: 1; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 18px;
+  padding: 4px 24px 6px 0; border-right: 1px solid var(--line-2);
+}
+.pf-scene.t-P2 > .pf-body > .dotrule { display: none; }
+.pf-scene.t-P2 > .pf-body > .toc-cols { grid-column: 2; grid-row: 1; gap: 0 40px; }
+.pf-scene.t-P2 > .pf-body > .toc-cols.one { grid-template-columns: minmax(0, 1fr); }
+.t-P2 .toc-h { font-size: 44px; line-height: 1; letter-spacing: 0; }
+.t-P2 .toc-sub { font-size: 18px; color: var(--ink); border-top: 2px solid var(--ink); padding-top: 10px; align-self: stretch; }
+.toc-list a { border-bottom-color: var(--line); }
+.toc-list .n { border-radius: 0; background: transparent; color: var(--accent-ink); box-shadow: inset 0 0 0 1px var(--accent); }
+.toc-list .pg { color: var(--muted); }
+
+/* ── 장 표지: 큰 세리프 CHAPTER / 01 ── */
+.t-CH .ch-mid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 64px; }
+.t-CH .ch-no { width: min-content; font-size: 62px; line-height: .98; letter-spacing: 0; overflow-wrap: normal; word-break: keep-all; }
+.t-CH .ch-t { margin-top: 22px !important; font-size: 40px; }
+.t-CH .dotrule { max-width: 240px; }
+.ch-list .toc-list { border-top: 2px solid var(--ink); }
+
+/* ── 맺음: 가운데 정렬 + 링크 한 줄 ── */
+.t-EN .en-mid { grid-template-columns: minmax(0, 1fr); align-content: center; justify-items: center; gap: 40px; text-align: center; }
+.t-EN .en-t { font-family: var(--display); font-size: 64px; line-height: 1.05; letter-spacing: -.01em; }
+.t-EN .dotrule { margin: 22px auto 0; width: 240px; }
+.t-EN .en-links { width: 100%; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); text-align: left; }
+
+/* ── 카드: 상자 대신 위 잉크 선 ── */
+.ncard { background: transparent; border: 0; border-top: 1px solid var(--ink); border-radius: 0; padding: 12px 4px 4px; }
+.ncard .num { border-radius: 0; background: transparent; color: var(--accent-ink); box-shadow: inset 0 0 0 1px var(--accent); font-family: var(--display); }
+.fstep { background: transparent; border: 0; border-top: 2px solid var(--ink); border-radius: 0; padding: 12px 4px 4px; }
+.fstep.res { background: transparent; border-top-color: var(--ok); }
+.fstep .labelchip { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.card { border-color: var(--line-2); box-shadow: none; }
+.rt-ach li::before { border-radius: 0; background: transparent; box-shadow: inset 0 0 0 1px var(--accent); }
+.note { border-radius: 0; border-left-width: 2px; }
+.callout { border-radius: 0; }
+.lcard a { background: transparent; border-color: var(--line-2); }
+.lcard a:hover { background: var(--card); }
+.en-links .lcard.primary a { background: transparent; box-shadow: inset 0 0 0 1px var(--accent); }
+.vmedia, .media { border-color: var(--line-2); }
+.vbox[data-kind="code"] .vmedia { box-shadow: none; }
+.fe-card { border-top: 2px solid var(--ink); padding-top: 12px; }
+
+/* ── 표: 잉크 머리줄 · 줄무늬 없음 ── */
+table.mini, table.md-table { background: transparent; }
+table.mini th, table.md-table th { background: transparent; box-shadow: inset 0 -2px 0 var(--ink); }
+table.mini tbody tr:nth-child(even) td, table.md-table tbody tr:nth-child(even) td { background: transparent; }
+table.kv td { border-left-color: var(--ink); }

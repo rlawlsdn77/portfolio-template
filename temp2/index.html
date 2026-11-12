@@ -236,7 +236,7 @@ function Rich({ text }) {
 const pad = (n) => String(n).padStart(2, '0');
 const isUrl = (u) => /^https?:\/\//.test(u || '');
 const img = (p, src) => `../src/${p.id}/${src}`;
-// 발표 덱은 temp2 전용 레트로 덱(deck.html — 원본 렌더러 + temp2/deck-theme.css). 원본 덱은 ../project.html
+// 발표 덱은 temp2 전용 레트로 덱(deck.html — 원본 렌더러 + temp2/deck-theme.css 색 + temp2/deck-layout.css 배치). 원본 덱은 ../project.html
 const deckUrl = (p, sid = '') => `deck.html?p=${encodeURIComponent(p.id)}${sid ? `#s=${sid}` : ''}`;
 const docUrl = (p) => `../doc.html?p=${encodeURIComponent(p.id)}`;
 const shortUrl = (u) => String(u || '').replace(/^https?:\/\//, '').replace(/\/$/, '');

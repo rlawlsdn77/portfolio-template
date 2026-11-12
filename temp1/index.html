@@ -131,7 +131,7 @@ function Rich({ text }) {
 const pad = (n) => String(n).padStart(2, '0');
 const img = (p, src) => `../src/${p.id}/${src}`;
 const metaOf = (p, label) => (p.meta || []).find((m) => m.label === label)?.value || '';
-const deckUrl = (p, sid = '') => `../project.html?p=${encodeURIComponent(p.id)}${sid ? `#s=${sid}` : ''}`;
+const deckUrl = (p, sid = '') => `deck.html?p=${encodeURIComponent(p.id)}${sid ? `#s=${sid}` : ''}`;   // temp1 전용 발표 덱(종이 카탈로그 배치)
 const docUrl = (p) => `../doc.html?p=${encodeURIComponent(p.id)}`;
 // 기능 절(section) → 발표 덱 장면 id (원본 포트폴리오 문서와 같은 규칙)
 const norm = (s) => String(s || '').replace(/[`*_~]/g, '').replace(/\s+/g, ' ').trim();
