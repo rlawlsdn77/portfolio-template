@@ -127,9 +127,10 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 .tagline { margin: -18px 0 32px; max-width: 48rem; font-size: clamp(16px, 1.9vw, 18px); color: var(--muted); }
 .pi { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; align-items: start;
       padding: clamp(18px, 3vw, 36px); background: var(--surface); border: 1px solid var(--line); border-radius: calc(var(--radius) * 1.4); }
-.cover { display: flex; align-items: center; justify-content: center; height: clamp(240px, 42vw, 400px); padding: 12px;
+/* 대표 이미지 틀은 그림 높이에 맞춤(예전: 높이 400px 고정 → 가로 그림 위아래에 90px씩 검은 띠). 세로 그림만 최대 높이에서 멈추고 양옆이 빔 */
+.cover { display: flex; align-items: center; justify-content: center; padding: 12px;
          background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.cover img { max-height: 100%; width: auto; height: auto; border-radius: 8px; }
+.cover img { max-height: 376px; width: auto; height: auto; border-radius: 8px; }
 .meta { display: grid; grid-template-columns: 1fr; gap: 14px 28px; }
 .meta dt, .intent .k, .purls dt { font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--muted); }
 .meta dd { margin-top: 2px; font-size: 15px; font-weight: 600; }
@@ -261,6 +262,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
   .pi { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 16pt; padding: 0; background: none; border: 0; border-radius: 0; }
   .pi.nocover { grid-template-columns: 1fr; }
   .cover { height: 78mm; background: none; padding: 4pt; }
+  .cover img { max-height: 100%; }
   .meta { grid-template-columns: 1fr 1fr; gap: 6pt 14pt; }
   .meta .wide { grid-column: 1 / -1; }
   .meta dt, .intent .k, .purls dt { font-size: 7.5pt; }

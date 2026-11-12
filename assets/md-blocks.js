@@ -112,5 +112,40 @@
     return null;
   }
 
-  PF.md = { parse, index, findSection, pick, fpOf, firstVisual, isRelative, decode };
+  // 그림만 든 표(칸마다 그림 하나, 글 없음) = 원문에서 화면을 나란히 놓으려고 쓴 표 → [{ im, cap }] (아니면 null)
+  //   캡션 = 그 열의 머리 칸(행이 하나일 때), 없으면 그림 설명(alt). 발표 덱(화면 모음)·상세 문서(같은 크기 격자)가 같이 씀
+  function galleryOf(table) {
+    const rows = [...table.querySelectorAll('tbody tr')];
+    if (!rows.length) return null;
+    const imgs = [];
+    for (const td of rows.flatMap((r) => [...r.children])) {
+      const im = td.querySelectorAll('img');
+      if (im.length !== 1 || td.textContent.replace(/\s+/g, '').length) return null;
+      imgs.push(im[0]);
+    }
+    const heads = [...table.querySelectorAll('thead th')].map((th) => th.textContent.replace(/\s+/g, ' ').trim());
+    return imgs.map((im, i) => ({ im, cap: (rows.length === 1 && heads[i]) || im.getAttribute('alt') || '', cols: rows[0].children.length }));
+  }
+
+  // 코드 이름 줄바꿈 자리: 인라인 코드(<pre> 밖) 안의 낱말 경계(소문자 → 대문자, . _ / < > ( ) , : 뒤)에 <wbr>을 넣음
+  //   ParseNetworkManager → Parse·Network·Manager에서만 꺾임(예전: 아무 글자에서나 꺾여 "ParseNetworkManag / er")
+  //   소문자 → 대문자, 약어 끝(UI|Manager), 구두점 뒤. 숫자 뒤는 꺾지 않음(Rigidbody2D의 "2D"를 붙여 둠)
+  const SOFT = /(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|(?<=[._/<>(),:])(?=[^\s._/<>(),:])/g;
+  function softBreaks(root) {
+    root.querySelectorAll('code').forEach((c) => {
+      if (c.closest('pre') || c.dataset.pfSoft) return;
+      c.dataset.pfSoft = '1';
+      const w = document.createTreeWalker(c, NodeFilter.SHOW_TEXT);
+      const nodes = []; for (let n = w.nextNode(); n; n = w.nextNode()) nodes.push(n);
+      nodes.forEach((n) => {
+        const parts = n.data.split(SOFT);
+        if (parts.length < 2) return;
+        const f = document.createDocumentFragment();
+        parts.forEach((s, i) => { if (i) f.appendChild(document.createElement('wbr')); f.appendChild(document.createTextNode(s)); });
+        n.replaceWith(f);
+      });
+    });
+  }
+
+  PF.md = { parse, index, findSection, pick, fpOf, firstVisual, isRelative, decode, galleryOf, softBreaks };
 })();

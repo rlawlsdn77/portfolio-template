@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
    temp2 전용 발표 덱 배치 — 레트로 게임 화면 (temp2/deck.html만 싣음, deck-theme.css 다음)
    원본 덱(project.html)과 다른 점
-     · 장면 바탕: 32px 격자 + 주사선(CRT) — temp2 페이지와 같은 무늬(그러데이션만, 그림 파일 없음)
+     · 장면 바탕: 32px 격자 + 주사선(CRT) — temp2 페이지와 같은 무늬(그러데이션만, 그림 파일 없음). 주사선은 바탕에만(그림 위에 줄이 그어지지 않게)
      · 머리: 장 이름·쪽 표시를 게임 창의 제목 막대(픽셀 모서리 상자)로 · 제목 앞 ▶ 표시 · 제목에 픽셀 그림자
      · 바닥글: 화면 끝까지 닿는 상태 막대 · 쪽 번호는 픽셀 글꼴
      · 표지: 좌우를 뒤집어 메타를 왼쪽, 제목과 CRT 화면(둥근 화면 + 테두리)을 오른쪽
@@ -18,16 +18,15 @@
                 calc(100% - 3px) calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 3px calc(100% - 3px), 0 calc(100% - 3px));   /* 픽셀 모서리 */
 }
 
-/* ── 장면 바탕: 격자 + 주사선 ── */
+/* ── 장면 바탕: 격자 + 주사선 ──
+   주사선은 장면 "바탕"에만 깝니다(그림·코드·상자 아래). 예전처럼 장면 전체를 덮는 막(::after, z-index 4)으로 두면
+   스크린샷 위에 검은 가로줄이 그어지고, 덱이 화면에 맞춰 줄어들거나 화면 배율이 125%·150%일 때 줄 간격이 들쭉날쭉해져 더 눈에 띕니다. */
 .pf-scene, .pf-scene.t-CH, .pf-scene.t-EN, .pf-scene.t-P1, .pf-scene.t-P2 {
   background:
+    repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / .16) 2px 3px),
     linear-gradient(color-mix(in srgb, var(--ink) 3%, transparent) 1px, transparent 1px) 0 0 / 32px 32px,
     linear-gradient(90deg, color-mix(in srgb, var(--ink) 3%, transparent) 1px, transparent 1px) 0 0 / 32px 32px,
     var(--bg);
-}
-.pf-scene::after {
-  content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none;
-  background: repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / .16) 2px 3px);
 }
 
 /* ── 픽셀 글꼴(영문 라벨): 굵은 모양이 없는 글꼴이라 가짜 굵게를 막음(한글은 Pretendard 굵기 그대로) ── */
@@ -66,8 +65,10 @@
 .t-P1 .pi-left { order: 2; }
 .t-P1 .pi-t { font-family: var(--display); font-size: 34px; line-height: 1.35; letter-spacing: 0; text-shadow: 4px 4px 0 var(--acc-deep); }
 .pi-tight .pi-t { font-size: 28px; }
+/* CRT 테두리(안쪽 여백 10px)를 둘러도 그림 칸은 그림 비율 그대로: 비율을 안쪽 칸(content-box)에 걸고 폭에서 여백 20px을 뺌 */
 .t-P1 .pi-cover {
   position: relative; padding: 10px; border: 0; border-radius: 22px / 18px; clip-path: none; outline: 0;
+  box-sizing: content-box; width: min(calc(100% - 20px), calc(var(--pi-h) * var(--ar, 1.7778)));
   background: var(--panel); box-shadow: inset 0 0 0 2px var(--line-2);
 }
 .t-P1 .pi-cover img { border-radius: 14px / 11px; }
@@ -98,6 +99,9 @@
 .t-CH .ch-t { text-shadow: 4px 4px 0 var(--acc-deep); }
 .t-CH .dotrule { margin-left: auto; flex-direction: row-reverse; }
 .t-CH .dotrule .dot { margin: 0 6px 0 0; }
+.t-CH .ch-line { margin-left: auto; }
+.t-CH .ch-shot { display: flex; justify-content: flex-end; }
+.t-CH .ch-shot img { border: 0; border-radius: 0; clip-path: var(--px); outline: 2px solid var(--line-2); outline-offset: -2px; }
 
 /* ── 맺음: 제목을 오른쪽으로 ── */
 .t-EN .en-mid > :first-child { order: 2; text-align: right; }

@@ -175,7 +175,40 @@ const PF = (() => {
   // ── 문구 표(assets/strings.js): t(키, 값) · tab(data의 탭 값) · label(data의 카드 라벨 값) · 페이지 시작 때 loadStrings()로 theme/strings.tsv를 읽음 ──
   const { t, tab, label, load: loadStrings, report: stringsReport } = PFStr;
 
+  // ── 다이어그램 색 = 페이지 색(발표 덱·상세 문서 공용) ──
+  //   판(board, 기본 --diagram-bg)이 어두우면 mermaid 'base' 테마에 페이지 색(바탕·글자·강조·선)을 넣어 { theme, themeVariables }로 돌려줌.
+  //   밝은 판이면 예전처럼 { theme: 'default' }. 원문에 %%{init}%%이 있으면 그 지시가 이김(mermaid 규칙)
+  //   CSS 색(color-mix 등)은 mermaid가 읽지 못하므로 캔버스로 #rrggbb로 바꿔 넘김
+  function mermaidTheme(board0 = 'var(--diagram-bg)') {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 1;
+    const cx = cv.getContext('2d', { willReadFrequently: true });
+    const probe = document.createElement('i'); probe.style.display = 'none'; document.body.appendChild(probe);
+    const hex = (expr) => {
+      probe.style.color = ''; probe.style.color = expr;
+      cx.clearRect(0, 0, 1, 1); cx.fillStyle = '#000'; cx.fillStyle = getComputedStyle(probe).color; cx.fillRect(0, 0, 1, 1);
+      const [r, g, b] = cx.getImageData(0, 0, 1, 1).data;
+      return `#${[r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
+    };
+    const mix = (a, pct) => hex(`color-mix(in srgb, ${a} ${pct}%, ${board0})`);
+    const board = hex(board0);
+    const lum = (h) => { const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+    if (lum(board) > 0.5) { probe.remove(); return { theme: 'default' }; }
+    const ink = hex('var(--ink)'), muted = hex('var(--muted)'), line2 = hex('var(--line-2)');
+    const node = mix('var(--accent)', 20), nodeLine = mix('var(--accent)', 70), soft = mix('var(--ink)', 8), soft2 = mix('var(--ink)', 4), note = mix('var(--accent-2)', 18);
+    probe.remove();
+    return { theme: 'base', themeVariables: {
+      darkMode: true, background: board, fontFamily: 'Pretendard, sans-serif', fontSize: '16px',
+      primaryColor: node, primaryTextColor: ink, primaryBorderColor: nodeLine, secondaryColor: soft, secondaryTextColor: ink, secondaryBorderColor: line2,
+      tertiaryColor: soft2, tertiaryTextColor: ink, tertiaryBorderColor: line2, mainBkg: node, nodeBorder: nodeLine, nodeTextColor: ink, textColor: ink, titleColor: ink,
+      lineColor: muted, edgeLabelBackground: board, clusterBkg: soft2, clusterBorder: line2,
+      actorBkg: node, actorBorder: nodeLine, actorTextColor: ink, actorLineColor: muted, signalColor: ink, signalTextColor: ink,
+      labelBoxBkgColor: soft, labelBoxBorderColor: line2, labelTextColor: ink, loopTextColor: ink, activationBkgColor: soft, activationBorderColor: line2,
+      noteBkgColor: note, noteTextColor: ink, noteBorderColor: line2, sequenceNumberColor: board,
+      labelColor: ink, altBackground: soft2, stateLabelColor: ink, stateBkg: node, specialStateColor: muted, innerEndBackground: muted, compositeBackground: soft2, compositeTitleBackground: soft,
+    } };
+  }
+
   return { esc, inline, isUrl, shortUrl, loadJSON, loadText, encodePath, srcPath, projectUrl, docUrl, siteBase, visibleUrl, metaValue, teamLabel,
            slugger, normTitle, resolveHeading, keyOk, deckSceneFor, headingsOf, ICON, NEWTAB, link, markNewTab, themeTokens, applyTheme, contrast, hexRgb,
-           FILE_HELP, noDataHtml, isFile, notice, guardFileProtocol, noData, t, tab, label, loadStrings, stringsReport };
+           FILE_HELP, noDataHtml, isFile, notice, guardFileProtocol, noData, t, tab, label, loadStrings, stringsReport, mermaidTheme };
 })();

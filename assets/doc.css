@@ -6,7 +6,8 @@
    1200px 미만은 목차를 [목차] 서랍으로, 720px 미만은 휴대폰 한 열. 인쇄는 A4(코드·그림이 쪽 사이에서 잘리지 않게만, 빈칸 0은 보장 안 함).
    장면 키트 CSS는 싣지 않습니다(결정 #14의 인쇄 규칙이 흐르는 문서를 빈 쪽으로 만들기 때문, §4-8).
    화면은 어두운 테마(포트폴리오 문서·발표 덱과 같은 검은 바탕 · 한 단 밝은 카드 · 강조색 → 보랏빛 그러데이션). 인쇄는 맨 아래 @media print에서 흰 종이용 밝은 색으로 되돌림.
-   다이어그램은 학생 문서의 %%{init}%% 테마(밝은 색)가 그대로 읽히게 밝은 판(--diagram-bg) 위에 둡니다.
+   다이어그램은 두 벌: 화면은 페이지 색 판(--diagram-bg = 카드 색, doc.js가 페이지 색으로 그림), 인쇄·밝게 읽기는 밝은 판(예전 'default' 테마).
+   밝게 읽기(html[data-doc-theme="light"], doc.js의 머리 막대 단추): 화면에서도 인쇄와 같은 밝은 토큰 — 코드 상자만 어둡게.
    테마 손잡이(--t-*)는 theme/theme.css(/portfolio-theme가 씀)에서 받습니다. 비어 있으면 아래 기본값 = 어두운 기본 테마
    ───────────────────────────────────────────────────────────── */
 :root {
@@ -20,7 +21,7 @@
   --ink: var(--t-ink, #F4F4F6); --body: var(--t-body, #BDBDC7); --muted: var(--t-muted, #9A9AA6); --faint: var(--t-faint, color-mix(in srgb, var(--muted) 85%, var(--paper)));
   --line: var(--t-line, #24242C); --line-2: var(--t-line-2, #3D3D48);
   --paper: var(--t-bg, #0A0A0D); --bg: var(--paper); --surface: var(--t-surface, #131318); --th: color-mix(in srgb, var(--ink) 5%, var(--surface));
-  --code-bg: var(--t-code-bg, #111116); --diagram-bg: var(--t-diagram, #F4F5FA); --shadow: var(--t-shadow, rgb(0 0 0 / .8));
+  --code-bg: var(--t-code-bg, #111116); --diagram-bg: var(--t-diagram, var(--surface)); --shadow: var(--t-shadow, rgb(0 0 0 / .8));
   --sans: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --mono: 'JetBrains Mono', 'D2Coding', Consolas, monospace;
   --r: var(--t-radius, 20px); --radius: calc(var(--r) * .7); --pill: var(--t-pill, 999px);
@@ -37,8 +38,10 @@ body { font-family: var(--sans); background: var(--paper); color: var(--ink); li
        -webkit-font-smoothing: antialiased; word-break: keep-all; }
 a { color: inherit; }
 img { max-width: 100%; }
+/* 인라인 코드: 낱말 경계(<wbr>, PF.md.softBreaks — ParseNetwork·Manager)에서만 꺾고, 그래도 안 들어가는 긴 덩어리만 아무 곳에서나.
+   예전 word-break: break-all은 표 칸에서 "ParseNetworkManag / er"처럼 이름을 글자 중간에서 끊었음 */
 code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft); color: var(--accent-ink);
-       padding: 1px 6px; border-radius: 5px; word-break: break-all; }
+       padding: 1px 6px; border-radius: 5px; word-break: normal; overflow-wrap: break-word; }
 :focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; border-radius: 4px; }
 .sr-only, .pf-sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
            clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
@@ -168,13 +171,25 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
 /* 크기 정보가 없는 그림이 늦게 들어올 때 스크롤 고정의 기준이 되지 않게 → 바로 아래 제목·글이 기준이 되어 제자리에 머묾(doc.js hold()와 함께) */
 .md :is(.pf-figure, img, .table-wrap:has(img)) { overflow-anchor: none; }
 
+/* 화면 모음: 그림만 든 표 → 같은 폭 격자(doc.js ⑥). 캡션 = 그 열의 머리 칸 */
+.md > .doc-gallery { width: 100%; max-width: min(100%, var(--fig-max)); }
+.doc-gallery { margin: 20px 0; display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 14px; overflow-anchor: none; }
+.doc-gallery figure { margin: 0; min-width: 0; }
+.doc-gallery img { display: block; width: 100%; height: auto; border-radius: calc(var(--r) * .5); border: 1px solid var(--line); cursor: zoom-in; }
+.doc-gallery figcaption { margin-top: 6px; font-size: 13.5px; font-weight: 600; line-height: 1.45; color: var(--muted); text-align: center; }
+
 .md .mmd { margin: 22px 0; }
-.mmd .mermaid { display: flex; justify-content: center; padding: 16px; border: 1px solid var(--diagram-bg); border-radius: calc(var(--r) * .7); overflow-x: auto; background: var(--diagram-bg); }
+.mmd .mermaid { display: flex; justify-content: center; padding: 16px; border: 1px solid var(--line); border-radius: calc(var(--r) * .7); overflow-x: auto; background: var(--diagram-bg); }
+/* 두 벌 그린 다이어그램(.two): 화면 = 페이지 색(.mmd-dark), 밝게 읽기·인쇄 = 밝은 판(.mmd-light). 밝은 벌의 판은 늘 흰색 */
+.mmd .mermaid.mmd-light { background: #FFFFFF; border-color: #E6E7EB; }
+.mmd.two .mermaid.mmd-light { display: none; }
+:root[data-doc-theme="light"] .mmd.two .mermaid.mmd-dark { display: none; }
+:root[data-doc-theme="light"] .mmd.two .mermaid.mmd-light { display: flex; }
 .mmd .mermaid svg { display: block; max-width: 100%; height: auto; }
 .mmd-bar { contain: inline-size; display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 6px 12px; margin-top: 6px; font-size: 13px; }
 .mmd-src summary { color: var(--muted); cursor: pointer; font-weight: 600; }
 .mmd-src pre { margin: 8px 0 0; max-height: 320px; overflow: auto; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; }
-.mmd-src pre code { display: block; padding: 10px 12px; font-size: 12.5px; color: var(--body); background: none; white-space: pre; word-break: normal; }
+.mmd-src pre code { display: block; padding: 10px 12px; font-size: 12.5px; color: #C9CDD6; background: none; white-space: pre; word-break: normal; }   /* 코드 판은 늘 어두움 → 글자는 늘 밝게(밝게 읽기에서도) */
 .mmd-zoom { font: inherit; font-size: 13px; font-weight: 700; color: var(--accent-ink); background: none; border: 0; cursor: pointer; padding: 0; }
 .pf-mmd-error { font-family: var(--mono); font-size: 13px; white-space: pre-wrap; color: #F97066; }
 
@@ -202,6 +217,16 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
 .lb-stage.lb-svg svg { display: block; height: auto; }
 .lb-cap { color: #fff; text-align: center; font-size: 14px; margin-top: 10px; }
 .lb-close { display: block; margin: 10px auto 0; }
+
+/* ── 밝게 읽기(화면만, doc.js 머리 막대 단추): 인쇄와 같은 밝은 토큰. 코드 상자(--code-bg)는 어두운 그대로(가이드: 코드는 다크 블록, 나머지는 밝은 문서형) ── */
+:root[data-doc-theme="light"] {
+  --ink: #17181C; --body: #3A3D46; --muted: #6B6F7B; --faint: #767B87; --line: #E6E7EB; --line-2: #D5D7DD;
+  --paper: #FFFFFF; --bg: #F7F7F5; --surface: #F7F7F8; --th: #F1F2F4; --diagram-bg: #FFFFFF; --shadow: rgb(20 20 30 / .18); color-scheme: light;
+  --accent-ink: var(--accent-ink-p, #2557B7) !important; --accent-fill: var(--accent-fill-p, var(--accent)) !important;
+  --accent-soft: var(--accent-soft-p, #ECF2FD) !important; --accent-line: color-mix(in srgb, var(--accent) 28%, #fff);
+}
+:root[data-doc-theme="light"] .doc-intro .eyebrow { background: none; -webkit-text-fill-color: currentColor; }
+.read-mode[aria-pressed="true"] { border-color: var(--accent-line); background: var(--accent-soft); }
 
 .doc-foot { max-width: var(--page-max); margin: 0 auto; padding: 28px var(--pad) 48px; border-top: 1px solid var(--line);
             display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; color: var(--faint); font-size: 13px; }
@@ -239,6 +264,7 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
   .md h3 { font-size: 17.5px; }
   .md pre code, .md pre code.hljs { font-size: 12.5px; padding: 14px 16px; }
   .md table { font-size: 14px; }
+  .doc-gallery { grid-template-columns: 1fr; }     /* 휴대폰: 화면 모음은 한 줄에 하나 */
   .doc-foot { padding-bottom: 88px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -288,6 +314,10 @@ dialog.lightbox::backdrop { background: rgba(10, 11, 14, .82); }
   .md :is(th, td) a, .md .table-wrap.print-wide :is(th, td) { overflow-wrap: anywhere; }
   thead { display: table-header-group; }
   .mmd .mermaid { border: 0; padding: 0; overflow: visible; }
+  .mmd.two .mermaid.mmd-dark { display: none !important; }      /* 인쇄(흰 종이)는 늘 밝은 벌 */
+  .mmd.two .mermaid.mmd-light { display: flex !important; }
+  .doc-gallery { gap: 6pt; break-inside: avoid; }
+  .doc-gallery figcaption { font-size: 8.5pt; }
   .mermaid svg, .md img { max-width: 100% !important; height: auto; max-height: 230mm; }
   .md a { color: inherit; text-decoration: none; }
   .link-list { margin-top: 18pt; border-top: 1px solid #ccc; padding-top: 8pt; font-size: 9pt; }

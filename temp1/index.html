@@ -310,7 +310,10 @@ function FeatureCard({ p, h, k, t }) {
     <li className="fcard reveal bg-sheet border border-rule flex flex-col min-w-0" style={{ animationDelay: `${60 + k * 90}ms` }}>
       <div className="aspect-[16/10] border-b border-rule overflow-hidden relative bg-[#E4E1DA]">
         {h.image?.src ? (
-          <img src={img(p, h.image.src)} alt={cap(h.image.caption) || h.title} className="w-full h-full object-cover block"
+          /* 카드 그림 칸은 16:10으로 맞춤(세 카드 높이를 고르게). 비율이 25% 넘게 다른 그림(가로로 긴 비교 그림 등)은 잘라 내면
+             절반이 사라지므로 잘리지 않게 담고(contain) 남는 자리는 종이 색 칸이 받침 */
+          <img src={img(p, h.image.src)} alt={cap(h.image.caption) || h.title}
+               className={`w-full h-full block ${h.image.w && h.image.h && Math.abs(h.image.w / h.image.h / 1.6 - 1) > 0.25 ? 'object-contain' : 'object-cover'}`}
                {...(h.image.w && h.image.h ? { width: h.image.w, height: h.image.h } : {})} />
         ) : (
           <span className="absolute inset-0 flex items-end justify-start p-5 font-serif font-bold text-[88px] leading-none text-ink/10 select-none" aria-hidden="true">{pad(k + 1)}</span>

@@ -523,11 +523,16 @@ def validate(p, chapters, doc):
     return errs, warns, pieces, cross
 
 
+CH_MIN = 3   # 장 표지는 장면이 3개 이상인 장에만(assets/project-deck.js CH_MIN과 같은 규칙)
+
+
 def scene_count(chapters, slides, data):
-    used = {s.get('chapter') for s in slides}
+    per = {}
+    for s in slides:
+        per[s.get('chapter')] = per.get(s.get('chapter'), 0) + 1
     retro = data.get('retro') or {}
     has_retro = any(retro.get(x) for x in ('achieved', 'regrets', 'plans'))
-    return len(slides) + len([c for c in chapters if c in used]) + 3 + (1 if has_retro else 0)
+    return len(slides) + len([c for c in chapters if per.get(c, 0) >= CH_MIN]) + 3 + (1 if has_retro else 0)
 
 
 def deck_scene_for(slides, section):                               # PF.deckSceneFor와 같은 규칙
@@ -692,7 +697,7 @@ def apply_edits(data, edits, doc, rep):
         sec = hl.get('section')
         b = deck_scene_for(base, sec) if sec else None
         if b and not deck_scene_for(S, sec):
-            where = '그 장의 장 표지로' if b.get('chapter') in left else '장 표지도 사라져 발표 덱 표지로'
+            where = ('그 장의 장 표지로' if sum(1 for s in S if s.get('chapter') == b.get('chapter')) >= CH_MIN else '그 장의 첫 장면으로') if b.get('chapter') in left else '장 표지도 사라져 발표 덱 표지로'
             rep.add('권장', '포트폴리오 문서 기능 "%s"의 [발표 덱에서 보기]가 연결된 장면이 빠졌습니다 → %s 이어집니다' % (hl.get('title', sec), where))
     if applied or removed:
         rep.add('참고', '고친 장면 %d개 · 숨긴 장면 %d개를 반영했습니다' % (len(applied), len(removed)))

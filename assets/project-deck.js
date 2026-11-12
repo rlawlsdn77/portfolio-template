@@ -108,10 +108,11 @@
   // ── 원문 블록 → 장면에 넣을 준비(이미지 크기·다이어그램 SVG를 미리 구함) ──
   let mmdHost = null;
   const svgCache = new Map();
+  // 다이어그램 색 = 장면 색(PF.mermaidTheme, common.js — 상세 문서와 공용)
   async function renderMermaid(els) {
     if (!els.length) return;
     if (!window.mermaid) { els.forEach((el) => svgCache.set(el, { error: 'Mermaid를 불러오지 못했습니다' })); return; }
-    mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose', fontFamily: 'Pretendard, sans-serif', suppressErrorRendering: true });
+    mermaid.initialize({ startOnLoad: false, ...PF.mermaidTheme(), securityLevel: 'loose', fontFamily: 'Pretendard, sans-serif', suppressErrorRendering: true });
     if (!mmdHost) { mmdHost = document.createElement('div'); mmdHost.setAttribute('aria-hidden', 'true'); Object.assign(mmdHost.style, { position: 'absolute', left: '-20000px', top: '0', width: '1280px', visibility: 'hidden' }); document.body.appendChild(mmdHost); }
     let n = 0;
     for (const el of els) {
@@ -122,6 +123,8 @@
     }
     mmdHost.replaceChildren();
   }
+  // 그림만 든 표(PF.md.galleryOf) = 원문에서 화면을 나란히 놓으려고 쓴 표 → 표로 그리면 그림이 썸네일(높이 120px)이 되므로
+  //   그림 하나하나를 화면(image 시각 자료)으로 풀어 장면 칸에 맞춰 크게. 캡션 = 그 열의 머리 칸
   async function resolveVisuals(model, P, p) {
     const mm = [];
     for (const c of model) for (const sl of c.slides) {
@@ -131,10 +134,17 @@
         if (r.status === 'missing' || r.status === 'ambiguous') { info.unresolved.push(`${sl.key}: ${r.detail}`); return { ref, ...r }; }
         if (ref.kind === 'mermaid') mm.push(r.el);
         if (ref.kind === 'image') { const src = r.el.getAttribute('src'); const d = ref.w && ref.h ? { w: ref.w, h: ref.h } : await PF.imageSize(src); return { ref, ...r, src, d }; }
+        const gal = ref.kind === 'table' && r.el ? PF.md.galleryOf(r.el) : null;
+        if (gal) {                                                      // 화면 모음: 원문 문제 띠(visual-changed)는 첫 그림에만
+          return Promise.all(gal.map(async ({ im, cap }, i) => {
+            const src = im.getAttribute('src');
+            return { ref: { kind: 'image', caption: cap ? { text: cap } : null, gallery: true }, status: i ? 'ok' : r.status, detail: i ? '' : r.detail, el: im, src, d: await PF.imageSize(src) };
+          }));
+        }
         // 표 안 그림: 불러오기 전 높이로 재면 나중에 표가 커져 조용히 잘림 → 크기를 먼저 받아 두고 복제본에 width·height를 적음(vboxHtml)
         if (ref.kind === 'table' && r.el) return { ref, ...r, imgDims: await Promise.all([...r.el.querySelectorAll('img')].map((i) => PF.imageSize(i.getAttribute('src')))) };
         return { ref, ...r };
-      }))).map((v) => (sl.edited ? { ...v, edited: true } : v));             // 장면 고치기로 고친 장면: 원문 문제 띠 문구가 다름
+      }))).flat().map((v) => (sl.edited ? { ...v, edited: true } : v));      // 장면 고치기로 고친 장면: 원문 문제 띠 문구가 다름
     }
     await renderMermaid(mm);
   }
@@ -156,8 +166,9 @@
     const cap = (t) => (t ? `<figcaption class="cap">${t}</figcaption>` : '');
     const k = v.ref.kind;
     if (k === 'image') {
-      const alt = v.ref.caption?.text || v.el?.getAttribute('alt') || '';
-      return `<figure class="vbox" data-kind="image"${v.d ? ` data-w="${v.d.w}" data-h="${v.d.h}"` : ''}><div class="vmedia">${PF.imgTag(v.src, alt, v.d)}</div>${cap(inline(alt))}</figure>`;
+      const capT = v.ref.caption?.text || v.el?.getAttribute('alt') || '';
+      const alt = v.ref.gallery ? v.el?.getAttribute('alt') || capT : capT;   // 화면 모음: 캡션은 열 머리 칸, 대체 글은 그림 설명
+      return `<figure class="vbox" data-kind="image"${v.d ? ` data-w="${v.d.w}" data-h="${v.d.h}"` : ''}><div class="vmedia">${PF.imgTag(v.src, alt, v.d)}</div>${cap(inline(capT))}${warn}</figure>`;
     }
     if (k === 'mermaid') {
       const r = svgCache.get(v.el) || {};
@@ -186,6 +197,21 @@
 
   // ── 장면 틀(deck.slides[].layout) ──
   const txt = (t) => (t && typeof t === 'object' ? t.text : t) || '';
+  // 장면 제목: 덱 안에 같은 제목이 여럿이면(한 절을 여러 장면으로 나눈 경우) ①②③을 붙여 구분(레이아웃 원칙 1 — 같은 제목을 되풀이하지 않음)
+  const CIRC = '①②③④⑤⑥⑦⑧⑨⑩';
+  const titleOf = (sl) => sl._title || txt(sl.title);
+  function numberDupTitles(model) {
+    const all = model.flatMap((c) => c.slides);
+    const count = new Map();
+    all.forEach((sl) => { const t = txt(sl.title).trim(); if (t) count.set(t, (count.get(t) || 0) + 1); });
+    const seen = new Map();
+    all.forEach((sl) => {
+      const t = txt(sl.title).trim();
+      if (!t || count.get(t) < 2) { delete sl._title; return; }
+      const k = (seen.get(t) || 0) + 1; seen.set(t, k);
+      sl._title = `${t} ${CIRC[k - 1] || `(${k})`}`;
+    });
+  }
   const ncards = (points, { row = false, num = true, two = false } = {}) => (points.length
     ? `<div class="cards${row ? ' row' : ''}${two ? ' two' : ''}" style="--n:${Math.min(points.length, 4)}">${points.map((pt, i) =>
       `<div class="ncard${num ? '' : ' nonum'}">${num ? `<span class="num" aria-hidden="true">${i + 1}</span>` : ''}<div>${pt.label ? `<span class="lb">${esc(PF.label(pt.label))}</span>` : ''}<p>${inline(txt(pt))}</p></div></div>`).join('')}</div>` : '');
@@ -197,8 +223,10 @@
     const vis = (list) => `<div class="vis">${list.join('')}</div>`;
     const tight = variant.tight ? ' tight' : '';
     if (!vs.length) {
-      if (sl.layout === 'problem') return `<div class="dk dk-text${tight}">${flowHtml(points, variant.stack || variant.tight ? 'row' : 'col')}</div>`;
-      return `<div class="dk dk-text${tight}">${ncards(points, { two: points.length >= 3 && !variant.stack, num: sl.layout !== 'overview' })}</div>`;
+      // 글만 있는 장면: 들어가면 큰 글자(big)부터 — 짧은 글이 장면 위아래로 크게 비지 않게(채움률)
+      const big = variant.big ? ' big' : '';
+      if (sl.layout === 'problem') return `<div class="dk dk-text${tight}${big}">${flowHtml(points, variant.stack || variant.tight ? 'row' : 'col')}</div>`;
+      return `<div class="dk dk-text${tight}${big}">${ncards(points, { two: points.length >= 3 && !variant.stack, num: sl.layout !== 'overview' })}</div>`;
     }
     if (sl.layout === 'screens') {
       return `<div class="dk scr-row${tight}" style="--n:${vs.length}">${vs.map((v, i) => `<div class="fe-card">${vis([v])}${points[i] ? `<p class="fe-k">${esc(PF.t('en.feature'))} ${String(i + 1).padStart(2, '0')}</p>${points[i].label ? `<h3>${esc(PF.label(points[i].label))}</h3>` : ''}${txt(points[i]) ? `<p>${inline(txt(points[i]))}</p>` : ''}` : ''}</div>`).join('')}</div>`;
@@ -255,14 +283,16 @@
   //   codeChunk(v) = 그 코드의 이번 줄 범위 · tsplit = { v, rows: [a, b) } 행을 나누는 표 하나(다른 표는 그대로 둠)
   function fitSlide(sl, vis, sid, part, codeChunk, meta, tsplit = null, depth = 0) {
     const vs = vis.map((v) => vboxHtml(v, v.ref.kind === 'code' ? codeChunk(v) : v.ref.kind === 'table' && tsplit && tsplit.v === v ? tsplit.rows : null));
-    const V = sl.layout === 'full' || sl.layout === 'screens' ? [{}, { tight: true }]
+    const V = !vis.length ? [{ big: true }, {}, { tight: true }, { stack: true }, { stack: true, tight: true }]   // 글만: 큰 글자 → 보통 → 촘촘 → 한 줄로 쌓기
+      : sl.layout === 'full' || sl.layout === 'screens' ? [{}, { tight: true }]
       : [{ vw: 1.4 }, { vw: 1.7 }, { vw: 1.15 }, { vw: 1.4, tight: true }, { stack: true }, { stack: true, tight: true }];
     const build = (v) => {
-      const s = PF.scene({ id: sid, tpl: 'D', eyebrow: meta.chapter, rlabel: meta.rlabel, title: txt(sl.title) || meta.chapter, sub: part, lead: part && part !== `1/${part.split('/')[1]}` ? '' : txt(sl.lead), foot: meta.foot, sec: meta.chapter, group: meta.chapter, stitle: txt(sl.title) });
+      const s = PF.scene({ id: sid, tpl: 'D', eyebrow: meta.chapter, rlabel: meta.rlabel, title: titleOf(sl) || meta.chapter, sub: part, lead: part && part !== `1/${part.split('/')[1]}` ? '' : txt(sl.lead), foot: meta.foot, sec: meta.chapter, group: meta.chapter, stitle: titleOf(sl) });
       s.classList.add(`l-${sl.layout || 'visual'}`);
       if (meta.err) s.dataset.pfErr = meta.err;
       if (sl.edited) s.dataset.pfEdited = '1';                       // 장면 고치기로 고친 장면(미리보기 개요에 ✎)
       PF.body(s).innerHTML = `<div class="pf-fill">${bodyHtml(sl, vs, v)}</div>`;
+      PF.md.softBreaks(s);                                             // 코드 이름은 낱말 경계에서만 꺾음(재기 전에 — 줄바꿈이 바뀌면 크기가 바뀜)
       if (meta.auto) s.querySelector('.pf-foot > span').insertAdjacentHTML('beforeend', '<span class="pf-autoband" data-pf-ui="note">예전 데이터로 자동 구성 — /portfolio-build를 다시 실행하면 발표 덱이 됩니다</span>');
       return PF.fitVisuals(s);
     };
@@ -295,6 +325,7 @@
     info.fonts = await PF.loadFonts();
     mark('fonts');
     const model = modelOf(p, P);
+    numberDupTitles(model);
     await resolveVisuals(model, P, p);
     mark('visuals');
     const auto = info.mode === 'auto';
@@ -302,17 +333,21 @@
     const used = new Set(['cover', 'toc', 'retro', 'end']);
 
     // 표지 = 프로젝트 소개 템플릿(PF.projectIntro, 결정 G4). 상세 문서 링크는 표지·맺음에만(G1)
+    //   표지의 링크는 이름만 있는 한 줄(바깥 링크 · 상세 기술문서). 주소가 보이는 카드와 [← 포트폴리오]는 맺음 장면에
     const cards = [
-      ...ext.map((l) => ({ k: PF.extEn(l), label: l.label, href: l.url, kind: 'external', visible: shortUrl(l.url) })),
-      { k: PF.t('en.techdoc'), label: PF.t('name.doc'), href: PF.docUrl(p.id), kind: 'page', visible: PF.visibleUrl(PF.docUrl(p.id)) },
-      { k: PF.t('en.portfolio'), label: PF.t('name.portfolio'), href: 'index.html', kind: 'page', visible: PF.visibleUrl('') },
+      ...ext.map((l) => ({ label: l.label, href: l.url, kind: 'external' })),
+      { label: PF.t('name.doc'), href: PF.docUrl(p.id), kind: 'page' },
     ];
     const cover = await PF.projectIntro(p, { id: 'cover', titleTag: 'h1', eyebrow: PF.t('deck.cover-eyebrow'), links: cards, foot, sec: PF.t('deck.cover'), stats: info.overflow });
     if (auto) cover.querySelector('.pf-foot > span').insertAdjacentHTML('beforeend', '<span class="pf-autoband" data-pf-ui="note">예전 데이터로 자동 구성 — /portfolio-build를 다시 실행하면 발표 덱이 됩니다</span>');
 
     // 장 → 장 표지 + 장면들
+    //   장 표지는 장면(데이터의 slide)이 CH_MIN개 이상인 장에만 — 짧은 장은 장면 머리의 장 이름(눈썹 글자)이 길잡이를 대신함(길잡이 장면이 덱의 1/3을 넘지 않게)
+    //   장 표지에는 그 장의 기능 화면 + 한 줄(포트폴리오 기능 소개와 같은 highlights 데이터, 없으면 그 장의 첫 그림)을 함께 보여 줌
     const chapterScenes = [];
     const tocItems = [];
+    chFirst.clear();
+    const feats = await Promise.all(model.map((c) => featureOf(p, c)));
     model.forEach((c, ci) => {
       const ckey = PF.keyOk(c.key) ? c.key : `c${ci + 1}`;
       let chId = `ch-${ckey}`; if (used.has(chId)) chId = `ch-c${ci + 1}`; used.add(chId);
@@ -327,9 +362,16 @@
         scenes.forEach((s) => used.add(s.id));
         slides.push({ sl, scenes });
       });
-      const chs = chapterScene(c, ci, chId, slides, foot, auto, p.title);
-      chapterScenes.push(chs, ...slides.flatMap((x) => x.scenes));
-      tocItems.push({ c, chId, n: slides.reduce((a, x) => a + x.scenes.length, 0) });
+      const n = slides.reduce((a, x) => a + x.scenes.length, 0);
+      if (c.slides.length >= CH_MIN) {
+        chapterScenes.push(chapterScene(c, ci, chId, slides, foot, auto, p.title, feats[ci]), ...slides.flatMap((x) => x.scenes));
+        tocItems.push({ c, chId, n });
+      } else {                                                          // 장 표지 없음: 목차·옛 주소(#s=ch-…)는 그 장의 첫 장면으로
+        const first = slides[0].scenes[0].id;
+        chFirst.set(chId, first);
+        chapterScenes.push(...slides.flatMap((x) => x.scenes));
+        tocItems.push({ c, chId: first, n });
+      }
     });
     const retro = buildRetro(p.retro || {}, p, foot, auto);
     const end = endScene(p, foot, ext, auto);
@@ -358,11 +400,12 @@
       const list = hm[1] === 'hl' ? p.highlights || [] : p.troubleshooting || [];
       const it = list[+hm[2] - 1];
       to = info.mode === 'auto' ? `d-${hm[1]}-${hm[2]}` : it ? PF.deckSceneFor(p, it.section) : '';
-      if (!to && it?.section) {                                          // 같은 장(H2)의 장 표지
+      if (!to && it?.section) {                                          // 같은 장(H2)의 장 표지(없으면 그 장의 첫 장면)
         const ch = model.find((c) => (c.slides || []).some((x) => (x.sectionPath || []).some((t) => PF.normTitle(t) === PF.normTitle(it.section))));
-        if (ch) to = scenes.find((s) => s.dataset.group === ch.title && s.classList.contains('t-CH'))?.id || '';
+        if (ch) to = scenes.find((s) => s.dataset.group === ch.title && s.classList.contains('t-CH'))?.id || scenes.find((s) => s.dataset.group === ch.title)?.id || '';
       }
-    } else if (/^shots/.test(want)) to = scenes.find((s) => s.classList.contains('l-screens'))?.id || '';
+    } else if (/^ch-/.test(want) && chFirst.has(want)) to = chFirst.get(want);   // 장 표지를 그리지 않은 장 → 그 장의 첫 장면
+    else if (/^shots/.test(want)) to = scenes.find((s) => s.classList.contains('l-screens'))?.id || '';
     else if (want === 'more') to = 'end';
     else if (/^retro/.test(want)) to = 'retro';
     else if (/^d-/.test(want)) to = PF.deckSceneNear(p, want, (id) => scenes.some((s) => s.id === id));   // 숨겼거나 다시 빌드로 없어진 장면
@@ -376,20 +419,41 @@
   const band = (s, auto) => { if (auto) s.querySelector('.pf-foot > span').insertAdjacentHTML('beforeend', '<span class="pf-autoband" data-pf-ui="note">예전 데이터로 자동 구성</span>'); return s; };
 
   // 장 표지: 장면이 적으면(4개 이하) 넉넉한 변형 — 목차 크기 목록 + 장면마다 도입(결정 I7). 안 들어가면 보통 → 촘촘
+  //   그 장의 기능 화면(feat.shot)이 있으면 장 이름 아래에 크게 — 들어가지 않으면 화면 없이
   const ROOMY_MAX = 4;
-  function chapterScene(c, ci, chId, slides, foot, auto, ptitle) {
-    const make = (mode) => {
-      const s = PF.scene({ id: chId, tpl: 'CH', kind: 'bare', cls: mode === 'compact' ? 'compact' : '', foot, sec: c.title, group: c.title, stitle: c.title });
+  const CH_MIN = 3;                                                     // 장 표지를 그리는 최소 장면 수(데이터의 slide 수 — deck-edits.py scene_count와 같은 규칙)
+  const chFirst = new Map();                                            // 장 표지를 그리지 않은 장: ch-<key> → 그 장의 첫 장면 id
+  // 장의 기능 화면·한 줄: highlights 중 이 장의 장면을 가리키는 것(PF.deckSceneFor) → 그 그림·what. 그림이 없으면 이 장 장면들의 첫 그림
+  async function featureOf(p, c) {
+    const keys = new Set(c.slides.map((sl) => `d-${sl.key}`));
+    const h = (p.highlights || []).find((x) => x.section && keys.has(PF.deckSceneFor(p, x.section)));
+    let shot = null;
+    if (h?.image?.src) {
+      const src = PF.srcPath(p.id, h.image.src);
+      const d = h.image.w && h.image.h ? { w: h.image.w, h: h.image.h } : await PF.imageSize(src);
+      const capText = typeof h.image.caption === 'string' ? h.image.caption : h.image.caption?.text || '';
+      shot = { src, d, alt: capText || h.title || c.title };
+    } else {
+      const v = c.slides.flatMap((sl) => sl._v || []).find((x) => x.ref.kind === 'image' && x.src && (x.status === 'ok' || x.status === 'changed'));
+      if (v) shot = { src: v.src, d: v.d, alt: v.ref.caption?.text || v.el?.getAttribute('alt') || c.title };
+    }
+    return { line: h?.what || '', shot };
+  }
+  function chapterScene(c, ci, chId, slides, foot, auto, ptitle, feat = {}) {
+    const make = (mode, withShot) => {
+      const s = PF.scene({ id: chId, tpl: 'CH', kind: 'bare', cls: [mode === 'compact' ? 'compact' : '', withShot ? 'has-shot' : ''].filter(Boolean).join(' '), foot, sec: c.title, group: c.title, stitle: c.title });
       const roomy = mode === 'roomy';
-      const list = slides.map((x, i) => item(String(i + 1), txt(x.sl.title) || c.title, PF.tab(x.sl.tab), x.scenes[0].id, roomy ? txt(x.sl.lead) : '')).join('');
+      const list = slides.map((x, i) => item(String(i + 1), titleOf(x.sl) || c.title, PF.tab(x.sl.tab), x.scenes[0].id, roomy ? txt(x.sl.lead) : '')).join('');
+      const line = feat.line ? `<p class="ch-line">${inline(feat.line)}</p>` : '';
+      const shot = withShot ? `<figure class="ch-shot">${PF.imgTag(feat.shot.src, feat.shot.alt, feat.shot.d)}</figure>` : '';
       PF.body(s).innerHTML = `<div class="toprow"><span class="pf-eyebrow long">${esc(ptitle)}</span><span class="rl">${esc(PF.t('deck.ch-count', { n: slides.length }))}</span></div>
-        <div class="ch-mid"><div><p class="ch-no">${esc(PF.t('en.chapter'))} ${String(ci + 1).padStart(2, '0')}</p><h2 class="ch-t">${esc(c.title)}</h2>${DOT}</div>
+        <div class="ch-mid"><div class="ch-head"><p class="ch-no">${esc(PF.t('en.chapter'))} ${String(ci + 1).padStart(2, '0')}</p><h2 class="ch-t">${esc(c.title)}</h2>${line}${DOT}${shot}</div>
         <div class="ch-list t-P2${mode === 'normal' ? '' : ' ' + mode}"><ol class="toc-list${roomy ? '' : ' sub'}">${list}</ol></div></div>`;
       return band(s, auto);
     };
     const modes = slides.length <= ROOMY_MAX ? ['roomy', 'normal', 'compact'] : ['normal', 'compact'];
-    for (const m of modes) { const s = make(m); if (PF.fitsM(s)) return s; }
-    return PF.shrinkOrClip(make('compact'), PFScene.refUrl(chId), info.overflow);
+    for (const withShot of feat.shot ? [true, false] : [false]) for (const m of modes) { const s = make(m, withShot); if (PF.fitsM(s)) return s; }
+    return PF.shrinkOrClip(make('compact', false), PFScene.refUrl(chId), info.overflow);
   }
 
   function tocScene(p, foot, items, retro, auto) {

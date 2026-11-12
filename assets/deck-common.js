@@ -249,21 +249,28 @@
     const fin = media.querySelector(':scope > .fit-in');
     Object.assign(fin.style, { zoom: '1', width: 'max-content' });
     if (k === 'code') return { k, ar: fin.offsetWidth / Math.max(1, fin.offsetHeight), nw: fin.offsetWidth, nh: fin.offsetHeight, max: 1, min: 12 / 14 };
-    // 표: 높이는 놓일 폭에 따라 달라지므로 hAt(w)로 잼(배율 1)
+    // 표: 높이는 놓일 폭에 따라 달라지므로 hAt(w)로 잼(배율 1). 칸이 남으면 1.25배(15px → 약 19px)까지 키움 — 행이 적은 표가 장면 위아래로 크게 비지 않게
     const hAt = (w) => { Object.assign(fin.style, { zoom: '1', width: `${Math.max(1, Math.floor(w))}px` }); return fin.offsetHeight; };
-    return { k, table: true, min: 14 / 15, max: 1, hAt };
+    return { k, table: true, min: 14 / 15, max: TABLE_MAX, hAt };
   }
+  const TABLE_MAX = 1.25;
   // 시각 자료 상자 안에서 그림 말고 차지하는 높이: 캡션 + 원문 문제 띠(visual-changed). 상자 안 간격 6px씩
   const capOf = (box) => [...box.querySelectorAll(':scope > figcaption, :scope > .pf-vband')].reduce((a, c) => a + c.offsetHeight + 6, 0);
-  // 표: 폭 bw에서 높이 bh 안에 들어가는 가장 큰 배율(하한까지)
-  function fitTable(fin, bw, bh, min) {
+  // 표: 폭 bw에서 높이 bh 안에 들어가는 가장 큰 배율(하한 min ~ 상한 max). 1에서 들어가면 max까지 키워 봄
+  function fitTable(fin, bw, bh, min, max = 1) {
     const at = (z) => { Object.assign(fin.style, { zoom: String(z), width: `${bw / z}px` }); return fin.offsetHeight * z <= bh + 0.5 && fin.scrollWidth <= bw / z + 1; };
-    if (at(1)) return 1;
-    if (!at(min)) return min;
-    let lo = min, hi = 1;
+    let lo, hi;
+    if (at(1)) {
+      if (max <= 1) return 1;
+      if (at(max)) return max;
+      lo = 1; hi = max;
+    } else {
+      if (!at(min)) return min;
+      lo = min; hi = 1;
+    }
     for (let i = 0; i < 7; i++) { const m = (lo + hi) / 2; if (at(m)) lo = m; else hi = m; }
     at(lo);
-    return lo;
+    return +lo.toFixed(3);
   }
   function sizeBoxes(boxes, arr, W, H, capsIn) {
     const nat = boxes.map(natOf), caps = capsIn || boxes.map(capOf), n = boxes.length;
@@ -297,7 +304,7 @@
     nat.forEach((t, i) => {
       if (!t.table) return;
       const fin = boxes[i].querySelector(':scope > .vmedia > .fit-in'), o = out[i];
-      const z = fitTable(fin, o.w, o.h, t.min);
+      const z = fitTable(fin, o.w, o.h, t.min, t.max);
       o.z = fin.offsetHeight * z <= o.h + 0.5 && fin.scrollWidth <= o.w / z + 1 ? z : 0.01;
     });
     return { out, nat, caps };
@@ -349,7 +356,7 @@
           const fin = media.querySelector(':scope > .fit-in');
           let z;
           if (t.k === 'code') { z = Math.max(t.min, Math.min(1, o.w / t.nw, o.h / t.nh)); Object.assign(fin.style, { zoom: String(z), width: `${o.w / z}px` }); }
-          else z = fitTable(fin, o.w, o.h, t.min);
+          else z = fitTable(fin, o.w, o.h, t.min, t.max);
           fin.dataset.pfFz = z.toFixed(3);
           box.dataset.sc = z.toFixed(3);
         }
@@ -360,8 +367,10 @@
     return s;
   }
 
-  // ── 프로젝트 소개 장면(발표 덱 표지, 결정 G4): 큰 대표 이미지 · 메타 격자 · 개발 의도 · 링크 카드 · 태그 ──
-  //   글: title · tagline · meta · team.role · intent · tags(data 그대로). 링크: [{ k, label, href, kind, visible }]
+  // ── 프로젝트 소개 장면(발표 덱 표지, 결정 G4): 큰 대표 이미지 · 메타 격자 · 개발 의도 · 태그 · 링크 한 줄 ──
+  //   글: title · tagline · meta · team.role · intent · tags(data 그대로). 링크: [{ label, href, kind }]
+  //   첫 장은 "이 프로젝트가 무엇인가"만 — 링크는 이름만 있는 작은 한 줄(.pi-go)로 맨 아래에. 주소까지 보이는 큰 링크 카드는 맺음 장면에만
+  //   대표 이미지 틀은 그림 비율 그대로(--ar): 폭 = min(칸 폭, 최대 높이 × 비율) → 위아래·양옆에 검은 띠가 생기지 않음
   //   메타 이름(data의 meta[].label, 기술 문서의 말) → 영문 라벨 키
   const META_EN = { '장르': 'en.meta-genre', '기간': 'en.meta-duration', '개발 기간': 'en.meta-duration', '인원': 'en.meta-team', '팀': 'en.meta-team', '팀 구성': 'en.meta-team',
                     '환경': 'en.meta-env', '개발 환경': 'en.meta-env', '엔진': 'en.meta-engine', '플랫폼': 'en.meta-platform' };
@@ -373,19 +382,19 @@
     const meta = (p.meta || []).map((m) => `<div class="mi"><dt class="meta-k">${metaEn(m.label) ? `${esc(metaEn(m.label))} · ` : ''}${esc(m.label)}</dt><dd>${inline(m.value)}</dd></div>`);
     if (p.team?.role) meta.push(`<div class="mi wide role"><dt class="meta-k">${esc(PF.t('en.role'))} · ${esc(PF.t('name.role'))}</dt><dd>${inline(p.team.role)}</dd></div>`);
     const intent = p.intent?.text ? `<div class="intent"><p class="lc-k">${esc(PF.t('en.intent'))} · ${esc(PF.t('name.intent'))}</p><p class="it">${inline(p.intent.text)}</p></div>` : '';
-    const cards = links.map((l) => `<div class="lcard">${PF.link({ href: l.href, kind: l.kind, label: `<span class="lc-k">${esc(l.k)}</span><span class="lc-t">${esc(l.label)}</span><span class="url">${esc(l.visible)}</span>` })}</div>`).join('');
+    const go = links.length ? `<p class="pi-go">${links.map((l) => PF.link({ href: l.href, kind: l.kind, label: esc(l.label) })).join('')}</p>` : '';
     const tags = (p.tags || []).length ? `<ul class="tags">${p.tags.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '';
-    const cover = p.cover ? `<div class="media pi-cover"${ar ? ` style="aspect-ratio:${ar.toFixed(4)}"` : ''}>${imgTag(PF.srcPath(p.id, p.cover), p.title, d)}</div>` : '';
+    const cover = p.cover ? `<div class="media pi-cover"${ar ? ` style="aspect-ratio:${ar.toFixed(4)};--ar:${ar.toFixed(4)}"` : ''}>${imgTag(PF.srcPath(p.id, p.cover), p.title, d)}</div>` : '';
     const head = `<div class="pi-head"><${titleTag} class="pi-t">${esc(p.title)}</${titleTag}>${p.tagline ? `<p class="tagline">${inline(p.tagline)}</p>` : ''}</div>`;
-    const make = (tight, linksLeft) => {
+    const make = (tight) => {
       const s = scene({ id, tpl, kind: 'bare', cls: `${variant}${tight ? ' pi-tight' : ''}`, foot, sec, group, stitle: p.title });
-      const right = `<div class="pi-right">${meta.length ? `<dl class="pi-meta">${meta.join('')}</dl>` : ''}${intent}${!linksLeft && cards ? `<div class="pi-links">${cards}</div>` : ''}${tags}</div>`;
-      const left = `<div class="pi-left">${head}${cover}${linksLeft && cards ? `<div class="pi-links row">${cards}</div>` : ''}</div>`;
+      const right = `<div class="pi-right">${meta.length ? `<dl class="pi-meta">${meta.join('')}</dl>` : ''}${intent}${tags}${go}</div>`;
+      const left = `<div class="pi-left">${head}${cover}</div>`;
       body(s).innerHTML = `<div class="toprow"><span class="pf-eyebrow">${esc(eyebrow)}</span><span class="rl">${esc(PF.teamLabel(p.team))}</span></div><div class="pi-main">${left}${right}</div>`;
       return s;
     };
-    for (const tight of [false, true]) for (const linksLeft of variant === 'nocover' ? [false] : [false, true]) { const s = make(tight, linksLeft); if (fitsM(s)) return s; }
-    return shrinkOrClip(make(true, true), window.PFScene.refUrl(id), stats);
+    for (const tight of [false, true]) { const s = make(tight); if (fitsM(s)) return s; }
+    return shrinkOrClip(make(true), window.PFScene.refUrl(id), stats);
   }
 
   // 원문 절(section 글자) → 발표 덱 장면 id는 PF.deckSceneFor(common.js — 포트폴리오 문서의 기능 링크도 씀)

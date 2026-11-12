@@ -42,8 +42,9 @@
     background-image: linear-gradient(rgba(233, 238, 230, .026) 1px, transparent 1px), linear-gradient(90deg, rgba(233, 238, 230, .026) 1px, transparent 1px);
     background-size: 32px 32px;
   }
-  /* 주사선(CRT) — 화면 전체에 아주 옅게 */
-  body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 80;
+  /* 주사선(CRT) — 바탕에만 아주 옅게. z-index -1 = 글·그림·상자 "아래"(본문 바탕 무늬 위).
+     화면 맨 위를 덮으면(예전 z-index 80) 스크린샷마다 검은 가로줄이 그어지고, 화면 배율 125%·150%에서는 줄 간격이 들쭉날쭉해져 더 눈에 띕니다. */
+  body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1;
     background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, .14) 2px 3px); }
   ::selection { background: var(--acc); color: var(--bg); }
   a:focus-visible, button:focus-visible { outline: 2px dashed var(--acc); outline-offset: 5px; }
@@ -103,9 +104,9 @@
   /* CRT 화면 */
   .crt { background: color-mix(in srgb, var(--ink) 6%, var(--bg)); padding: 14px 14px 0; }
   .crt .screen { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 18px / 14px; background: #000; }
+  /* 화면 유리: 가장자리만 어둡게(볼록 화면 느낌). 주사선은 그림 위에 검은 줄로 보여 넣지 않음 */
   .crt .glass, .thumb .glass { position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, .5) 100%),
-                repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, .25) 2px 3px); }
+    background: radial-gradient(ellipse at center, transparent 58%, rgba(0, 0, 0, .5) 100%); }
   .crt .bar { display: flex; align-items: center; gap: 12px; min-height: 52px; }
   .crt .led { width: 8px; height: 8px; background: var(--acc); flex: none; }
   .crt .dot { width: 10px; height: 10px; background: var(--line2); }
@@ -180,13 +181,50 @@
     .tl-item::before { content: ''; position: absolute; left: -8px; top: 4px; width: 14px; height: 14px; background: var(--acc); }
   }
 
+  /* ── 스테이지: 화면 한 장 = 절 하나(레이아웃 원칙 1, 포트폴리오 A안 "한 장씩 넘기는 절") ──
+     넓고 충분히 높은 화면에서만 스냅 — 휠·↑↓·PageUp/Down 한 번에 한 스테이지(scroll-snap-stop: always: 빠르게 굴려도 건너뛰지 않음).
+     내용은 스테이지 가운데. 화면보다 긴 스테이지는 그 안에서 스크롤된 뒤 다음으로. 휴대폰·좁은 화면·인쇄는 예전처럼 흐르는 페이지 */
+  .stage { position: relative; }
+  @media screen and (min-width: 1024px) and (min-height: 700px) {
+    html { scroll-snap-type: y mandatory; scroll-padding-top: 64px; }
+    .stage { scroll-snap-align: start; scroll-snap-stop: always; min-height: calc(100vh - 64px); min-height: calc(100svh - 64px);
+             display: flex; flex-direction: column; justify-content: center; }
+    .stage > .wrap { width: 100%; padding-top: clamp(14px, 3vh, 28px); padding-bottom: clamp(14px, 3vh, 28px); }
+    #cover.stage { min-height: 100vh; min-height: 100svh; padding-top: 72px; padding-bottom: 12px; }
+    /* 한 화면에 들어가게: 스테이지 안 큰 제목은 한 단계 작게(1366×768 노트북 = 스테이지 704px까지) */
+    .stage .ptitle, #glance .giant { font-size: clamp(26px, 3.6vw, 48px); }
+    #cover .name-xl { font-size: clamp(36px, min(4.8vw, 8vh), 84px); }
+    #cover .tile { min-height: 76px; }
+    #cover .cv-list a { padding-top: 8px; padding-bottom: 8px; }
+    #glance .clamp3 { -webkit-line-clamp: 2; }
+    #glance article { padding: 16px; }
+    #glance .tl-axis { height: 34px; }
+    #glance .thumb { aspect-ratio: auto; height: clamp(120px, 21vh, 210px); }   /* 낮은 화면에서만 썸네일 높이를 줄임(가로로 조금 잘림 — 대표 그림 전체는 프로젝트 스테이지에) */
+    .stage .status .row { padding-top: 9px; padding-bottom: 9px; }
+    .fgrid > li { padding: 16px; }
+  }
+  /* 스테이지에 들어서면 절 번호가 몇 번 깜빡임(게임의 스테이지 진입). 그림·글 위에는 아무것도 얹지 않음 */
+  .stage.enter .eyebrow .n { animation: blink .16s steps(1) 5; }
+  /* 오른쪽 아래 화면 이동 표시: STAGE 05/11 ▲ ▼ */
+  .hud { position: fixed; right: 22px; bottom: 20px; z-index: 46; display: none; align-items: center; gap: 8px; padding: 6px 8px 6px 14px;
+         background: rgba(10, 13, 11, .92); --pc: var(--line2); }
+  .hud .ct { font-family: var(--arcade); font-size: 10px; color: var(--muted); white-space: nowrap; }
+  .hud .ct b { font-weight: 400; color: var(--acc); }
+  .hud button { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 28px; font-family: var(--arcade); font-size: 10px;
+                color: var(--ink); background: var(--panel); }
+  .hud button:hover:not(:disabled) { color: var(--acc); --pc: var(--acc); }
+  .hud button:disabled { opacity: .3; cursor: default; }
+  /* 기능 스테이지: 카드 2열, 홀수 개면 마지막 카드가 두 칸 */
+  @media screen and (min-width: 1024px) and (min-height: 700px) { .hud { display: flex; } }
+  @media (min-width: 1024px) { .fgrid.two > li:last-child:nth-child(odd) { grid-column: 1 / -1; } }
+
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
-    .blink, .tile:hover .cur, .tile:focus-visible .cur { animation: none; }
+    .blink, .tile:hover .cur, .tile:focus-visible .cur, .stage.enter .eyebrow .n { animation: none; }
     .fade, .thumb img { transition: none !important; }
   }
   @media print {
-    body::after, .rail, .nav { display: none !important; }
+    body::after, .rail, .nav, .hud { display: none !important; }
     body { background-image: none; }
   }
 </style>
@@ -350,6 +388,20 @@ function useActive(ids) {
   return active;
 }
 
+// 오른쪽 아래 화면 이동: STAGE 05/11 ▲ ▼ (넓고 높은 화면에서만 — CSS .hud)
+function Hud({ secs, active }) {
+  const i = Math.max(0, secs.findIndex((s) => s.id === active));
+  const go = (k) => { const s = secs[k]; if (s) document.getElementById(s.id)?.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' }); };
+  const last = i >= secs.length - 1;
+  return (
+    <div className="hud pxb2" role="group" aria-label="화면 이동">
+      <span className="ct" aria-live="polite">STAGE <b>{secs[i]?.no}</b>/{pad(secs.length)}</span>
+      <button type="button" className="pxb2" onClick={() => go(i - 1)} disabled={i === 0} aria-label="이전 화면">▲</button>
+      <button type="button" className="pxb2" onClick={() => go(i + 1)} disabled={last} aria-label="다음 화면"><span className={last ? '' : 'blink'}>▼</span></button>
+    </div>
+  );
+}
+
 function Rail({ prof, secs, active }) {
   const initials = (prof.nameEn || '').split(/\s+/).filter(Boolean).map((w) => w[0].toUpperCase()).join('').slice(0, 3);
   return (
@@ -442,7 +494,7 @@ function Cover({ pf, prof, projects, t, no }) {
     { href: '#glance', no: no('glance'), label: t('page.nav-glance'), arr: '→' },
   ].filter(Boolean);
   return (
-    <section id="cover" className="min-h-screen flex items-center pt-24 pb-16 lg:pt-28">
+    <section id="cover" className="stage min-h-screen flex items-center pt-24 pb-16 lg:pt-24 lg:pb-12">
       <div className="wrap w-full grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16 items-center">
         <div className="min-w-0 order-2 lg:order-1"><Crt projects={projects} t={t} /></div>
         <div className="min-w-0 order-1 lg:order-2">
@@ -458,7 +510,7 @@ function Cover({ pf, prof, projects, t, no }) {
             {prof.job && <><span className="muted mx-2">·</span><span className="acc">{prof.job}</span></>}
           </p>
           {prof.headline && <p className="mt-5 f-pixel font-bold text-[22px] leading-[1.55] md:text-[26px] break-keep"><Rich text={prof.headline} /></p>}
-          <div className="mt-8 grid grid-cols-3 gap-3">
+          <div className="mt-8 lg:mt-6 grid grid-cols-3 gap-3">
             {tiles.map((x, i) => (
               <a key={i} href={x.href} className={`tile pxb2 ${x.pri ? 'pri' : ''}`}>
                 <span className="no">{x.no}</span>
@@ -467,9 +519,9 @@ function Cover({ pf, prof, projects, t, no }) {
             ))}
           </div>
           {projects.length > 0 && (
-            <div className="mt-10">
+            <div className="mt-10 lg:mt-7">
               <p className="f-pixel font-bold text-[12px] muted">{t('page.nav-projects')}</p>
-              <ul className="mt-3 grid sm:grid-cols-2 gap-x-8 border-t border-[color:var(--line2)]">
+              <ul className="cv-list mt-3 grid sm:grid-cols-2 gap-x-8 border-t border-[color:var(--line2)]">
                 {projects.map((p) => {
                   const period = metaOf(p, /기간/), genre = metaOf(p, /장르/);
                   return (
@@ -498,8 +550,8 @@ function Cover({ pf, prof, projects, t, no }) {
 function Intro({ prof, t, no }) {
   if (!prof.intro) return null;
   return (
-    <section id="intro" className="sec">
-      <div className="wrap py-24 md:py-32 grid gap-12 lg:grid-cols-[minmax(0,.85fr)_minmax(0,1.15fr)] lg:gap-16 items-center">
+    <section id="intro" className="sec stage">
+      <div className="wrap py-20 lg:py-10 grid gap-12 lg:grid-cols-[minmax(0,.85fr)_minmax(0,1.15fr)] lg:gap-16 items-center">
         <div className="min-w-0">
           <Eyebrow no={no('intro')}>{t('page.intro')}</Eyebrow>
           <h2 className="giant mt-5">{t('en.about')}</h2>
@@ -519,31 +571,38 @@ function Intro({ prof, t, no }) {
 function Stack({ pf, byId, t, no }) {
   const skills = pf.skills || [];
   if (!skills.length) return null;
+  // 한 화면에: 제목은 위 한 줄, 기술 카드는 나란히(3개까지 한 줄)
+  const cols = skills.length >= 3 ? 'lg:grid-cols-3' : skills.length === 2 ? 'lg:grid-cols-2' : '';
   return (
-    <section id="stack" className="sec">
-      <div className="wrap py-24 md:py-32 grid gap-12 lg:grid-cols-[minmax(0,.85fr)_minmax(0,1.15fr)] lg:gap-16">
-        <div className="min-w-0 lg:sticky lg:top-28 self-start">
-          <Eyebrow no={no('stack')}>{t('page.stack')}</Eyebrow>
-          <h2 className="giant mt-5">{t('en.skills')}</h2>
-          <p className="mt-6 f-pixel text-[14px] txt">{t('page.stack-note')}</p>
-          <p className="mt-2 f-pixel text-[12px] muted"><span className="f-arcade text-[9px] acc">×N</span> = 근거 프로젝트 수</p>
+    <section id="stack" className="sec stage">
+      <div className="wrap py-20 lg:py-10">
+        <div className="flex flex-wrap items-end justify-between gap-x-10 gap-y-4">
+          {/* 큰 제목 칸은 글자 폭 맞춤용 컨테이너(cqi)라 내용으로 폭이 정해지지 않음 → 남는 폭을 다 씀(flex-1). 안 그러면 폭 0으로 줄어 글자가 세로로 쌓임 */}
+          <div className="min-w-0 flex-1 basis-[320px]">
+            <Eyebrow no={no('stack')}>{t('page.stack')}</Eyebrow>
+            <h2 className="giant mt-4">{t('en.skills')}</h2>
+          </div>
+          <div className="min-w-0 pb-1 lg:text-right">
+            <p className="f-pixel text-[14px] txt">{t('page.stack-note')}</p>
+            <p className="mt-1 f-pixel text-[12px] muted"><span className="f-arcade text-[9px] acc">×N</span> = 근거 프로젝트 수</p>
+          </div>
         </div>
-        <div className="min-w-0 grid gap-6">
+        <div className={`mt-8 grid gap-5 ${cols}`}>
           {skills.map((s, i) => {
             const ev = s.evidence || [];
             const n = new Set(ev.map((e) => e.project).filter(Boolean)).size;
             return (
-              <article key={i} className="pxb p-5 md:p-6" style={{ background: 'var(--panel)' }}>
-                <div className="flex items-center gap-4">
+              <article key={i} className="pxb p-5 flex flex-col min-w-0" style={{ background: 'var(--panel)' }}>
+                <div className="flex items-center gap-3">
                   <span className="slot pxb2" aria-hidden="true">{pad(i + 1)}</span>
-                  <h3 className="flex-1 min-w-0 f-pixel font-bold text-[18px] leading-snug break-keep">{s.name}</h3>
+                  <h3 className="flex-1 min-w-0 f-pixel font-bold text-[17px] leading-snug break-keep">{s.name}</h3>
                   {n > 0 && <span className="f-arcade text-[12px] acc flex-none" title={`근거 프로젝트 ${n}개`} aria-label={`근거 프로젝트 ${n}개`}>×{n}</span>}
                 </div>
-                <ul className="mt-5 space-y-3">
+                <ul className="mt-4 space-y-3">
                   {ev.map((e, k) => (
-                    <li key={k} className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4 text-[15px] leading-[1.65] txt">
-                      <span className="flex-1 min-w-0 break-keep"><span className="acc mr-2" aria-hidden="true">▸</span><Rich text={e.text} /></span>
-                      {byId[e.project] && <a href={`#p-${e.project}`} className="chip pxb2 self-start ml-5 sm:ml-0">{byId[e.project].title}</a>}
+                    <li key={k} className="text-[14px] leading-[1.6] txt break-keep">
+                      <span className="acc mr-1.5" aria-hidden="true">▸</span><Rich text={e.text} />
+                      {byId[e.project] && <a href={`#p-${e.project}`} className="chip pxb2 ml-2 align-middle">{byId[e.project].title}</a>}
                     </li>
                   ))}
                 </ul>
@@ -556,41 +615,50 @@ function Stack({ pf, byId, t, no }) {
   );
 }
 
-function Features({ p, i, t }) {
+// 기능 스테이지: 프로젝트 소개 다음 화면. 기능 카드 2열(그림은 카드 오른쪽, 그림 비율 그대로)
+function Features({ p, t, no }) {
   const hl = p.highlights || [];
   if (!hl.length) return null;
+  const id = `p-${p.id}-core`;
   return (
-    <div id={`p-${p.id}-core`} className="mt-20 md:mt-24">
-      <div className="flex flex-wrap items-end justify-between gap-3 pb-4 border-b border-[color:var(--line2)]">
-        <Eyebrow no={pad(i + 1)}>{t('page.features')}</Eyebrow>
-        <a className="tlink" href={deckUrl(p)} target="_blank" rel="noopener">{t('page.deck-all')} <Ext /></a>
-      </div>
-      <ol className="mt-8 grid gap-7">
-        {hl.map((h, k) => {
-          const sid = deckScene(p, h.section);
-          const pic = h.image?.src;
-          return (
-            <li key={k} className={`pxb p-5 md:p-6 grid gap-5 md:gap-8 items-center ${pic ? 'md:grid-cols-[minmax(0,1fr)_minmax(0,320px)]' : ''}`} style={{ background: 'var(--panel)' }}>
-              <div className="min-w-0 flex gap-4 md:gap-5 order-2 md:order-1">
-                <span className="slot pxb2" aria-hidden="true">{pad(k + 1)}</span>
-                <div className="min-w-0">
-                  <p className="f-arcade text-[9px] muted">{t('en.feature')} {pad(k + 1)}</p>
-                  <h4 className="mt-2 f-pixel font-bold text-[19px] leading-snug break-keep">{h.title}</h4>
-                  {h.what && <p className="mt-2 text-[15px] leading-[1.7] txt break-keep"><Rich text={h.what} /></p>}
-                  <a className="tlink inline-block mt-4" href={deckUrl(p, sid)} target="_blank" rel="noopener">▶ {t('page.see-in-deck')} <Ext /></a>
+    <section id={id} className="sec stage">
+      <div className="wrap py-20 lg:py-10">
+        <div className="flex flex-wrap items-end justify-between gap-3 pb-4 border-b border-[color:var(--line2)]">
+          <div className="min-w-0">
+            <Eyebrow no={no(id)}>{t('page.features')}</Eyebrow>
+            <p className="mt-3 f-pixel font-bold text-[22px] leading-snug break-keep">{p.title}</p>
+          </div>
+          <a className="tlink" href={deckUrl(p)} target="_blank" rel="noopener">{t('page.deck-all')} <Ext /></a>
+        </div>
+        <ol className={`fgrid mt-6 grid gap-5 ${hl.length > 1 ? 'two lg:grid-cols-2' : ''}`}>
+          {hl.map((h, k) => {
+            const sid = deckScene(p, h.section);
+            const pic = h.image?.src;
+            return (
+              <li key={k} className={`pxb p-5 grid gap-5 items-center min-w-0 ${pic ? 'sm:grid-cols-[minmax(0,1fr)_minmax(0,40%)]' : ''}`} style={{ background: 'var(--panel)' }}>
+                <div className="min-w-0 flex gap-4">
+                  <span className="slot pxb2" aria-hidden="true">{pad(k + 1)}</span>
+                  <div className="min-w-0">
+                    <p className="f-arcade text-[9px] muted">{t('en.feature')} {pad(k + 1)}</p>
+                    <h4 className="mt-2 f-pixel font-bold text-[18px] leading-snug break-keep">{h.title}</h4>
+                    {h.what && <p className="mt-2 text-[14px] leading-[1.65] txt break-keep"><Rich text={h.what} /></p>}
+                    <a className="tlink inline-block mt-3" href={deckUrl(p, sid)} target="_blank" rel="noopener">▶ {t('page.see-in-deck')} <Ext /></a>
+                  </div>
                 </div>
-              </div>
-              {pic && (
-                <figure className="min-w-0 order-1 md:order-2">
-                  <img src={img(p, pic)} alt={h.image.caption || h.title} loading="lazy" className="w-full aspect-video object-contain pxb2 bg-black" />
-                  {h.image.caption && <figcaption className="mt-2.5 f-pixel text-[11px] muted leading-snug break-keep">{h.image.caption}</figcaption>}
-                </figure>
-              )}
-            </li>
-          );
-        })}
-      </ol>
-    </div>
+                {pic && (
+                  <figure className="min-w-0">
+                    {/* 그림 비율 그대로(16:9 검은 틀에 넣으면 가로로 긴 비교 그림·4:3 화면 위아래·양옆에 검은 띠가 생김) */}
+                    <img src={img(p, pic)} alt={h.image.caption || h.title} loading="lazy" className="w-full h-auto pxb2"
+                         {...(h.image.w && h.image.h ? { width: h.image.w, height: h.image.h } : {})} />
+                    {h.image.caption && <figcaption className="mt-2 f-pixel text-[11px] muted leading-snug break-keep">{h.image.caption}</figcaption>}
+                  </figure>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </section>
   );
 }
 
@@ -599,16 +667,16 @@ function Project({ p, i, n, t, no }) {
   const meta = (p.meta || []).filter((m) => m.value);
   const role = p.team?.role;
   return (
-    <section id={`p-${p.id}`} className="sec">
-      <div className="wrap py-24 md:py-32">
+    <section id={`p-${p.id}`} className="sec stage">
+      <div className="wrap py-20 lg:py-10">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <Eyebrow no={no(`p-${p.id}`)}>{t('page.project-no', { no: pad(i + 1), total: pad(n) })}</Eyebrow>
           <p className="f-pixel text-[12px] muted">{teamLabel(p.team, t)}</p>
         </div>
-        <h2 className="ptitle mt-5">{p.title}</h2>
-        {p.tagline && <p className="mt-5 max-w-3xl text-[17px] leading-[1.75] txt break-keep"><Rich text={p.tagline} /></p>}
+        <h2 className="ptitle mt-4">{p.title}</h2>
+        {p.tagline && <p className="mt-4 max-w-3xl text-[16px] leading-[1.7] txt break-keep"><Rich text={p.tagline} /></p>}
 
-        <div className="mt-12 grid gap-10 lg:grid-cols-2 lg:gap-14 items-start">
+        <div className="mt-6 grid gap-10 lg:grid-cols-2 lg:gap-12 items-start">
           {p.cover && (
             <figure className={`min-w-0 ${flip ? 'lg:order-2' : ''}`}>
               <div className="crt pxb" style={{ paddingBottom: 14 }}>
@@ -624,18 +692,16 @@ function Project({ p, i, n, t, no }) {
               </dl>
             )}
             {p.intent?.text && (
-              <div className="dialog pxb mt-10">
+              <div className="dialog pxb mt-5">
                 <span className="who pxb2">{t('name.intent')}</span>
-                <p className="text-[16px] leading-[1.75] break-keep"><Rich text={p.intent.text} /></p>
+                <p className="text-[15px] leading-[1.7] break-keep"><Rich text={p.intent.text} /></p>
                 <span className="more blink" aria-hidden="true">▼</span>
               </div>
             )}
-            {(p.tags || []).length > 0 && <div className="mt-8 flex flex-wrap gap-2.5">{p.tags.map((g, k) => <span key={k} className="tag pxb2">{g}</span>)}</div>}
-            <div className="mt-8"><ProjectButtons p={p} t={t} /></div>
+            {(p.tags || []).length > 0 && <div className="mt-4 flex flex-wrap gap-2">{p.tags.map((g, k) => <span key={k} className="tag pxb2">{g}</span>)}</div>}
+            <div className="mt-4"><ProjectButtons p={p} t={t} small /></div>
           </div>
         </div>
-
-        <Features p={p} i={i} t={t} />
       </div>
     </section>
   );
@@ -647,11 +713,11 @@ function Glance({ projects, t, no }) {
   const rows = projects.map((p, i) => ({ p, i, period: metaOf(p, /기간/) })).map((r) => ({ ...r, start: startOf(r.period) }))
     .sort((a, b) => (a.start && b.start ? a.start.localeCompare(b.start) : a.i - b.i));
   return (
-    <section id="glance" className="sec">
-      <div className="wrap py-24 md:py-32">
+    <section id="glance" className="sec stage">
+      <div className="wrap py-20 lg:py-10">
         <Eyebrow no={no('glance')}>{t('page.glance')}</Eyebrow>
-        <h2 className="giant mt-5">{t('en.glance')}</h2>
-        <div className="mt-14">
+        <h2 className="giant mt-4">{t('en.glance')}</h2>
+        <div className="mt-8 lg:mt-6">
           <div className="grid md:grid-flow-col md:auto-cols-fr md:-mx-3">
             {rows.map(({ p, period, start }) => (
               <div key={p.id} className="tl-item min-w-0 flex flex-col md:px-3">
@@ -660,7 +726,7 @@ function Glance({ projects, t, no }) {
                 <div className="tl-axis hidden md:block md:order-2" aria-hidden="true"><span className="node" /></div>
                 <article className="order-3 md:order-1 mt-5 md:mt-0 flex-1 pxb p-5 flex flex-col" style={{ background: 'var(--panel)' }}>
                   {p.cover && (
-                    <a href={`#p-${p.id}`} className="thumb mb-5" aria-label={`${p.title}(으)로 이동`}>
+                    <a href={`#p-${p.id}`} className="thumb mb-4" aria-label={`${p.title}(으)로 이동`}>
                       <img src={img(p, p.cover)} alt="" loading="lazy" />
                       <span className="glass" aria-hidden="true" />
                     </a>
@@ -668,12 +734,12 @@ function Glance({ projects, t, no }) {
                   <p className="f-arcade text-[9px] acc">{t('en.project')} {pad(projects.indexOf(p) + 1)}</p>
                   <a href={`#p-${p.id}`} className="mt-2 f-pixel font-bold text-[19px] leading-snug hover:text-[color:var(--acc)] break-keep">{p.title}</a>
                   {p.tagline && <p className="mt-2 text-[14px] leading-[1.65] txt break-keep clamp3"><Rich text={p.tagline} /></p>}
-                  {(p.tags || []).length > 0 && <div className="mt-4 flex flex-wrap gap-2">{p.tags.slice(0, 4).map((g, k) => <span key={k} className="tag pxb2">{g}</span>)}</div>}
-                  <p className="mt-4 text-[13px] leading-[1.6] txt break-keep flex-1">
+                  {(p.tags || []).length > 0 && <div className="mt-3 flex flex-wrap gap-2">{p.tags.slice(0, 4).map((g, k) => <span key={k} className="tag pxb2">{g}</span>)}</div>}
+                  <p className="mt-3 text-[13px] leading-[1.6] txt break-keep flex-1">
                     <span className="f-pixel font-bold text-[11px] acc mr-2">{t('name.role-short')}</span>
                     {p.team?.role ? <Rich text={p.team.role} /> : teamLabel(p.team, t)}
                   </p>
-                  <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2">
+                  <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2">
                     <a className="tlink" href={deckUrl(p)} target="_blank" rel="noopener">{t('name.deck')} <Ext /></a>
                     <a className="tlink" href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc-short')} <Ext /></a>
                     {isUrl(p.links?.github) && <a className="tlink" href={p.links.github} target="_blank" rel="noopener">GitHub <Ext /></a>}
@@ -691,8 +757,8 @@ function Glance({ projects, t, no }) {
 function Contact({ prof, projects, t, no }) {
   const links = (prof.links || []).filter((l) => isUrl(l.url));
   return (
-    <footer id="contact" className="sec">
-      <div className="wrap pt-24 md:pt-32 pb-20">
+    <footer id="contact" className="sec stage">
+      <div className="wrap py-20 lg:py-10">
         <Eyebrow no={no('contact')}>{t('page.nav-contact')}</Eyebrow>
         <div className="mt-10 grid gap-10 md:grid-cols-3 md:gap-12">
           {prof.email && (
@@ -723,7 +789,7 @@ function Contact({ prof, projects, t, no }) {
             </ul>
           </div>
         </div>
-        <div className="mt-24 md:mt-32 flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+        <div className="mt-16 lg:mt-14 flex flex-col lg:flex-row lg:items-end justify-between gap-8">
           <h2 className="giant" style={{ fontSize: 'clamp(34px, 7.4vw, 112px)' }}>{t('en.contact')}</h2>
           <div className="min-w-0 lg:text-right">
             {prof.email && <a className="f-pixel font-bold text-[20px] md:text-[26px] hover:text-[color:var(--acc)] break-all" href={`mailto:${prof.email}`}><span className="acc blink mr-2" aria-hidden="true">▶</span>{prof.email}</a>}
@@ -742,21 +808,30 @@ function Page({ pf, prof, projects, t }) {
     prof.intro && { id: 'intro', label: t('page.nav-intro') },
     (pf.skills || []).length && { id: 'stack', label: t('page.nav-stack') },
     projects.length && { id: 'glance', label: t('page.nav-glance') },
-    ...projects.map((p) => ({ id: `p-${p.id}`, label: p.title })),
+    ...projects.flatMap((p) => [{ id: `p-${p.id}`, label: p.title }, (p.highlights || []).length && { id: `p-${p.id}-core`, label: `${p.title} ${t('page.features')}` }]),
     { id: 'contact', label: t('page.nav-contact') },
   ].filter(Boolean).map((s, i) => ({ ...s, no: pad(i + 1) }));
   const no = (id) => (secs.find((s) => s.id === id) || {}).no || '';
   const active = useActive(secs.map((s) => s.id));
+  // 스테이지에 들어설 때마다 절 번호 깜빡임(CSS .stage.enter)
+  useEffect(() => {
+    const el = document.getElementById(active);
+    if (!el) return;
+    el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter');
+    const id = setTimeout(() => el.classList.remove('enter'), 1000);
+    return () => clearTimeout(id);
+  }, [active]);
   return (
     <>
       <Rail prof={prof} secs={secs} active={active} />
+      <Hud secs={secs} active={active} />
       <Nav prof={prof} projects={projects} t={t} active={active} />
       <main className="lg:pl-16">
         <Cover pf={pf} prof={prof} projects={projects} t={t} no={no} />
         <Intro prof={prof} t={t} no={no} />
         <Stack pf={pf} byId={byId} t={t} no={no} />
         <Glance projects={projects} t={t} no={no} />
-        {projects.map((p, i) => <Project key={p.id} p={p} i={i} n={projects.length} t={t} no={no} />)}
+        {projects.map((p, i) => <React.Fragment key={p.id}><Project p={p} i={i} n={projects.length} t={t} no={no} /><Features p={p} t={t} no={no} /></React.Fragment>)}
         <Contact prof={prof} projects={projects} t={t} no={no} />
       </main>
     </>

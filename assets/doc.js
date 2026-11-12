@@ -64,6 +64,16 @@
     ...(p.links?.extra || []).filter((l) => PF.isUrl(l.url)).map((l) => link({ href: l.url, label: esc(l.label), kind: 'external', cls: 'btn' })),
   ].filter(Boolean);
   const deckBtn = link({ href: deckUrl(), label: T('name.deck'), kind: 'page', cls: 'btn primary' });
+  // 밝게 읽기(화면만): 어두운 페이지에서 긴 글을 밝은 바탕으로 읽음 — 코드는 어두운 상자 그대로. 고른 것은 이 브라우저에만 기억(localStorage)
+  //   페이지가 원래 밝으면(밝은 테마) 단추를 두지 않음. 인쇄는 고른 것과 상관없이 늘 흰 종이
+  const READ_KEY = 'pf-doc-read';
+  const pageDark = (() => { const c = getComputedStyle(document.body).backgroundColor.match(/\d+/g) || [0, 0, 0]; return (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.5; })();
+  const readBtn = pageDark ? `<button type="button" class="btn read-mode" aria-pressed="false">${T('doc.read-light')}</button>` : '';
+  const setRead = (light) => {
+    if (light) html.dataset.docTheme = 'light'; else delete html.dataset.docTheme;
+    document.querySelectorAll('.read-mode').forEach((b) => { b.setAttribute('aria-pressed', String(light)); b.textContent = PF.t(light ? 'doc.read-dark' : 'doc.read-light'); });
+  };
+  if (pageDark) { try { if (localStorage.getItem(READ_KEY) === 'light') html.dataset.docTheme = 'light'; } catch { /* 저장소를 못 쓰면 기본(어둡게) */ } }
   const tags = (p.tags || []).length ? `<ul class="tags">${p.tags.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : '';
 
   root.innerHTML = `
@@ -72,7 +82,7 @@
         <p class="crumb">${link({ href: 'index.html', label: T('ui.back'), kind: 'page' })}<span aria-hidden="true">›</span><b>${esc(p.title)} — ${T('name.doc')}</b></p>
         <nav class="head-nav" aria-label="프로젝트 링크">
           ${deckBtn}${ext.join('')}
-          <span class="newtab-note">${T('ui.newtab')}</span>
+          <span class="newtab-note">${T('ui.newtab')}</span>${readBtn}
         </nav>
       </div>
     </header>
@@ -87,7 +97,7 @@
           <dl class="meta-line">${metaRows}</dl>
           ${tags}
           <details class="glance" id="glance"><summary>${T('doc.glance')}</summary>
-            <div class="glance-body"><div class="actions">${deckBtn}${ext.join('')}</div>
+            <div class="glance-body"><div class="actions">${deckBtn}${ext.join('')}${readBtn}</div>
             <p class="newtab-note">${T('doc.deck-note')}</p></div>
           </details>
         </div>
@@ -110,6 +120,12 @@
 
   // 좁은 화면(< 720px)에서는 "한눈에" 상자를 접어 둠
   document.getElementById('glance').open = !matchMedia('(max-width: 719.98px)').matches;
+  setRead(html.dataset.docTheme === 'light');
+  document.querySelectorAll('.read-mode').forEach((b) => b.addEventListener('click', () => {
+    const light = html.dataset.docTheme !== 'light';
+    setRead(light);
+    try { localStorage.setItem(READ_KEY, light ? 'light' : 'dark'); } catch { /* 기억하지 못해도 이번 화면은 바뀜 */ }
+  }));
 
   const zoom = lightbox();
   try { await renderDoc(); ready(); }
@@ -147,6 +163,21 @@
     document.querySelectorAll('.toc-links').forEach((el) => { el.innerHTML = tocHtml; });
 
     // ⑥ 표 → .table-wrap(스크롤 영역), 그림만 있는 문단 → .pf-figure
+    //   그림만 든 표(PF.md.galleryOf, 칸마다 그림 하나) → 같은 크기 격자(.doc-gallery). 표 칸 폭은 머리 글 길이로 정해져 같은 줄 그림 크기가 제각각이 되므로
+    doc.querySelectorAll('table').forEach((tb) => {
+      const gal = PF.md.galleryOf(tb);
+      if (!gal) return;
+      const g = document.createElement('div');
+      g.className = 'doc-gallery'; g.style.setProperty('--cols', String(Math.min(gal[0].cols || gal.length, 4)));
+      gal.forEach(({ im, cap }) => {
+        const f = document.createElement('figure');
+        f.appendChild(im);
+        if (cap) { const c = document.createElement('figcaption'); c.textContent = cap; f.appendChild(c); }
+        g.appendChild(f);
+      });
+      tb.replaceWith(g);
+    });
+    PF.md.softBreaks(doc);                                             // 코드 이름은 낱말 경계에서만 꺾음(ParseNetwork·Manager) — 표 폭을 재기(⑥-2) 전에
     let nTable = 0;
     doc.querySelectorAll('table').forEach((tb) => {
       const w = document.createElement('div');
@@ -161,19 +192,26 @@
       if (img) para.classList.add('pf-figure');
     });
 
-    // ⑦ Mermaid (theme default, securityLevel loose). 글꼴을 먼저 받아 글자 폭을 맞춤
+    // ⑦ Mermaid (securityLevel loose). 글꼴을 먼저 받아 글자 폭을 맞춤
+    //   페이지가 어두우면 두 벌로 그림: 화면용(.mmd-dark, 페이지 색 — PF.mermaidTheme) + 인쇄·밝게 읽기용(.mmd-light, 'default' 밝은 테마)
+    //   어두운 화면 위에 흰 상자가 뜨지 않게 하면서 A4 인쇄(흰 종이)는 예전처럼 밝게. 밝은 페이지(테마)면 밝은 한 벌만
+    //   어두운 색은 밝게 읽기를 잠깐 끄고 잼(어두운 토큰 기준) — 고른 읽기 모드와 상관없이 같은 색
+    const lightNow = html.dataset.docTheme === 'light';
+    if (lightNow) delete html.dataset.docTheme;
+    const darkTheme = PF.mermaidTheme();
+    if (lightNow) html.dataset.docTheme = 'light';
+    const two = darkTheme.theme === 'base';
     let n = 0;
     const figs = [];
     doc.querySelectorAll('code.language-mermaid').forEach((code) => {
       const fig = document.createElement('figure');
       fig.className = 'mmd';
-      const div = document.createElement('div');
-      div.className = 'mermaid';
-      div.id = `mmd-${n++}`;
-      div.textContent = code.textContent;
+      const mk = (cls) => { const div = document.createElement('div'); div.className = `mermaid ${cls}`; div.textContent = code.textContent; fig.appendChild(div); };
+      n++;
+      if (two) mk('mmd-dark');
+      mk('mmd-light');
       const acc = /^\s*accTitle\s*:\s*(.+)$/m.exec(code.textContent)?.[1]?.trim();
       fig.dataset.label = acc || PF.t('doc.diagram-n', { n });
-      fig.appendChild(div);
       fig.insertAdjacentHTML('beforeend', `<div class="mmd-bar"><details class="mmd-src"><summary>${T('doc.diagram-src')}</summary><pre><code>${esc(code.textContent)}</code></pre></details>` +
         `<button type="button" class="mmd-zoom">${T('doc.zoom')}</button></div>`);
       (code.closest('pre') || code).replaceWith(fig);
@@ -210,21 +248,32 @@
     markPrintWide();
     document.fonts?.addEventListener('loadingdone', markPrintWide);
     if (window.mermaid && figs.length) {                                // 설정(startOnLoad 끔)은 파일 맨 위에서 이미 함
-      try { await mermaid.run({ nodes: doc.querySelectorAll('.mermaid') }); }
-      catch (err) { console.warn('[doc] Mermaid 렌더 오류:', err); errors.push(`mermaid: ${String(err?.message || err).split('\n')[0].slice(0, 160)}`); }
+      const base = { startOnLoad: false, securityLevel: 'loose', fontFamily: 'Pretendard, sans-serif' };
+      const run = async (cfg, sel) => {
+        const nodes = doc.querySelectorAll(sel);
+        if (!nodes.length) return;
+        mermaid.initialize({ ...base, ...cfg });
+        try { await mermaid.run({ nodes }); }
+        catch (err) { console.warn('[doc] Mermaid 렌더 오류:', err); errors.push(`mermaid: ${String(err?.message || err).split('\n')[0].slice(0, 160)}`); }
+      };
+      if (two) await run(darkTheme, '.mermaid.mmd-dark');
+      await run({ theme: 'default' }, '.mermaid.mmd-light');
     } else if (figs.length) errors.push('mermaid: 다이어그램 라이브러리(Mermaid)를 불러오지 못했습니다');
     figs.forEach((fig) => {
-      const svg = fig.querySelector('.mermaid svg');
-      if (!svg) { fig.querySelector('.mermaid')?.classList.add('pf-mmd-error'); return; }
-      const natural = svg.viewBox?.baseVal?.width || parseFloat(svg.style.maxWidth) || 0;
-      if (natural) { svg.setAttribute('width', String(Math.ceil(natural))); svg.style.maxWidth = '100%'; svg.removeAttribute('height'); }
-      svg.dataset.naturalWidth = String(natural);
-      svg.setAttribute('role', 'img');
-      svg.setAttribute('aria-label', fig.dataset.label);
-      svg.querySelectorAll('a[href], a[*|href]').forEach((a) => {           // Mermaid click 링크에도 같은 분류
-        const h = a.getAttribute('href') || a.getAttribute('xlink:href') || '';
-        if (/^https?:/i.test(h)) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); }
+      fig.querySelectorAll('.mermaid').forEach((div) => {
+        const svg = div.querySelector('svg');
+        if (!svg) { div.classList.add('pf-mmd-error'); return; }
+        const natural = svg.viewBox?.baseVal?.width || parseFloat(svg.style.maxWidth) || 0;
+        if (natural) { svg.setAttribute('width', String(Math.ceil(natural))); svg.style.maxWidth = '100%'; svg.removeAttribute('height'); }
+        svg.dataset.naturalWidth = String(natural);
+        svg.setAttribute('role', 'img');
+        svg.setAttribute('aria-label', fig.dataset.label);
+        svg.querySelectorAll('a[href], a[*|href]').forEach((a) => {         // Mermaid click 링크에도 같은 분류
+          const h = a.getAttribute('href') || a.getAttribute('xlink:href') || '';
+          if (/^https?:/i.test(h)) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); }
+        });
       });
+      if (two) fig.classList.add('two');                                // 그린 뒤에 숨김(숨긴 채로 그리면 글자 폭을 못 잼)
     });
 
     // ⑧ 코드 하이라이트 + 접근성 (다이어그램 원문 pre는 제외)
@@ -261,7 +310,11 @@
       const img = e.target.closest('img');
       if (img && !img.closest('a')) return zoom({ src: img.currentSrc || img.src, caption: img.alt });
       const zb = e.target.closest('.mmd-zoom');
-      if (zb) { const svg = zb.closest('.mmd').querySelector('.mermaid svg'); if (svg) zoom({ svg, caption: zb.closest('.mmd').dataset.label }); }
+      if (zb) {                                                         // 지금 보이는 벌(어두운 화면용 · 밝은 인쇄용)을 크게
+        const fig = zb.closest('.mmd');
+        const svg = ([...fig.querySelectorAll('.mermaid')].find((d) => d.offsetParent !== null) || fig.querySelector('.mermaid'))?.querySelector('svg');
+        if (svg) zoom({ svg, caption: fig.dataset.label });
+      }
     });
     // 코드 오른쪽 흐림 표시: 가로로 더 있을 때만
     const fade = (pre) => pre.classList.toggle('fade-r', pre.scrollWidth > pre.clientWidth + 1 && pre.scrollLeft + pre.clientWidth < pre.scrollWidth - 1);

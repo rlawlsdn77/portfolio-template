@@ -21,7 +21,7 @@
   --fx: var(--t-glow, 1);                                        /* 배경 광채 세기 0~1 */
   --shadow: var(--t-shadow, rgb(0 0 0 / .8));
   --radius: var(--t-radius, 20px); --pill: var(--t-pill, 999px);
-  --code-bg: var(--t-code-bg, #111116); --ok: #1B7A4B; --ok-ink: color-mix(in srgb, #2BB673 70%, var(--ink)); --diagram-bg: var(--t-diagram, #F4F5FA);
+  --code-bg: var(--t-code-bg, #111116); --ok: #1B7A4B; --ok-ink: color-mix(in srgb, #2BB673 70%, var(--ink)); --diagram-bg: var(--t-diagram, var(--card));
   --sans: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --display: var(--t-display, 'Montserrat'), var(--sans);
   --mono: 'D2Coding', Consolas, monospace;
@@ -182,9 +182,11 @@ table.kv td.role { color: var(--accent-ink); font-weight: 800; }
 .pi-left, .pi-right { display: flex; flex-direction: column; gap: 16px; min-height: 0; }
 .pi-t { font-size: 44px; font-weight: 800; letter-spacing: -.03em; line-height: 1.12; color: var(--ink); }
 .pi-head .tagline { font-size: 18px; font-weight: 600; color: var(--muted); margin-top: 10px !important; line-height: 1.5; }
-.pi-cover { width: 100%; flex: 0 1 auto; min-height: 140px; max-height: 380px; border-radius: calc(var(--radius) * .9); box-shadow: 0 24px 60px -24px var(--shadow), 0 30px 80px -40px color-mix(in srgb, var(--accent-2) calc(60% * var(--fx)), transparent); }
-.t-P1.portrait .pi-cover { max-height: 480px; }
-.pi-cover img { width: 100%; height: 100%; object-fit: contain; }
+/* 대표 이미지 틀 = 그림 비율 그대로(--ar은 deck-common.js가 넣음). 폭을 "칸 폭"과 "최대 높이 × 비율" 중 작은 쪽으로 정하고 높이는 비율로 →
+   틀이 줄거나 늘어도 그림과 틀 사이에 검은 띠(레터박스)가 생기지 않음. 틀 테두리 1px만큼의 어긋남은 cover로 메움 */
+.pi-cover { --pi-h: 380px; flex: none; width: min(100%, calc(var(--pi-h) * var(--ar, 1.7778))); border-radius: calc(var(--radius) * .9); box-shadow: 0 24px 60px -24px var(--shadow), 0 30px 80px -40px color-mix(in srgb, var(--accent-2) calc(60% * var(--fx)), transparent); }
+.t-P1.portrait .pi-cover { --pi-h: 480px; }
+.pi-cover img { width: 100%; height: 100%; object-fit: cover; }
 .pi-meta { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 20px; border-top: 2px solid var(--accent); border-image: linear-gradient(90deg, var(--accent), var(--accent-2)) 1; }
 .pi-meta .mi { padding: 9px 0 10px; border-bottom: 1px solid var(--line); min-width: 0; }
 .pi-meta .mi.wide { grid-column: 1 / -1; }
@@ -194,8 +196,10 @@ table.kv td.role { color: var(--accent-ink); font-weight: 800; }
 .intent { border-left: 3px solid var(--accent); padding: 2px 0 2px 16px; }
 .lc-k { display: block; font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--muted); }
 .intent .it { margin-top: 4px !important; font-size: 15px; line-height: 1.62; color: var(--ink); }
-.pi-links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.pi-links.row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* 표지 링크 한 줄: 이름 + ↗만(주소는 맺음 장면의 카드에). 첫 장의 자리는 프로젝트 정보가 씀 */
+.pi-go { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px; margin-top: 2px !important; font-size: 14px; font-weight: 700; line-height: 1.4; }
+.pi-go a { display: inline-flex; align-items: center; gap: 2px; color: var(--accent-ink); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent-ink) 40%, transparent); }
+.pi-go a:hover { border-bottom-color: var(--accent-ink); }
 .lcard a { position: relative; display: block; border: 1px solid var(--line); border-radius: calc(var(--radius) * .6); padding: 8px 30px 9px 14px; color: var(--ink); text-decoration: none; background: var(--paper); }
 .lcard a .pf-newtab-icon { position: absolute; right: 12px; top: 11px; margin: 0; }
 .lcard a:hover { border-color: var(--accent); }
@@ -204,11 +208,10 @@ table.kv td.role { color: var(--accent-ink); font-weight: 800; }
 .pi-right .tags { margin-top: 2px; }
 .pi-tight .pi-t { font-size: 38px; }
 .pi-tight .pi-head .tagline { font-size: 16px; }
-.pi-tight .pi-cover { max-height: 300px; }
-.t-P1.portrait.pi-tight .pi-cover { max-height: 400px; }
+.pi-tight .pi-cover { --pi-h: 300px; }
+.t-P1.portrait.pi-tight .pi-cover { --pi-h: 400px; }
 .pi-tight .pi-meta dd { font-size: 14px; }
 .pi-tight .intent .it { font-size: 14px; line-height: 1.55; }
-.pi-tight .lcard a { padding: 6px 28px 7px 12px; }
 .pi-tight .pi-left, .pi-tight .pi-right { gap: 12px; }
 
 /* ── 화면 카드(발표 덱 screens 장면의 열 하나): 화면 + FEATURE 0n + 제목 + 설명 ── */
@@ -232,7 +235,7 @@ table.kv td.role { color: var(--accent-ink); font-weight: 800; }
 .vis[data-arr="row"] { flex-direction: row; align-items: flex-start; }
 .vbox { margin: 0; display: flex; flex-direction: column; gap: 6px; flex: none; max-width: 100%; min-width: 0; }
 .vmedia { border-radius: calc(var(--radius) * .6); overflow: hidden; background: var(--card); border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
-.vbox[data-kind="mermaid"] .vmedia { background: var(--diagram-bg); border-color: var(--diagram-bg); }   /* 다이어그램은 밝은 판(학생 문서의 밝은 mermaid 테마가 그대로 읽히게) */
+.vbox[data-kind="mermaid"] .vmedia { background: var(--diagram-bg); border-color: var(--line); }   /* 다이어그램 판 = 카드 색(장면 색에 맞춰 그림, project-deck.js mermaidTheme). 밝은 판이 필요하면 theme.css의 --t-diagram */
 .vbox[data-kind="image"] .vmedia img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .vbox[data-kind="mermaid"] .vmedia svg { width: 100% !important; height: 100% !important; max-width: none !important; display: block; }
 .vbox[data-kind="code"] .vmedia { display: block; background: var(--code-bg); border: 0; box-shadow: inset 0 0 0 1px var(--line); }
@@ -270,6 +273,19 @@ table.md-table img { max-height: 120px; max-width: 100%; height: auto; }   /* wi
 .fstep.res { background: color-mix(in srgb, var(--ok) 16%, var(--card)); border-color: color-mix(in srgb, var(--ok) 50%, var(--card)); }
 .flow.col .fstep { display: grid; grid-template-columns: 86px minmax(0, 1fr); gap: 12px; align-items: start; padding: 11px 14px; }
 .flow.col .fstep .labelchip { justify-content: center; }
+/* 카드가 홀수(3·5개)인 2열: 마지막 카드는 두 칸을 다 씀(왼쪽 아래 하나만 남아 오른쪽이 비지 않게) */
+.cards.two > .ncard:last-child:nth-child(odd) { grid-column: 1 / -1; }
+/* 글만 있는 장면의 큰 글자 변형(fitSlide가 먼저 시험): 짧은 글(고민과 선택·문제 해결)이 장면 위아래로 크게 비지 않게 */
+.dk-text.big .cards, .dk-text.big .flow { gap: 16px; }
+.dk-text.big .ncard { grid-template-columns: 32px minmax(0, 1fr); gap: 14px; padding: 20px 22px; }
+.dk-text.big .ncard.nonum { grid-template-columns: minmax(0, 1fr); }
+.dk-text.big .ncard .num { width: 30px; height: 30px; font-size: 15px; }
+.dk-text.big .ncard .lb { font-size: 15px; margin-bottom: 6px; }
+.dk-text.big .ncard p { font-size: 20px; line-height: 1.6; }
+.dk-text.big .fstep { padding: 18px 20px; }
+.dk-text.big .flow.col .fstep { grid-template-columns: 104px minmax(0, 1fr); gap: 16px; padding: 16px 20px; }
+.dk-text.big .fstep .labelchip { font-size: 15px; padding: 5px 12px; }
+.dk-text.big .fstep p { font-size: 19px; line-height: 1.6; }
 .scr-row { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 22px; }
 .pf-sizing .scr-row { align-items: stretch; }
 .pf-vband { margin: 0; padding: 12px 14px; border-left: 4px solid #F04438; background: #2A1212; color: #FDA29B; font-size: 13px; line-height: 1.45; border-radius: 8px; min-width: 260px; }
@@ -293,6 +309,11 @@ table.md-table img { max-height: 120px; max-width: 100%; height: auto; }   /* wi
 .ch-list.roomy .toc-list a { align-items: flex-start; padding: 16px 0; }
 .ch-list.roomy .toc-list .pg { padding-top: 8px; }
 .ch-list.roomy .toc-list .ld { display: block; margin-top: 6px; font-size: 15px; line-height: 1.55; color: var(--ink); opacity: .82; }
+/* 기능 장 표지: 장 이름 아래 한 줄(포트폴리오 기능 소개와 같은 글) + 그 기능의 게임 화면. 화면은 그림 비율 그대로(폭·높이 상한 안에서) */
+.ch-line { margin-top: 14px !important; max-width: 520px; font-size: 17px; font-weight: 600; line-height: 1.55; color: var(--muted); }
+.ch-shot { margin-top: 26px !important; max-width: 100%; }
+.ch-shot img { display: block; width: auto; height: auto; max-width: 100%; max-height: 270px; border-radius: calc(var(--radius) * .6); border: 1px solid var(--line); box-shadow: 0 18px 50px -24px var(--shadow); }
+.t-CH.has-shot .ch-mid { align-items: center; }
 
 /* ── 맺음(발표 덱) ── */
 .t-EN .pf-body { display: flex; flex-direction: column; }
