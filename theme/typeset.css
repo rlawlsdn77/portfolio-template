@@ -1,0 +1,25 @@
+/* ─────────────────────────────────────────────────────────────
+   줄바꿈 규칙 (theme/typeset.css) — 레이아웃 원칙 2 "짧은 끝줄 막기" (theme/layout-principles.md)
+   원본·temp1·temp2의 포트폴리오 문서·발표 덱·상세 기술문서가 모두 마지막에 싣습니다.
+   theme/theme.css는 색 손잡이만 두는 파일이라(check-theme.py) 줄바꿈 규칙은 여기에 따로 둡니다.
+   /portfolio-update가 렌더러(index.html·project.html·doc.html)를 다시 받으면 그 파일의 이 줄(<link … typeset.css>)이 빠집니다 → 다시 넣으세요.
+
+   · 글(문단·목록·표 칸·캡션·라벨): text-wrap: pretty — 끝줄에 1~2글자만 남지 않게 앞줄에서 낱말을 하나 내려 줌
+   · 제목: text-wrap: balance — 두세 줄로 꺾일 때 줄 길이를 고르게
+   · 한글은 낱말 단위로만 꺾음(word-break: keep-all, 각 렌더러에 이미 있음). 긴 주소·식별자만 아무 곳에서나 끊음
+   text-wrap은 물려받는 속성이라 body에 한 번 두면 아래가 모두 따릅니다. 코드(pre)는 white-space: pre라 영향 없음.
+   발표 덱은 장면마다 실제 크기를 재므로 이 규칙이 바뀌면 배치 점검(PFScene.report().audit)으로 다시 확인합니다.
+   지원: Chrome·Edge 117+(pretty·balance), Safari 17.5+·Firefox 121+(balance). 지원하지 않는 브라우저는 예전처럼 꺾일 뿐 깨지지 않습니다.
+   PPTX로 저장한 파일은 PowerPoint가 다시 줄을 바꿉니다(이 규칙이 따라가지 않음).
+   ───────────────────────────────────────────────────────────── */
+body { text-wrap: pretty; }
+:where(h1, h2, h3, h4, h5, h6, .pf-title, .pi-t, .ch-t, .en-t, .toc-h, .giant, .ptitle, .name-xl) { text-wrap: balance; }
+
+/* 표 칸·용어 칸: 좁은 칸에서는 두 줄 길이를 고르게(balance — "스테이지 기믹과 / 퍼즐" → "스테이지 / 기믹과 퍼즐") */
+:where(td, th, dt, caption, figcaption) { text-wrap: balance; }
+/* 주소 글자(.url)는 아무 글자에서나 끊기므로, 꺾일 때 두 줄 길이를 고르게("…OverFix / ed" 대신 반씩) */
+:where(.url) { text-wrap: balance; }
+/* 이름 칸(표의 첫 열·머리 칸): "레드 타일", "STAGE 1", "공용 코드"처럼 5글자 안팎의 이름이 두 줄로 갈라지지 않게 글자 폭 최소 5em.
+   (표 칸에는 max-content 같은 내용 기준 폭이 듣지 않아 고정 폭으로 둠. 안쪽 여백과 따로 세도록 content-box)
+   상세 문서의 표는 가로 스크롤 상자 안이라 휴대폰에서도 넘치지 않고, 발표 덱의 표는 장면 폭에 맞춰 줄이는 단계(fit)가 이 폭까지 포함해 잽니다. */
+:where(td:first-child, th), .pf-scene :where(td:first-child, th) { box-sizing: content-box; min-width: 5em; }

@@ -67,7 +67,10 @@
 
   .eyebrow { font-family: var(--pixel); font-weight: 700; font-size: 12px; line-height: 1.6; color: var(--acc); letter-spacing: .02em; }
   .eyebrow .n { font-family: var(--arcade); font-weight: 400; font-size: 10px; }
-  .giant { font-family: var(--arcade); font-size: clamp(26px, 5.2vw, 76px); line-height: 1.14; color: var(--ink);
+  /* 큰 영문 제목은 들어 있는 칸 폭에 맞춰 줄임(원칙 2: "ABOUT / ME"처럼 짧은 낱말 하나 때문에 줄이 바뀌지 않게).
+     픽셀 글꼴은 한 글자 = 1em이라, 칸 폭의 12%(12cqi)면 8글자 제목이 한 줄에 들어감. 칸(container)이 없으면 화면 폭 기준 */
+  :where(div, section, header):has(> .giant) { container-type: inline-size; }
+  .giant { font-family: var(--arcade); font-size: clamp(26px, min(5.2vw, 12cqi), 76px); line-height: 1.14; color: var(--ink);
     text-shadow: .07em .07em 0 var(--acc-deep); overflow-wrap: anywhere; }
   .name-xl { font-family: var(--arcade); font-size: clamp(36px, 5.4vw, 84px); line-height: 1.14; color: var(--ink);
     text-shadow: .07em .07em 0 var(--acc-deep); }
@@ -187,6 +190,7 @@
     body { background-image: none; }
   }
 </style>
+<link rel="stylesheet" href="../theme/typeset.css"><!-- 줄바꿈 규칙(짧은 끝줄 막기): ../theme/layout-principles.md 원칙 2 -->
 </head>
 <body>
 <div id="root"><p style="padding:96px 24px;color:rgba(233,238,230,.56);font-family:system-ui,sans-serif">불러오는 중…</p></div>
