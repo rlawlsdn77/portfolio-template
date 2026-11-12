@@ -445,10 +445,50 @@ let goingTo = { id: '', until: 0 };
 function goTo(id) {
   const el = document.getElementById(id);
   if (!el) return;
-  goingTo = { id, until: Date.now() + 1200 };
+  goingTo = { id, until: Date.now() + 2500 };
   el.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
   try { history.replaceState(null, '', `#${id}`); } catch (e) { /* file:// 등 */ }
 }
+// 스크롤이 멈추면 "가는 중" 기억을 지움(scrollend가 없는 브라우저는 2.5초 뒤 저절로)
+window.addEventListener('scrollend', () => { goingTo.until = 0; });
+// 아직 가는 중인지 — 목표 절이 제자리(위 띠 바로 아래 · 맨 위 · 맨 아래)에 왔으면 도착(scrollend가 늦거나 없어도)
+function going() {
+  if (Date.now() >= goingTo.until) return false;
+  const el = document.getElementById(goingTo.id);
+  if (!el) return false;
+  const top = el.getBoundingClientRect().top;
+  const pad = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+  const atEnd = scrollY + innerHeight >= document.documentElement.scrollHeight - 2;
+  return !(Math.abs(top - pad) < 2 || (scrollY < 1 && top > -2 && top < pad) || (atEnd && top < pad));
+}
+// 한 장씩 넘기는 화면(넓고 높은 화면 — CSS의 scroll-snap 조건과 같음)
+const snapOn = () => !!window.matchMedia && matchMedia('screen and (min-width: 1024px) and (min-height: 700px)').matches;
+// ▲ ▼ 한 번 = 스테이지 하나. 스크롤이 끝나기 전에 또 누르면 "지금 가는 스테이지"에서 한 장 더(브라우저 기본 스크롤 + scroll-snap은
+// 스크롤 도중에 누를 때마다 같은 장으로 처음부터 다시 출발해서 화면이 덜덜 떨림). inner = 화면보다 긴 스테이지는 그 안부터 스크롤(키보드).
+// 처리했으면 true(기본 스크롤 막음), 긴 스테이지 안이라 브라우저에 맡기면 false
+function stepStage(d, inner = false) {
+  const els = [...document.querySelectorAll('.stage')];
+  if (!els.length) return false;
+  let i = going() ? els.findIndex((el) => el.id === goingTo.id) : -1;
+  if (i < 0) {
+    const line = 72; // 위 메뉴 띠(64px) 바로 아래
+    i = 0;
+    els.forEach((el, j) => { if (el.getBoundingClientRect().top <= line) i = j; });
+    const r = els[i].getBoundingClientRect();
+    if (inner && (d > 0 ? r.bottom > innerHeight + 4 : i > 0 && r.top < line - 16)) return false;
+  }
+  const to = els[i + d];
+  if (to) goTo(to.id);
+  return true;
+}
+// 키를 누른 곳이 그 안에서 세로로 스크롤되는 상자(코드 블록 등)면 그 상자에 맡김
+const inScroller = (el) => {
+  for (; el && el !== document.body && el !== document.documentElement; el = el.parentElement) {
+    const oy = getComputedStyle(el).overflowY;
+    if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight + 1) return true;
+  }
+  return false;
+};
 // 프로젝트 한 장으로 들어갈 때는 첫 세부 화면(01 시작)부터
 function enterStage(id) {
   window.dispatchEvent(new CustomEvent('pf-enter', { detail: id }));
@@ -486,14 +526,32 @@ function useGameKeys(active) {
       if (document.body.classList.contains('lb-open')) return;
       const tg = e.target;
       if (tg && tg.closest && tg.closest('input, textarea, select, [contenteditable="true"]')) return;
-      const h = keyReg.get(Date.now() < goingTo.until ? goingTo.id : cur.current);
+      const v = { ArrowDown: 1, PageDown: 1, ArrowUp: -1, PageUp: -1 }[e.key];
+      if (v) { if (snapOn() && !inScroller(tg) && stepStage(v, true)) e.preventDefault(); return; }
+      const h = keyReg.get(going() ? goingTo.id : cur.current);
       if (!h) return;
       const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
       if (d) { e.preventDefault(); h.move(d); return; }
       if (e.key === 'Enter' && !(tg && tg.closest && tg.closest('a, button'))) { e.preventDefault(); h.enter(); }
     };
+    // 휠 = ▲ ▼ 와 같이 한 번에 한 장(브라우저 기본 휠 + scroll-snap은 굴린 만큼 갔다가 멈춘 뒤에야 장으로 끌려가서 밀리는 느낌).
+    // 한 장 넘긴 뒤에는 그 이동이 끝나고 휠이 잠깐(160ms) 멈출 때까지 휠을 먹음 — 트랙패드 관성으로 여러 장 건너뛰지 않게
+    let lock = false, lastWheel = 0;
+    const onWheel = (e) => {
+      if (e.defaultPrevented || e.ctrlKey || !snapOn() || document.body.classList.contains('lb-open')) return;
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX) || inScroller(e.target)) return;
+      const now = Date.now();
+      const quiet = now - lastWheel >= 160;
+      lastWheel = now;
+      if (lock) {
+        if (going() || !quiet) { e.preventDefault(); return; }
+        lock = false;
+      }
+      if (stepStage(Math.sign(e.deltaY), true)) { e.preventDefault(); lock = true; }
+    };
     window.addEventListener('keydown', on);
-    return () => window.removeEventListener('keydown', on);
+    window.addEventListener('wheel', onWheel, { passive: false });
+    return () => { window.removeEventListener('keydown', on); window.removeEventListener('wheel', onWheel); };
   }, []);
 }
 // 세로 목록(퀘스트·보스) 안 ▲ ▼: 키보드로 들어와 있을 때(:focus-visible)만 목록 안에서 고름. 마우스로 누른 뒤의 ▲ ▼ 는 스테이지 넘김 그대로
@@ -616,8 +674,8 @@ function Hud({ secs, active }) {
   return (
     <div className="hud pxb2" role="group" aria-label="화면 이동">
       <span className="ct" aria-live="polite">STAGE <b>{secs[i]?.no}</b>/{pad(secs.length)}</span>
-      <button type="button" className="pxb2 lift" onClick={() => secs[i - 1] && goTo(secs[i - 1].id)} disabled={i === 0} aria-label="이전 화면">▲</button>
-      <button type="button" className="pxb2 lift" onClick={() => secs[i + 1] && goTo(secs[i + 1].id)} disabled={last} aria-label="다음 화면"><span className={last ? '' : 'blink'}>▼</span></button>
+      <button type="button" className="pxb2 lift" onClick={() => stepStage(-1)} disabled={i === 0} aria-label="이전 화면">▲</button>
+      <button type="button" className="pxb2 lift" onClick={() => stepStage(1)} disabled={last} aria-label="다음 화면"><span className={last ? '' : 'blink'}>▼</span></button>
     </div>
   );
 }
@@ -1203,7 +1261,9 @@ function ProjectStage({ p, i, projects, t, no }) {
   kRef.current = k;
   const viewRef = useRef(null);
   const paneRefs = useRef([]);
-  const bump = () => { const el = viewRef.current; if (!el || reduceMotion()) return; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); };
+  // 끝에서 더 넘기면 한 번 툭(흔들리는 중에 또 눌러도 처음부터 다시 흔들지 않음 — 연타 떨림 방지)
+  const bump = () => { const el = viewRef.current; if (!el || reduceMotion() || el.classList.contains('bump')) return; el.classList.add('bump'); };
+  const bumpEnd = (e) => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('bump'); };
   const go = (to) => { if (to < 0 || to >= n) { bump(); return; } setK(to); };
   useKeyReg(id, { move: (d) => go(kRef.current + d), enter: () => {} });
   useEffect(() => {
@@ -1254,7 +1314,7 @@ function ProjectStage({ p, i, projects, t, no }) {
           {screens.map((s, j) => <button key={s.key} type="button" tabIndex={-1} aria-hidden="true" title={`${pad(j + 1)} ${s.label}`} onClick={() => go(j)} />)}
           <span className="thumbbar" aria-hidden="true" />
         </div>
-        <div ref={viewRef} className="tview" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onWheel={onWheel}>
+        <div ref={viewRef} className="tview" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onWheel={onWheel} onAnimationEnd={bumpEnd}>
           <div className="track" style={{ transform: `translateX(-${k * 100}%)` }}>
             {screens.map((s, j) => (
               <div key={s.key} ref={(el) => { paneRefs.current[j] = el; }} className="pane" role="group" aria-label={`${pad(j + 1)} ${s.label}`} aria-hidden={j !== k ? 'true' : 'false'}>{s.el}</div>
