@@ -1,0 +1,43 @@
+/* ─────────────────────────────────────────────────────────────
+   temp3 전용 발표 덱 테마 (temp3/deck.html만 싣음 — 원본 project.html·doc.html·index.html은 theme/theme.css 그대로)
+   기준: 카트리지 앞면 라벨 — 따뜻한 라벨 종이 · 짙은 인쇄 잉크 · 프로젝트마다 다른 카트리지 색 하나(강조색) · 둥근 스티커 모서리 · 굵은 간판 영문 라벨(Bungee) · 광채 없음
+   규칙은 theme/theme.css와 같음(.claude/skills/portfolio-theme/rules.md): 영문 글꼴 @import + :root { --t-… } 한 블록만.
+   강조색(--t-accent)은 아래 값이 기본이고, temp3/deck-cart.js가 프로젝트의 카트리지 색(temp3/carts.js의 ink)으로 바꿉니다.
+   배치(라벨 줄무늬·인쇄 띠·스티커 카드·카트리지 껍데기)는 temp3/deck-layout.css가 맡습니다. 한글 글꼴은 Pretendard 그대로(덱 측정·PPTX).
+   ───────────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Bungee&display=swap");   /* 굵기 하나(400)뿐 — 가짜 굵게는 deck-layout.css가 막음 */
+
+:root {
+  /* ① 바탕과 글자 — 라벨 종이 · 흰 스티커 · 인쇄 잉크 */
+  --t-scheme: light;
+  --t-bg: #FBF6EC;
+  --t-surface: #FFFFFF;
+  --t-ink: #1D1C22;
+  --t-body: #38363E;
+  --t-muted: #6A6670;
+  --t-line: #E3DACA;
+  --t-line-2: #1D1C22;          /* 태그·단추 테두리 = 잉크(인쇄 스티커) */
+
+  /* ② 강조색 — 카트리지 색 하나(짝 색 없음). 프로젝트마다 deck-cart.js가 바꿈 */
+  --t-accent: #C63A2E;
+  --t-accent-2: #C63A2E;
+  --t-accent-3: #C63A2E;
+
+  /* ③ 모양 — 둥근 스티커 · 알약 태그 · 옅은 그림자 */
+  --t-radius: 14px;
+  --t-pill: 999px;
+  --t-shadow: rgb(29 28 34 / .18);
+
+  /* ④ 영문 라벨 글꼴 — 굵은 간판 글자 */
+  --t-display: 'Bungee';
+
+  /* ⑤ 효과 — 단색 라벨 · 단색 배지 · 광채 없음 */
+  --t-grad: linear-gradient(var(--accent-ink), var(--accent-ink));
+  --t-badge: var(--accent-fill);
+  --t-glow: 0;
+  --t-mark: 0;
+
+  /* 코드 판 — 라벨 위 검은 스티커 · 다이어그램 판 — 흰 스티커 */
+  --t-code-bg: #1E1D24;
+  --t-diagram: #FFFFFF;
+}

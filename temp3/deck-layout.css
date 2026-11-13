@@ -1,0 +1,185 @@
+/* ─────────────────────────────────────────────────────────────
+   temp3 전용 발표 덱 배치 — 카트리지 (temp3/deck.html만 싣음, deck-theme.css 다음)
+   A. 장면 = 카트리지 앞면 라벨 (화면·PDF 모두. 장식은 가상 요소라 PPTX에는 들어가지 않음)
+     · 맨 위 인쇄 줄무늬(카트리지 색 굵은 띠 + 잉크 한 줄) · 맨 아래 잉크 인쇄 띠(이름 · 쪽 번호 알약)
+     · 장 이름 = 카트리지 색 라벨 조각 · 제목 왼쪽에 색 막대 · 머리 아래 2px 잉크 선
+     · 카드·그림·링크 = 잉크 테두리 흰 스티커 + 카트리지 색 그림자(어긋나게 찍힌 인쇄 느낌)
+     · 점선 장식 → 기판(초록) 위 금속 접점 · 목차 번호 = 작은 카트리지
+   B. 덱 보기의 카트리지 껍데기 (화면 전용, temp3/deck-cart.js가 그림 · html.t3-on일 때만)
+     · 장면 자리를 껍데기 창에 맞춤(--c-x · --c-y · --c-k) · 위 책등 라벨 · 옆 손잡이 홈 · 아래 접점(장면 수만큼, 지금 장면이 켜짐)
+   덱은 장면마다 실제 크기를 재서 나누고 줄이므로 A의 값이 바뀌면 배치 점검(PFScene.report().audit)으로 넘침을 확인합니다.
+   장면 안 금지(§9-4)는 그대로: vw·vh, 뷰포트 @media, fixed·sticky, overflow:auto 상자, url() 배경 그림. (B는 장면 밖이라 fixed를 씀)
+   ───────────────────────────────────────────────────────────── */
+:root {
+  --pop: color-mix(in srgb, var(--accent) 34%, transparent);          /* 스티커 그림자(카트리지 색) */
+  --gold: #C29A35;
+  --pcb: #234E3A;
+}
+
+/* ═════════ A. 라벨 ═════════ */
+
+/* 바탕 = 라벨 종이(광채 없음) */
+.pf-scene, .pf-scene.t-CH, .pf-scene.t-EN, .pf-scene.t-P1, .pf-scene.t-P2 { background: var(--bg); }
+
+/* 맨 위 인쇄 줄무늬 */
+.pf-scene::before {
+  content: '' / ''; position: absolute; left: 0; right: 0; top: 0; height: 15px; pointer-events: none;
+  background: linear-gradient(var(--accent) 0 8px, transparent 8px 11px, var(--ink) 11px 13px, transparent 13px);
+}
+
+/* 간판 글꼴(Bungee)은 굵기가 하나뿐 → 가짜 굵게를 막음(한글은 Pretendard 굵기 그대로) */
+.pf-eyebrow, .fe-k, .ch-no, .toc-h, .toc-sub, .toc-list .n, .pf-foot .pf-num, .t-P1 .pi-t, .t-EN .en-t, .ncard .num, .lc-k { font-synthesis: none; }
+
+/* ── 장 이름 = 라벨 조각(카트리지 색 칠 + 흰 글자). 그러데이션 글자 대신 단색 ── */
+/* 높이는 원본과 같게: 라벨 조각 16 + 위아래 2 = 20px(원본 줄 높이), 밑줄 2px이면 아래 여백을 1px 줄임 → 머리 높이·본문 상자 크기가 원본 그대로 */
+.pf-headrow { align-items: center; padding-bottom: 11px; border-bottom: 2px solid var(--ink); }
+.pf-headrow .pf-eyebrow, .toprow .pf-eyebrow {
+  background: var(--accent-fill); -webkit-background-clip: border-box; background-clip: border-box; -webkit-text-fill-color: currentColor;
+  color: #fff; padding: 2px 10px; border-radius: 6px; font-size: 13px; letter-spacing: .06em; line-height: 16px;
+}
+.pf-rlabel, .toprow .rl { color: var(--muted); font-size: 14px; }
+.toprow { align-items: center; padding-bottom: 13px; border-bottom: 2px solid var(--ink); }
+
+/* ── 제목: 왼쪽 색 막대 ── */
+.pf-titlerow::before { content: '' / ''; flex: none; align-self: stretch; width: 7px; border-radius: 4px; background: var(--accent); }
+.pf-title { letter-spacing: -.025em; }
+.pf-title .pf-part { color: var(--accent-ink); }
+
+/* ── 바닥 인쇄 띠 ── */
+.pf-foot {
+  left: 0; right: 0; height: 40px; padding: 0 72px;
+  background: var(--ink); color: color-mix(in srgb, var(--bg) 76%, var(--ink));
+}
+.pf-foot .pf-num { font-family: var(--display); font-size: 12px; letter-spacing: .06em; line-height: 1; color: var(--ink); background: var(--bg); padding: 5px 12px 4px; border-radius: var(--pill); }
+
+/* ── 점선 장식 → 기판 위 금속 접점 ── */
+.dotrule { padding: 3px 5px 0; background: var(--pcb); border-radius: 4px 4px 1px 1px; }
+.dotrule .ln { height: 11px; background: repeating-linear-gradient(90deg, var(--gold) 0 6px, transparent 6px 10px); border-radius: 0 0 2px 2px; }
+.dotrule .dot { display: none; }
+
+/* ── 스티커(카드·단계·링크) ── */
+/* 테두리는 안쪽 고리(inset)로 — 상자 크기가 원본(1px 테두리)보다 커지지 않아 장면 맞춤에 여유가 남음 */
+.ncard, .fstep, .card { background: var(--card); border: 0; border-radius: 12px; box-shadow: inset 0 0 0 2px var(--ink), 4px 4px 0 var(--pop); }
+.ncard .num { border-radius: 7px; background: var(--accent-fill); color: #fff; font-family: var(--display); font-size: 13px; }
+.ncard .lb { color: var(--accent-ink); }
+.fstep .labelchip { background: var(--ink); color: var(--bg); }
+.fstep .labelchip.accent { background: var(--accent-fill); color: #fff; }
+.fstep.res { background: color-mix(in srgb, var(--ok) 9%, var(--card)); box-shadow: inset 0 0 0 2px var(--ok), 4px 4px 0 color-mix(in srgb, var(--ok) 30%, transparent); }
+.note { border: 2px solid var(--ink); border-left: 6px solid var(--accent); }
+.callout { border: 2px solid var(--accent-ink); }
+.tags li { font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.badge, .pill { border-width: 2px; border-color: var(--ink); }
+.rt-ach li::before { border-radius: 5px; background: var(--accent-fill); color: #fff; }
+
+/* ── 그림 틀: 테두리 대신 바깥 잉크 고리(틀 크기·그림 비율은 그대로 — 그림 위에는 아무것도 긋지 않음) ── */
+.vmedia, .media { border: 0; box-shadow: 0 0 0 2px var(--ink); border-radius: 10px; }
+.vbox[data-kind="code"] .vmedia { box-shadow: none; }
+.vbox[data-kind="table"] .vmedia { box-shadow: none; border-radius: 0; }
+
+/* ── 표: 카트리지 색 옅은 머리 + 잉크 밑줄 ── */
+table.mini th, table.md-table th { background: color-mix(in srgb, var(--accent) 11%, var(--card)); box-shadow: inset 0 -2px 0 var(--ink); }
+table.kv td { border-left-color: var(--accent); }
+
+/* ── 표지: 간판 제목 · 그림 = 잉크 고리 + 어긋난 색 그림자 ── */
+.t-P1 .pi-t { font-family: var(--display); font-weight: 800; font-size: 50px; line-height: 1.1; letter-spacing: 0; }
+.pi-tight .pi-t { font-size: 40px; }
+.t-P1 .pi-cover { border-radius: 12px; box-shadow: 0 0 0 3px var(--ink), 8px 8px 0 3px var(--pop); }
+.pi-meta { border-top: 3px solid var(--ink); border-image: none; }
+.meta-k, .lc-k { color: var(--accent-ink); }
+.intent { border-left: 0; padding: 10px 14px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 9%, var(--bg)); }
+
+/* ── 목차: 간판 CONTENTS · 번호 = 작은 카트리지(아래 띠가 어두운 네모) ── */
+.t-P2 .toc-h { font-size: 54px; letter-spacing: .01em; }
+.t-P2 .toc-sub { font-family: var(--display); font-weight: 800; color: var(--accent-ink); }
+.toc-list a { border-bottom-color: var(--line); }
+.toc-list .n { border-radius: 8px 8px 4px 4px; background: var(--accent-fill); color: #fff; box-shadow: inset 0 -7px 0 rgb(0 0 0 / .24); padding-bottom: 4px; }
+.toc-list .pg { color: var(--muted); }
+
+/* ── 장 표지 ── */
+.t-CH .ch-no { font-size: 18px; letter-spacing: .08em; }
+.t-CH .ch-t { font-size: 48px; }
+.t-CH .ch-shot img { border: 0; border-radius: 10px; box-shadow: 0 0 0 3px var(--ink), 7px 7px 0 3px var(--pop); }
+
+/* ── 맺음 ── */
+.t-EN .en-t { font-family: var(--display); font-weight: 800; font-size: 48px; line-height: 1.1; letter-spacing: 0; }
+.lcard a { border: 2px solid var(--ink); border-radius: 12px; background: var(--card); box-shadow: 4px 4px 0 var(--pop); transition: transform .12s, box-shadow .12s; }
+.lcard a:hover { border-color: var(--ink); transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--pop); }
+.lcard a:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--pop); }
+.en-links .lcard.primary a { border-color: var(--ink); background: color-mix(in srgb, var(--accent) 10%, var(--card)); }
+
+/* ═════════ B. 카트리지 껍데기(덱 보기 · 화면 전용) ═════════ */
+.t3-cart { display: none; }
+@media screen {
+  /* [한 번에 보기]: 장면마다 카트리지 색 테두리 */
+  html[data-view="scroll"] .pf-deck > .pf-scene { border-radius: 14px; box-shadow: 0 0 0 5px var(--shell, var(--accent)), 0 12px 30px -16px rgb(0 0 0 / .5); }
+
+  html.t3-on[data-view="deck"], html.t3-on[data-view="deck"] body { background: radial-gradient(120% 85% at 50% 0%, #3B3742 0%, #1F1D23 72%); }
+  html.t3-on[data-view="deck"] .pf-deck { pointer-events: none; }
+  html.t3-on[data-view="deck"] .pf-deck > .pf-scene {
+    pointer-events: auto; border-radius: 14px; box-shadow: none;
+    transform: translate(var(--c-x), var(--c-y)) scale(var(--c-k));
+  }
+  html.t3-on[data-view="deck"] .t3-cart {
+    display: block; position: fixed; z-index: 0; left: var(--c-l); top: var(--c-t); width: var(--c-w); height: var(--c-h); pointer-events: none;
+    --rt: calc(var(--c-side) * 1.15); --rb: calc(var(--c-side) * .5);
+  }
+
+  /* 껍데기: 위가 살짝 밝고 아래가 어두운 플라스틱 */
+  .t3-shell {
+    position: absolute; left: 0; right: 0; top: 0; bottom: var(--c-pins); pointer-events: auto; cursor: pointer;
+    border-radius: var(--rt) var(--rt) var(--rb) var(--rb);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--shell) 74%, #fff) 0, var(--shell) 8px, var(--shell) calc(100% - 12px), color-mix(in srgb, var(--shell) 76%, #000) 100%);
+    box-shadow: inset 3px 0 0 rgb(255 255 255 / .16), inset -3px 0 0 rgb(0 0 0 / .12), 0 2px 0 rgb(0 0 0 / .35), 0 44px 70px -34px rgb(0 0 0 / .85);
+  }
+  /* 라벨이 들어앉은 오목한 테(장면 바로 바깥) */
+  /* 창 안은 라벨 종이 색: 장면이 바뀌며 잠깐 투명해질 때(덱 키트의 나타나기 효과) 껍데기 색이 비치지 않게 */
+  .t3-window { position: absolute; left: var(--c-side); right: var(--c-side); top: var(--c-top); bottom: var(--c-bot); border-radius: var(--c-r); background: var(--bg);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--shell) 66%, #000), 0 0 0 5px color-mix(in srgb, var(--shell) 82%, #fff); }
+  /* 손잡이 홈(양옆 위쪽) */
+  .t3-grip { position: absolute; top: calc(var(--c-top) + 8px); height: 48%; width: calc(var(--c-side) * .44); border-radius: 3px;
+    background: repeating-linear-gradient(180deg, rgb(0 0 0 / .26) 0 2px, rgb(255 255 255 / .24) 2px 3px, transparent 3px 9px); }
+  .t3-grip.l { left: calc(var(--c-side) * .28); }
+  .t3-grip.r { right: calc(var(--c-side) * .28); }
+
+  /* 책등 라벨(위): 소프트 번호 · 제목 · 지금 장 이름 — 껍데기에 새긴 글자 */
+  .t3-spine { position: absolute; left: calc(var(--c-side) + 2px); right: calc(var(--c-side) + 2px); top: 0; height: var(--c-top);
+    display: flex; align-items: center; gap: 12px; min-width: 0; color: var(--shell-on); font: 600 12px/1 var(--sans); }
+  .t3-no { flex: none; font: 400 11px/1 'Bungee', var(--sans); letter-spacing: .06em; padding: 4px 8px 3px; border-radius: 4px;
+    background: color-mix(in srgb, var(--shell-on) 15%, transparent); }
+  .t3-name { flex: none; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 14px/1.1 'Bungee', var(--sans); font-synthesis: none; letter-spacing: .03em; }
+  .t3-sec { margin-left: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .8; }
+
+  /* 아래: 홈 두 줄 + 끼우는 방향 ▼ */
+  .t3-foot { position: absolute; left: var(--c-side); right: var(--c-side); bottom: 0; height: var(--c-bot); display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .t3-groove { flex: 0 1 28%; height: 4px; border-radius: 2px; background: linear-gradient(rgb(0 0 0 / .24) 0 2px, rgb(255 255 255 / .26) 2px 4px); }
+  .t3-arrow { width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 9px solid color-mix(in srgb, var(--shell) 64%, #000); }
+
+  /* 금속 접점(장면 수만큼): 지나온 장면은 밝게, 지금 장면은 빛남 */
+  .t3-pins { position: absolute; left: 10%; right: 10%; bottom: 0; height: calc(var(--c-pins) + 6px); display: flex; gap: 3px; padding: 0 6px;
+    background: linear-gradient(#1B3F2E, #2F6A4F); border-radius: 0 0 5px 5px; pointer-events: auto;
+    box-shadow: inset 0 -1px 0 rgb(255 255 255 / .12), 0 8px 14px -8px rgb(0 0 0 / .7); }
+  .t3-pins i { flex: 1 1 0; min-width: 2px; margin: 6px 0 2px; border-radius: 1px 1px 2px 2px; cursor: pointer; opacity: .55;
+    background: linear-gradient(90deg, #B08A33, #E6C567 50%, #B08A33); transition: opacity .15s, filter .15s; }
+  .t3-pins i.past { opacity: .9; }
+  .t3-pins i.on { opacity: 1; background: linear-gradient(90deg, #EFC95C, #FFF3BE 50%, #EFC95C); box-shadow: 0 0 9px 1px rgb(255 214 102 / .8); }
+  .t3-pins i:hover { opacity: 1; filter: brightness(1.2); }
+  .t3-cart.t3-bump .t3-pins i.on { animation: t3-flash .45s ease-out; }
+  .t3-cart.t3-bump .t3-sec { animation: t3-in .3s ease-out; }
+  @keyframes t3-flash { 0% { filter: brightness(2.2); } 100% { filter: none; } }
+  @keyframes t3-in { from { opacity: 0; transform: translateY(-3px); } to { opacity: .8; transform: none; } }
+
+  /* 아래 띠(HUD): 껍데기를 켠 동안은 어두운 받침대 색 */
+  html.t3-on .pf-hud { --bg: #1C1A20; --card: #2A2830; --ink: #F3EEE4; --muted: #A9A3AE; --line: #34313A; --line-2: #4A4653; --th: #2A2830;
+    --accent-ink: #FFD27A; --accent-soft: #3A3222; --accent: #E9B949; --accent-2: #E9B949; }
+  .pf-hud button { transition: transform .08s; }
+  .pf-hud button:active { transform: translateY(1px); }
+  .t3-hud-btn .ic { display: inline-block; width: 13px; height: 11px; vertical-align: -1px; background: currentColor; border-radius: 3px 3px 1px 1px;
+    -webkit-mask: linear-gradient(#000 0 0) top / 100% 66% no-repeat, repeating-linear-gradient(90deg, #000 0 2px, transparent 2px 3px) bottom / 100% 34% no-repeat;
+            mask: linear-gradient(#000 0 0) top / 100% 66% no-repeat, repeating-linear-gradient(90deg, #000 0 2px, transparent 2px 3px) bottom / 100% 34% no-repeat; }
+  .pf-hud .t3-hud-btn[hidden] { display: none !important; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .t3-cart.t3-bump .t3-pins i.on, .t3-cart.t3-bump .t3-sec { animation: none; }
+    .lcard a { transition: none; }
+  }
+}
