@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "pin": [
+    {
+      "key": "ui-screens",
+      "after": "ui-history",
+      "chapter": "ui",
+      "layout": "full",
+      "tab": "결과",
+      "title": {"text": "4.1 문제와 구조", "verbatim": true},
+      "lead": {"text": "라이어게임의 UI는 거의 전부 '지금 상태'에 따라 켜지고 꺼집니다.", "verbatim": true},
+      "sectionPath": ["4. UI 구조 리빌딩", "4.1 문제와 구조"],
+      "points": [],
+      "visuals": [{"kind": "table", "n": 2, "fp": "장르·키워드 공개 (CommonUIManager)|발언자 공지 (MeetingRoomUIManager)|라밍아웃 버튼 (MeetingRoomUIManager)"}]
+    }
+  ],
+  "hide": []
+}

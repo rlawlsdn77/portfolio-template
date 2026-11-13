@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "pin": [
+    {
+      "key": "flow-screens",
+      "after": "architecture",
+      "chapter": "structure",
+      "layout": "full",
+      "tab": "흐름",
+      "title": {"text": "2.1 씬 구성과 흐름", "verbatim": true},
+      "lead": {"text": "할당량을 다 내고 도착하면 정산을 거쳐 정비 씬으로 넘어가고, 안정도가 0%가 되면 게임오버 화면에 완료한 항해 수와 최고 기록이 뜹니다.", "verbatim": true},
+      "sectionPath": ["2. 시스템 구조", "2.1 씬 구성과 흐름"],
+      "points": [],
+      "visuals": [{"kind": "table", "n": 2, "fp": "정산|정비|게임오버"}]
+    },
+    {
+      "key": "architecture",
+      "after": "flow-screens",
+      "chapter": "structure",
+      "layout": "visual",
+      "tab": "구조",
+      "title": {"text": "2.2 아키텍처", "verbatim": true},
+      "lead": null,
+      "sectionPath": ["2. 시스템 구조", "2.2 아키텍처"],
+      "points": [
+        {"label": "", "text": "실선은 직접 호출, 점선은 이벤트(구독한 쪽이 받음)입니다.", "verbatim": true},
+        {"label": "", "text": "설정 SO는 각 컴포넌트가 인스펙터로 직접 참조합니다.", "verbatim": true}
+      ],
+      "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}],
+      "from": {"key": "architecture", "sectionPath": ["2. 시스템 구조", "2.2 아키텍처"], "sig": ["2.2 아키텍처|mermaid|1|flowchart TB"]}
+    },
+    {
+      "key": "terminal-quota",
+      "after": "order-flow",
+      "chapter": "loop",
+      "layout": "full",
+      "tab": "구현",
+      "title": {"text": "4.2 사용법", "verbatim": true},
+      "lead": {"text": "실제로 크레딧을 빼고 할당량에 더하는 일은 '납부' 버튼이 부르는 `GameManager.PayQuota` 하나뿐입니다.", "verbatim": true},
+      "sectionPath": ["4. 게임 루프와 씬 간 상태", "4.2 사용법"],
+      "points": [],
+      "visuals": [{"kind": "image", "src": "images/08b_terminal_quota.png", "w": 1920, "h": 1080, "caption": {"text": "터미널 할당량 납부 탭", "verbatim": true}}]
+    },
+    {
+      "key": "accident-marker",
+      "after": "minigames",
+      "chapter": "accident",
+      "layout": "full",
+      "tab": "결과",
+      "title": {"text": "6.1 문제와 구조", "verbatim": true},
+      "lead": {"text": "패널 위에 장소와 거리가 표시되고(화면 밖이면 가장자리 화살표), 왼쪽 아래 알림에 사고 종류와 남은 시간이 뜹니다.", "verbatim": true},
+      "sectionPath": ["6. 사고와 미니게임", "6.1 문제와 구조"],
+      "points": [],
+      "visuals": [{"kind": "image", "src": "images/14_accident_marker.png", "w": 1920, "h": 1080, "caption": {"text": "사고가 난 패널", "verbatim": true}}]
+    },
+    {
+      "key": "minigames",
+      "after": "accident-marker",
+      "chapter": "accident",
+      "layout": "full",
+      "tab": "결과",
+      "title": {"text": "6.1 문제와 구조", "verbatim": true},
+      "lead": {"text": "미니게임 3종은 조작이 모두 다릅니다 (Space 타이밍 / 방향키 순서 / 마우스로 전선 잇기).", "verbatim": true},
+      "sectionPath": ["6. 사고와 미니게임", "6.1 문제와 구조"],
+      "points": [],
+      "visuals": [{"kind": "table", "n": 1, "fp": "타이밍 바|순서 입력|전선 잇기"}],
+      "from": {
+        "key": "minigames",
+        "sectionPath": ["6. 사고와 미니게임", "6.1 문제와 구조"],
+        "sig": ["6.1 문제와 구조|table|1|타이밍 바|순서 입력|전선 잇기"]
+      }
+    }
+  ],
+  "hide": []
+}

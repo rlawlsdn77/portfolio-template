@@ -1,0 +1,1567 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>포트폴리오</title>
+<!-- /portfolio-custom 직접 생성 모드(temp3) — "카트리지 & 설명서": 8비트 가정용 게임기 시절의 카트리지·본체·설명서·컨트롤러를 빌려 온 밝은 크림 톤 페이지.
+     흐름(아래로 읽는 한 페이지 — 스냅 없음):
+       01 PLAYER   — 커다란 카트리지 한 개 = 자기소개(이름·한 줄 소개·소개 글·연락처)
+       02 SOFTWARE — 선반의 카트리지(프로젝트마다 하나)를 누르거나 끌어다 본체에 꽂으면 TV가 켜지고 옆 창에 그 프로젝트 정보. ◀ ▶ 로 바꿔 꽂기
+       03 MANUAL   — 꽂은 소프트의 취급 설명서(펼친 책): 게임 소개 · 목차 · 기능 소개 · 문제 해결(곤란할 때는) · 결과 · 스크린샷. ◀ ▶ · 모서리 · 옆 색인으로 넘김
+       04 SPEC     — 기술 스택을 본체 명판처럼. 근거 프로젝트 칩(카트리지 색)을 누르면 그 소프트를 꽂음
+       05 CONTROLLER — 연락처: 컨트롤러 버튼(A 메일 · B GitHub · START 포트폴리오 PDF · SELECT 처음으로) + 글자 목록
+     내용은 ../data/*.json(기능 = highlights, 문제 해결 = troubleshooting, 결과 = retro.achieved, 스크린샷 = screenshots), UI 문구는 ../theme/strings.tsv.
+     SOFT·PLAYER·NOW PLAYING 같은 게임기 라벨과 "취급 설명서·곤란할 때는" 같은 장식 문구는 이 파일에 적혀 있음(문구 표에 없는 temp3 전용 라벨).
+     카트리지 껍데기 색은 프로젝트 순서대로 SHELLS(아래 스크립트)에서 돌려 씀 — temp3/deck.html도 같은 순서·같은 색.
+     실제 게임기·회사의 이름·로고는 쓰지 않습니다(모양과 색 인상만).
+     색: 바탕 크림 --bg · 글자 --ink · 강조 마룬 --acc (+ 금색 띠 --gold는 장식 줄에만).
+     배치 원칙: ../theme/layout-principles.md -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.40.3/dist/galmuri.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --bg: #ECE5D5;
+    --bg2: #E2D9C5;
+    --paper: #FBF8F0;
+    --ink: #23201C;
+    --body: #474038;
+    --muted: #6B6256;
+    --line: #D7CCB6;
+    --line2: #B0A48C;
+    --acc: #8E1F2E;
+    --acc-deep: #63141F;
+    --acc-soft: color-mix(in srgb, var(--acc) 9%, var(--paper));
+    --gold: #B98A2E;
+    --cream: #F6EEDD;
+    --tv: #2B2825;
+    --screen: #0C0B0A;
+    --sans: 'Pretendard Variable', Pretendard, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --disp: 'Archivo', 'Pretendard Variable', Pretendard, system-ui, sans-serif;
+    --pix: 'Galmuri11', 'Pretendard Variable', Pretendard, monospace;
+    --mono: ui-monospace, 'D2Coding', Consolas, monospace;
+    --ease: cubic-bezier(.2, .8, .2, 1);
+    --spring: cubic-bezier(.34, 1.56, .64, 1);
+    --stripes: linear-gradient(var(--acc) 0 5px, transparent 5px 7px, var(--gold) 7px 10px);
+  }
+  html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden;
+         word-break: keep-all; overflow-wrap: break-word; }   /* 한글은 낱말 단위로만 꺾음(레이아웃 원칙 2) */
+  body.lb-open { overflow: hidden; }
+  ::selection { background: var(--acc); color: var(--cream); }
+  a:focus-visible, button:focus-visible { outline: 2px dashed var(--acc); outline-offset: 3px; }
+  .disp { font-family: var(--disp); font-stretch: 125%; }
+  .muted { color: var(--muted); }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 20px; }
+  @media (min-width: 768px) { .wrap { padding: 0 40px; } }
+  .sec { padding: 64px 0; }
+  .sec + .sec { border-top: 1px solid var(--line); }
+  .ic { font-family: var(--mono); font-size: .88em; padding: 1px 5px; border-radius: 4px; background: rgb(35 32 28 / .07); color: var(--ink); }
+  .blink { animation: blink 1.1s steps(1) infinite; }
+
+  /* ── 버튼: 플라스틱 키(누르면 아래로 꺼짐) ── */
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px; border-radius: 8px; border: 1px solid var(--line2);
+         background: var(--paper); color: var(--ink); font-size: 14px; font-weight: 700; white-space: nowrap; box-shadow: 0 3px 0 var(--line2);
+         transition: transform .08s, box-shadow .08s, background-color .15s, border-color .15s; }
+  .btn:hover:not(:disabled) { background: #fff; border-color: var(--ink); box-shadow: 0 3px 0 var(--ink); }
+  .btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 0 0 var(--ink); }
+  .btn.pri { background: var(--acc); border-color: var(--acc-deep); color: var(--cream); box-shadow: 0 3px 0 var(--acc-deep); }
+  .btn.pri:hover:not(:disabled) { background: #A12537; border-color: var(--acc-deep); box-shadow: 0 3px 0 var(--acc-deep); }
+  .btn.sm { height: 34px; padding: 0 12px; font-size: 13px; border-radius: 7px; }
+  .btn:disabled { opacity: .45; }
+  .ext { font-family: var(--sans); font-weight: 600; }
+  kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 5px; margin: 0 1px; border-radius: 5px;
+        border: 1px solid var(--line2); background: var(--paper); box-shadow: 0 2px 0 var(--line2); font: 700 11px/1 var(--sans); color: var(--ink); }
+
+  /* ── 절 머리 ── */
+  .shead { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 32px; margin-bottom: 28px; }
+  .eyebrow { display: flex; align-items: center; gap: 10px; margin: 0; font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: 12px; letter-spacing: .16em;
+             text-transform: uppercase; color: var(--acc); }
+  .eyebrow .sn { display: inline-flex; align-items: center; justify-content: center; height: 22px; padding: 0 7px; border-radius: 5px; background: var(--ink); color: var(--cream);
+                 letter-spacing: .06em; font-size: 11px; box-shadow: 0 3px 0 -1px var(--gold); }
+  .stitle { margin: 12px 0 0; font-size: clamp(30px, 4vw, 42px); font-weight: 900; line-height: 1.12; letter-spacing: -.03em; }
+  .shint { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; font-size: 13.5px; color: var(--muted); }
+  .shint b { color: var(--ink); }
+  .stripes { height: 10px; background: var(--stripes); }
+
+  /* ── 머리 막대 ── */
+  .top { position: sticky; top: 0; z-index: 40; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 88%, transparent);
+         -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .topin { display: flex; align-items: center; gap: 24px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .brand b { font-size: 16px; font-weight: 800; white-space: nowrap; }
+  .brand .en { font-family: var(--disp); font-stretch: 125%; font-weight: 700; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--acc); white-space: nowrap; }
+  .mini { display: inline-block; flex: none; width: 24px; height: 19px; border-radius: 4px 4px 3px 3px;
+          background: linear-gradient(var(--paper), var(--paper)) 4px 8px / 16px 8px no-repeat,
+                      repeating-linear-gradient(to bottom, rgb(255 255 255 / .4) 0 1px, transparent 1px 3px) 6px 2px / 12px 5px no-repeat, var(--shell, var(--acc)); }
+  .topnav { display: none; align-items: center; gap: 22px; margin-left: auto; }
+  @media (min-width: 900px) { .topnav { display: flex; } }
+  .topnav a { position: relative; display: inline-flex; align-items: center; height: 60px; font-size: 14px; font-weight: 700; color: var(--muted); transition: color .15s; }
+  .topnav a:hover { color: var(--ink); }
+  .topnav a.on { color: var(--ink); }
+  .topnav a.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: 14px; height: 4px; background: linear-gradient(var(--acc) 0 2px, var(--gold) 2px 4px); }
+  .top .pdf { margin-left: auto; }
+  @media (min-width: 900px) { .top .pdf { margin-left: 0; } }
+
+  /* ── 카트리지 ──
+     --w = 카트리지 폭. 껍데기 비율 1.3 : 1(가로가 긴 카트리지), 위 홈 · 아래 양옆 홈 · 종이 라벨(제목 띠 + 그림 + 아래 줄) */
+  .cart { --w: 220px; --shell: var(--acc); --band: var(--ink); position: relative; display: block; flex: none; width: var(--w); aspect-ratio: 1.3; box-sizing: border-box;
+          padding: calc(var(--w) * .12) calc(var(--w) * .055) calc(var(--w) * .055); border-radius: calc(var(--w) * .06) calc(var(--w) * .06) calc(var(--w) * .04) calc(var(--w) * .04);
+          background: var(--shell); color: var(--ink); text-align: left; user-select: none;
+          box-shadow: inset 0 2px 0 rgb(255 255 255 / .24), inset 0 -4px 0 rgb(0 0 0 / .22), inset 3px 0 0 rgb(255 255 255 / .06), inset -3px 0 0 rgb(0 0 0 / .12),
+                      0 10px 16px -10px rgb(50 30 12 / .55); }
+  .cart .grip { position: absolute; left: 17%; right: 17%; top: calc(var(--w) * .028); height: calc(var(--w) * .062); border-radius: 2px;
+                background: repeating-linear-gradient(to bottom, rgb(0 0 0 / .3) 0 1px, rgb(255 255 255 / .18) 1px 2px, transparent 2px 4px); }
+  .cart::before, .cart::after { content: ''; position: absolute; bottom: 15%; width: calc(var(--w) * .024); height: 17%; background: rgb(0 0 0 / .26); }
+  .cart::before { left: 0; border-radius: 0 3px 3px 0; }
+  .cart::after { right: 0; border-radius: 3px 0 0 3px; }
+  .cart .lab { display: flex; flex-direction: column; height: 100%; overflow: hidden; border-radius: calc(var(--w) * .022); background: var(--paper);
+               box-shadow: inset 0 0 0 1px rgb(0 0 0 / .1); }
+  .cart .lt { position: relative; z-index: 1; display: flex; align-items: center; gap: calc(var(--w) * .03); padding: calc(var(--w) * .022) calc(var(--w) * .04);
+              background: var(--band); color: var(--cream); box-shadow: 0 calc(var(--w) * .012) 0 var(--gold); }
+  .cart .no { flex: none; font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: max(7px, calc(var(--w) * .036)); letter-spacing: .08em; opacity: .78; white-space: nowrap; }
+  .cart .ti { flex: 1; min-width: 0; font-family: var(--disp); font-stretch: 112%; font-weight: 900; font-size: max(10px, calc(var(--w) * .07)); line-height: 1.2;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cart .art { position: relative; flex: 1; min-height: 0; margin-top: calc(var(--w) * .012); background: #171512; }
+  .cart .art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; -webkit-user-drag: none; }
+  .cart .lf { display: flex; justify-content: space-between; gap: 8px; padding: calc(var(--w) * .016) calc(var(--w) * .04); font-size: max(8px, calc(var(--w) * .043)); font-weight: 700;
+              line-height: 1.35; color: var(--muted); white-space: nowrap; }
+  .cart .lf span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .cart.sm .lf { display: none; }
+  .flyer { z-index: 90; pointer-events: none; filter: drop-shadow(0 22px 18px rgb(40 22 10 / .35)); }
+
+  /* ── 01 PLAYER: 커다란 카트리지 = 자기소개 ── */
+  .bigcart { position: relative; padding: 52px 22px 22px; border-radius: 28px 28px 18px 18px; background: var(--acc);
+             box-shadow: inset 0 3px 0 rgb(255 255 255 / .2), inset 0 -6px 0 rgb(0 0 0 / .22), inset 4px 0 0 rgb(255 255 255 / .06), inset -4px 0 0 rgb(0 0 0 / .14),
+                         0 34px 50px -36px rgb(60 30 14 / .7); transition: transform .4s var(--ease); }
+  @media (min-width: 768px) { .bigcart { padding: 58px 30px 30px; } }
+  .bigcart .grip { position: absolute; left: 20%; right: 20%; top: 14px; height: 26px; border-radius: 3px;
+                   background: repeating-linear-gradient(to bottom, rgb(0 0 0 / .32) 0 2px, rgb(255 255 255 / .16) 2px 3px, transparent 3px 7px); }
+  .bigcart::before, .bigcart::after { content: ''; position: absolute; bottom: 18%; width: 9px; height: 74px; background: rgb(0 0 0 / .26); }
+  .bigcart::before { left: 0; border-radius: 0 5px 5px 0; }
+  .bigcart::after { right: 0; border-radius: 5px 0 0 5px; }
+  .blabel { overflow: hidden; border-radius: 12px; background: var(--paper); box-shadow: inset 0 0 0 1px rgb(0 0 0 / .1); }
+  .bl-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 18px; padding: 10px 22px; background: var(--ink); color: var(--cream);
+            font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; box-shadow: 0 4px 0 var(--gold); }
+  .bl-top .gold { color: var(--gold); }
+  .bl-main { display: grid; gap: 28px; padding: 30px 22px 28px; }
+  @media (min-width: 960px) { .bl-main { grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: 48px; padding: 42px 44px 40px; } }
+  .pname { margin: 18px 0 0; font-size: clamp(52px, 8vw, 96px); font-weight: 900; line-height: 1; letter-spacing: -.05em; }
+  .pname-en { margin: 12px 0 0; font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: clamp(14px, 1.6vw, 18px); letter-spacing: .22em; text-transform: uppercase; color: var(--acc); }
+  .pjob { display: inline-flex; align-items: center; gap: 8px; margin-top: 22px; padding: 6px 12px 6px 8px; border-radius: 7px; background: var(--ink); color: var(--cream); font-size: 14px; font-weight: 700; }
+  .pjob i { width: 8px; height: 8px; border-radius: 50%; background: #FF4A3D; box-shadow: 0 0 6px 1px rgb(255 74 61 / .55); }
+  .phead { margin: 22px 0 0; font-size: clamp(20px, 2.2vw, 25px); font-weight: 800; line-height: 1.5; letter-spacing: -.02em; text-wrap: balance; }
+  .phead span { background: linear-gradient(transparent 60%, rgb(185 138 46 / .3) 60%); -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  .intro-box { position: relative; padding: 22px 22px 20px; border-radius: 10px; border: 1px dashed var(--line2); background: color-mix(in srgb, var(--bg) 45%, var(--paper)); }
+  .intro-box .lbl { position: absolute; top: -11px; left: 16px; padding: 2px 10px; border-radius: 5px; background: var(--acc); color: var(--cream); font-size: 12px; font-weight: 800; }
+  .intro-box p { margin: 0; font-size: 16px; line-height: 1.8; color: var(--body); }
+  .intro-box p + p { margin-top: 10px; }
+  .pbtns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+
+  /* ── 02 SOFTWARE: TV · 본체 · 정보 · 선반 ── */
+  .lib { display: grid; gap: 36px; }
+  @media (min-width: 1100px) { .lib { grid-template-columns: minmax(0, 1.28fr) minmax(0, 1fr); gap: 40px; align-items: start; } }
+  .setup { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+
+  .tv { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 58px; gap: 14px; padding: 16px; border-radius: 26px;
+        background: linear-gradient(#36322E, #24211E); box-shadow: inset 0 2px 0 rgb(255 255 255 / .1), inset 0 -3px 0 rgb(0 0 0 / .3), 0 26px 40px -28px rgb(30 18 8 / .7); }
+  @media (max-width: 559px) { .tv { grid-template-columns: minmax(0, 1fr); padding: 12px; border-radius: 20px; } .tvside { display: none !important; } }
+  .scr { position: relative; overflow: hidden; border-radius: 22px / 18px; background: radial-gradient(120% 90% at 30% 20%, #1D1B19, var(--screen) 60%);
+         box-shadow: 0 0 0 3px #161411, 0 0 0 5px #3A3632; transition: aspect-ratio .3s; }
+  .scr .cont { position: absolute; inset: 0; }
+  .scr .cont > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .cont.boot { animation: crtOn .62s var(--ease) both; }
+  .cont.shut { animation: crtOff .36s ease-in both; }
+  .idle { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; height: 100%; padding: 16px; text-align: center; color: #E9DFCC;
+          font-family: var(--pix); background: radial-gradient(90% 80% at 50% 40%, #191714, #0C0B0A); }
+  .idle .bars { width: 64px; height: 12px; background: linear-gradient(var(--acc) 0 6px, transparent 6px 8px, var(--gold) 8px 12px); }
+  .idle .p1 { margin: 6px 0 0; font-size: 12px; letter-spacing: .1em; color: var(--gold); }
+  .idle .nm { margin: 0; font-size: clamp(20px, 3vw, 30px); font-weight: 700; }
+  .idle .msg { margin: 8px 0 0; font-size: 13px; color: #BDB4A4; }
+  .idle .go { margin: 0; font-size: 12px; color: #FF6A5C; }
+  .tvside { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 4px 0; }
+  .knob { position: relative; width: 46px; height: 46px; border-radius: 50%; border: 0; padding: 0;
+          background: radial-gradient(circle at 35% 30%, #625B53, #2C2824 72%); box-shadow: 0 3px 0 #141210, inset 0 0 0 2px #1B1916; transition: transform .1s; }
+  .knob i { position: absolute; inset: 0; transition: transform .45s var(--spring); }
+  .knob i::after { content: ''; position: absolute; left: 50%; top: 6px; width: 4px; height: 12px; margin-left: -2px; border-radius: 2px; background: #E9DFCC; }
+  .knob:hover { box-shadow: 0 3px 0 #141210, inset 0 0 0 2px var(--gold); }
+  .knob:active { transform: translateY(2px); box-shadow: 0 1px 0 #141210, inset 0 0 0 2px var(--gold); }
+  .chl { font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: 10px; letter-spacing: .08em; color: #CFC4B0; white-space: nowrap; }
+  .grille { flex: 1; width: 34px; min-height: 40px; border-radius: 4px; background: repeating-linear-gradient(to bottom, #151310 0 3px, transparent 3px 6px); }
+  .pled { width: 8px; height: 8px; border-radius: 50%; background: #3A2020; }
+  .pled.on { background: #FF4A3D; box-shadow: 0 0 8px 2px rgb(255 74 61 / .55); }
+
+  .console { --w: 236px; position: relative; width: min(100%, 520px); margin: 0 auto; padding-top: calc(var(--w) / 1.3 * .56); }
+  @media (max-width: 559px) { .console { --w: 176px; } }
+  .holder { position: absolute; left: 50%; top: 0; z-index: 1; width: var(--w); aspect-ratio: 1.3; margin-left: calc(var(--w) / -2); }
+  .holder .cart { --w: inherit; width: 100%; }
+  .holder .cart.seat { animation: seat .4s cubic-bezier(.3, .8, .3, 1) both; }
+  .drop-hint { position: absolute; left: 50%; top: 4px; z-index: 3; padding: 6px 12px; border-radius: 7px; background: var(--ink); color: var(--cream); font-size: 12.5px; font-weight: 800;
+               white-space: nowrap; transform: translate(-50%, 6px); opacity: 0; pointer-events: none; transition: opacity .15s, transform .15s; }
+  .console.hot .drop-hint { opacity: 1; transform: translate(-50%, 0); animation: bob .6s ease-in-out infinite; }
+  .cbody { position: relative; z-index: 2; border-radius: 18px 18px 14px 14px; background: linear-gradient(#F5EFE3, #E7DDC9 72%, #DCD0B8);
+           box-shadow: inset 0 2px 0 #fff, 0 2px 0 #CBBE9F, 0 22px 26px -18px rgb(60 36 16 / .55); }
+  .cbody.clunk { animation: clunk .3s ease-out .26s; }
+  .ctop { position: relative; height: 48px; }
+  .slot { position: absolute; left: 50%; top: -2px; width: calc(var(--w) + 22px); height: 16px; margin-left: calc((var(--w) + 22px) / -2); border-radius: 0 0 8px 8px;
+          background: linear-gradient(#0D0B0A, #2C2824); box-shadow: inset 0 -2px 0 rgb(255 255 255 / .12); transition: box-shadow .15s; }
+  .console.hot .slot { box-shadow: inset 0 -2px 0 rgb(255 255 255 / .12), 0 0 0 3px var(--gold), 0 0 18px 4px rgb(185 138 46 / .5); }
+  .vent { position: absolute; top: 18px; width: 18%; height: 14px; background: repeating-linear-gradient(to bottom, rgb(0 0 0 / .14) 0 1px, rgb(255 255 255 / .7) 1px 2px, transparent 2px 4px); }
+  .vent.l { left: 5%; } .vent.r { right: 5%; }
+  .cfront { display: flex; align-items: center; gap: 14px; height: 66px; padding: 0 18px; border-radius: 0 0 14px 14px; background: linear-gradient(var(--acc), #771826);
+            box-shadow: inset 0 2px 0 rgb(255 255 255 / .16); }
+  @media (max-width: 559px) { .cfront { gap: 10px; padding: 0 12px; } .plate { display: none !important; } }
+  .sw { display: inline-flex; flex-direction: column; align-items: center; gap: 5px; padding: 0; border: 0; background: none; color: var(--cream);
+        font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: 9px; letter-spacing: .14em; }
+  .sw .lever { position: relative; width: 44px; height: 18px; border-radius: 4px; background: #1E1B19; box-shadow: inset 0 2px 3px rgb(0 0 0 / .6); }
+  .sw .lever i { position: absolute; top: 2px; left: 3px; width: 18px; height: 14px; border-radius: 3px; background: linear-gradient(#F4EEE2, #CDBFA2); transition: left .14s var(--ease); }
+  .sw.on .lever i, .sw.rs:active .lever i { left: 23px; }
+  .sw:hover .lever { box-shadow: inset 0 2px 3px rgb(0 0 0 / .6), 0 0 0 2px var(--gold); }
+  .led { width: 9px; height: 9px; border-radius: 50%; background: #3A1A1A; box-shadow: inset 0 1px 1px rgb(0 0 0 / .5); flex: none; }
+  .led.on { background: #FF4A3D; box-shadow: 0 0 8px 2px rgb(255 74 61 / .6); }
+  .plate { flex: 1; min-width: 0; text-align: center; font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: 9px; letter-spacing: .22em; color: rgb(246 238 221 / .5);
+           white-space: nowrap; overflow: hidden; }
+  .ej { margin-left: auto; display: inline-flex; flex-direction: column; align-items: center; gap: 5px; padding: 0; border: 0; background: none; color: var(--cream);
+        font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: 9px; letter-spacing: .14em; }
+  .ej .ejl { width: 40px; height: 18px; border-radius: 4px 4px 9px 9px; background: linear-gradient(#D9B25A, var(--gold)); box-shadow: 0 3px 0 #7D5B19; transition: transform .08s, box-shadow .08s; }
+  .ej:hover:not(:disabled) .ejl { filter: brightness(1.08); }
+  .ej:active:not(:disabled) .ejl { transform: translateY(3px); box-shadow: 0 0 0 #7D5B19; }
+  .ej:disabled { opacity: .45; }
+
+  .side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+  .info { position: relative; padding: 22px 24px 24px; border-radius: 14px; border: 1px solid var(--line); background: var(--paper); box-shadow: 0 3px 0 var(--line); }
+  .info .np { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: 11px; letter-spacing: .14em; color: var(--acc); }
+  .info h3 { margin: 10px 0 0; font-size: 30px; font-weight: 900; line-height: 1.15; letter-spacing: -.03em; }
+  .info .tg { margin: 10px 0 0; font-size: 15px; line-height: 1.65; color: var(--body); }
+  .meta { margin: 16px 0 0; border-top: 2px solid var(--ink); }
+  .meta > div { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--line2); }
+  .meta dt { font-size: 12px; font-weight: 800; color: var(--acc); padding-top: 2px; }
+  .meta dd { margin: 0; font-size: 14px; line-height: 1.55; color: var(--ink); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .tag { display: inline-flex; align-items: center; height: 26px; padding: 0 9px; border-radius: 5px; border: 1px solid var(--line2); font-size: 12px; font-weight: 600; color: var(--body); white-space: nowrap; }
+  .ibtns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .info.empty { display: flex; flex-direction: column; gap: 14px; }
+  .info.empty ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .info.empty li { display: flex; gap: 12px; font-size: 15px; line-height: 1.6; color: var(--body); }
+  .info.empty li b { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--acc); color: var(--cream); font-size: 12px; }
+  .swap { animation: slideIn .42s var(--ease) both; }
+
+  .rack-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 14px; }
+  .rack-h .eyebrow { font-size: 11px; }
+  .rack-h .muted { font-size: 13px; }
+  .rack { --w: 140px; display: flex; flex-wrap: wrap; gap: 20px 16px; margin: 0; padding: 0; list-style: none; }
+  @media (max-width: 559px) { .rack { --w: 128px; } }
+  .ritem { position: relative; }
+  .ritem.drag { z-index: 50; }
+  .rbtn { display: block; padding: 0; border: 0; background: none; cursor: grab; }
+  .rbtn .cart { transition: transform .3s var(--spring), box-shadow .3s; }
+  .rbtn:hover .cart, .rbtn:focus-visible .cart { transform: translateY(-9px) rotate(-2deg); box-shadow: inset 0 2px 0 rgb(255 255 255 / .24), inset 0 -4px 0 rgb(0 0 0 / .22), 0 22px 22px -14px rgb(50 30 12 / .55); }
+  .rbtn:active .cart { transform: translateY(-3px) scale(.97); transition-duration: .08s; }
+  .ritem.drag .rbtn { cursor: grabbing; }
+  .ritem.drag .cart { transition: none; box-shadow: 0 30px 30px -16px rgb(50 30 12 / .5); }
+  .rcap { display: block; margin-top: 8px; max-width: var(--w); font-size: 12.5px; font-weight: 700; line-height: 1.35; color: var(--ink); text-align: center; word-break: keep-all; }
+  .rcap.in { color: var(--acc); }
+  .ghost { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; width: var(--w); aspect-ratio: 1.3; border-radius: 10px;
+           border: 2px dashed var(--line2); background: repeating-linear-gradient(-45deg, transparent 0 8px, rgb(35 32 28 / .035) 8px 16px); }
+  .ghost span { font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: 9px; letter-spacing: .14em; color: var(--muted); }
+  .shelf { height: 12px; margin-top: 2px; border-radius: 3px; background: linear-gradient(#C9BB9C, #B3A485); box-shadow: 0 6px 10px -6px rgb(60 36 16 / .5); }
+
+  /* ── 03 MANUAL: 펼친 설명서 ── */
+  .mtop { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .mtop .lb { font-size: 13px; font-weight: 700; color: var(--muted); margin-right: 4px; }
+  .pchip { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px 0 7px; border-radius: 7px; border: 1px solid var(--line2); background: var(--paper);
+           font-size: 13px; font-weight: 700; color: var(--ink); white-space: nowrap; box-shadow: 0 2px 0 var(--line2); transition: transform .08s, box-shadow .08s, border-color .15s; }
+  .pchip i { width: 18px; height: 14px; flex: none; border-radius: 3px 3px 2px 2px;
+             background: linear-gradient(var(--paper), var(--paper)) 3px 6px / 12px 6px no-repeat, repeating-linear-gradient(to bottom, rgb(255 255 255 / .45) 0 1px, transparent 1px 3px) 4px 1px / 10px 4px no-repeat, var(--shell); }
+  .pchip:hover { border-color: var(--ink); box-shadow: 0 2px 0 var(--ink); }
+  .pchip:active { transform: translateY(2px); box-shadow: 0 0 0 var(--ink); }
+  .pchip[aria-pressed="true"] { border-color: var(--acc); background: var(--acc-soft); box-shadow: 0 2px 0 var(--acc); }
+  .bookwrap { position: relative; }
+  .book { --shell: var(--acc); position: relative; padding: 9px; border-radius: 12px; background: var(--shell); perspective: 2600px;
+          box-shadow: inset 0 2px 0 rgb(255 255 255 / .18), 0 34px 40px -32px rgb(50 28 10 / .7); }
+  .spread { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); transform-style: preserve-3d; }
+  .book.wide .spread { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .pslot { display: grid; min-width: 0; }
+  .page { grid-area: 1 / 1; visibility: hidden; position: relative; display: flex; flex-direction: column; min-width: 0; padding: 26px 26px 18px; background: var(--paper); border-radius: 5px; }
+  @media (min-width: 640px) { .page { padding: 32px 38px 20px; } }
+  .page.on { visibility: visible; }
+  .page.l { border-radius: 5px 0 0 5px; background: linear-gradient(to left, rgb(70 44 20 / .13), transparent 44px), var(--paper); }
+  .page.r { border-radius: 0 5px 5px 0; background: linear-gradient(to right, rgb(70 44 20 / .15), transparent 44px), var(--paper); }
+  .page.in-n { animation: inN .38s var(--ease) both; }
+  .page.in-p { animation: inP .38s var(--ease) both; }
+  .leaf { position: absolute; top: 0; bottom: 0; width: 50%; z-index: 5; transform-style: preserve-3d; }
+  .leaf.n { left: 50%; transform-origin: left center; animation: flipN .7s cubic-bezier(.45, .05, .3, 1) forwards; }
+  .leaf.p { left: 0; transform-origin: right center; animation: flipP .7s cubic-bezier(.45, .05, .3, 1) forwards; }
+  .face { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; overflow: hidden; }
+  .face.back { transform: rotateY(180deg); }
+  .face > .page { position: absolute; inset: 0; visibility: visible; }
+  .face::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to right, rgb(40 24 10 / .3), transparent 70%); opacity: 0; animation: shade .7s ease both; }
+  .rh { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 9px; margin-bottom: 18px; border-bottom: 1px solid var(--line);
+        font-size: 11.5px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+  .rh span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .rh i { font-style: normal; color: var(--acc); }
+  .pbody { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .pn { margin-top: 16px; text-align: center; font-family: var(--disp); font-stretch: 112%; font-weight: 700; font-size: 12px; letter-spacing: .1em; color: var(--muted); }
+  .ptab { display: inline-flex; align-self: flex-start; align-items: center; gap: 8px; margin: 0; padding: 4px 12px 4px 4px; border-radius: 7px; background: var(--acc); color: var(--cream);
+          font-size: 12.5px; font-weight: 800; }
+  .ptab b { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 5px; background: var(--cream); color: var(--acc); font-size: 11px; }
+  .ptab span { font-family: var(--disp); font-stretch: 112%; font-size: 11px; opacity: .78; }
+  .ptab.q { background: var(--ink); }
+  .ptab.q b { color: var(--ink); }
+  .ph { margin: 14px 0 0; font-size: 22px; font-weight: 900; line-height: 1.35; letter-spacing: -.02em; }
+  .pwhat { margin: 8px 0 0; font-size: 15.5px; line-height: 1.7; color: var(--ink); }
+  .pfig { margin: 14px 0 0; }
+  .zoom { display: inline-block; max-width: 100%; padding: 0; border: 0; background: none; vertical-align: top; cursor: zoom-in; }
+  .zoom img { display: block; max-width: 100%; width: auto; height: auto; max-height: 180px; border-radius: 6px; box-shadow: 0 0 0 1px var(--line2), 0 3px 0 var(--line); transition: transform .15s var(--ease), box-shadow .15s; }
+  .zoom:hover img { transform: translateY(-2px); box-shadow: 0 0 0 2px var(--acc), 0 5px 0 var(--line); }
+  .pfig figcaption { margin-top: 7px; font-size: 12px; line-height: 1.5; color: var(--muted); }
+  .pdl { margin: 14px 0 0; display: grid; gap: 10px; }
+  .pdl > div { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 12px; padding-top: 10px; border-top: 1px dashed var(--line2); }
+  .pdl dt { font-size: 12.5px; font-weight: 800; color: var(--acc); padding-top: 1px; }
+  .pdl dd { margin: 0; font-size: 14px; line-height: 1.7; color: var(--body); }
+  .pgo { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: auto 0 0; padding-top: 14px; font-size: 13px; }
+  .pgo a { font-weight: 800; color: var(--acc); border-bottom: 1px solid rgb(142 31 46 / .35); }
+  .pgo a:hover { border-bottom-color: var(--acc); }
+  .pgo span { font-size: 12px; color: var(--muted); }
+  .qa { margin: 16px 0 0; display: grid; gap: 12px; }
+  .qa > div { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 12px; }
+  .qa dt { align-self: start; display: inline-flex; justify-content: center; padding: 3px 0; border-radius: 5px; background: var(--bg2); font-size: 12px; font-weight: 800; color: var(--ink); }
+  .qa > div:first-child dt { background: var(--ink); color: var(--cream); }
+  .qa > div.sol dt { background: var(--acc); color: var(--cream); }
+  .qa dd { margin: 0; font-size: 14px; line-height: 1.7; color: var(--body); }
+  .pcart { display: flex; align-items: center; gap: 18px; margin-top: 16px; }
+  .pcart .cart { --w: 118px; }
+  .pcart h4 { margin: 4px 0 0; font-size: 28px; font-weight: 900; line-height: 1.15; letter-spacing: -.03em; }
+  .pcart .k { font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: 10.5px; letter-spacing: .14em; color: var(--acc); }
+  .ptg { margin: 16px 0 0; font-size: 16px; font-weight: 700; line-height: 1.65; }
+  .pint { margin: 14px 0 0; padding: 12px 14px; border-radius: 8px; border-left: 4px solid var(--acc); background: var(--acc-soft); }
+  .pint p { margin: 0; font-size: 14px; line-height: 1.7; color: var(--ink); }
+  .pint .k { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 800; color: var(--acc); }
+  .toc { margin: 16px 0 0; padding: 0; list-style: none; }
+  .toc li { margin: 0; }
+  .toc button { display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 7px 0; border: 0; background: none; text-align: left; color: var(--ink); }
+  .toc button .t { min-width: 0; font-size: 14.5px; font-weight: 800; line-height: 1.45; }
+  .toc button .dots { flex: 1; min-width: 16px; border-bottom: 2px dotted var(--line2); transform: translateY(-4px); }
+  .toc button .pg { flex: none; font-family: var(--disp); font-stretch: 112%; font-weight: 800; font-size: 13px; color: var(--acc); }
+  .toc .sub button { padding: 4px 0 4px 18px; }
+  .toc .sub button .t { font-size: 13.5px; font-weight: 600; color: var(--body); }
+  .toc .sub button .n { flex: none; font-family: var(--disp); font-stretch: 112%; font-weight: 800; font-size: 10.5px; color: var(--muted); }
+  .toc button:hover .t { color: var(--acc); }
+  .toc button:hover .dots { border-color: var(--acc); }
+  .ach { margin: 16px 0 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+  .ach li { display: flex; gap: 12px; font-size: 14.5px; line-height: 1.65; color: var(--ink); }
+  .ach li i { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-top: 1px; border-radius: 50%; background: var(--acc); color: var(--cream);
+              font-style: normal; font-size: 12px; font-weight: 900; }
+  .pnote { margin: 18px 0 0; padding-top: 12px; border-top: 1px dashed var(--line2); font-size: 13px; line-height: 1.6; color: var(--muted); }
+  .pnote a { font-weight: 800; color: var(--acc); }
+  .shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 16px 0 0; }
+  @media (min-width: 640px) { .shots { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .shots figure { margin: 0; min-width: 0; }
+  .shots .zoom { display: block; width: 100%; }
+  .shots .zoom img { width: 100%; max-height: none; }
+  .shots figcaption { margin-top: 5px; font-size: 11.5px; line-height: 1.4; color: var(--muted); word-break: keep-all; }
+  .plinks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 16px; }
+  .memo { flex: 1; margin-top: 16px; min-height: 160px; background: repeating-linear-gradient(to bottom, transparent 0 31px, var(--line) 31px 32px); }
+  .itabs { position: absolute; top: 46px; right: -28px; display: none; flex-direction: column; gap: 6px; }
+  @media (min-width: 1100px) { .book.wide + .itabs { display: flex; } }
+  .itab { width: 28px; padding: 12px 0; border: 0; border-radius: 0 8px 8px 0; background: var(--bg2); color: var(--muted); writing-mode: vertical-rl; font-size: 12px; font-weight: 800;
+          letter-spacing: .04em; box-shadow: inset 3px 0 0 rgb(0 0 0 / .08); transition: transform .15s var(--ease), background-color .15s, color .15s; }
+  .itab:hover { transform: translateX(3px); color: var(--ink); }
+  .itab.on { background: var(--ink); color: var(--cream); }
+  .curl { position: absolute; bottom: 0; z-index: 4; width: 48px; height: 48px; padding: 0; border: 0; background: none; }
+  .curl::before { content: ''; position: absolute; bottom: 0; width: 22px; height: 22px; transition: width .2s var(--ease), height .2s var(--ease); box-shadow: -2px -2px 5px rgb(40 24 10 / .12); }
+  .curl.r { right: 0; } .curl.r::before { right: 0; border-radius: 4px 0 5px 0; background: linear-gradient(135deg, var(--bg) 50%, #E9E0CD 50%, #CDBFA4); }
+  .curl.l { left: 0; } .curl.l::before { left: 0; border-radius: 0 4px 0 5px; background: linear-gradient(-135deg, var(--bg) 50%, #E9E0CD 50%, #CDBFA4); box-shadow: 2px -2px 5px rgb(40 24 10 / .12); }
+  .curl:hover::before { width: 36px; height: 36px; }
+  .curl:disabled { display: none; }
+  .mnav { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 16px; margin-top: 18px; }
+  .mnav .ct { min-width: 92px; text-align: center; font-family: var(--disp); font-stretch: 112%; font-weight: 800; font-size: 13px; letter-spacing: .06em; }
+  .mnav .hint { width: 100%; text-align: center; font-size: 12.5px; color: var(--muted); }
+
+  /* ── 04 SPEC: 본체 명판 ── */
+  .plate-box { position: relative; padding: 26px 22px 10px; border-radius: 14px; border: 1px solid var(--line2);
+               background: linear-gradient(#F7F2E8, #EBE2D0); box-shadow: inset 0 1px 0 #fff, 0 3px 0 var(--line2); }
+  @media (min-width: 768px) { .plate-box { padding: 30px 40px 12px; } }
+  .screw { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #D8CDB6, #9C9077 70%);
+           box-shadow: inset 0 0 0 1px rgb(0 0 0 / .2); }
+  .screw::after { content: ''; position: absolute; left: 2px; right: 2px; top: 5px; height: 2px; background: rgb(0 0 0 / .35); transform: rotate(-30deg); }
+  .screw.tl { left: 12px; top: 12px; } .screw.tr { right: 12px; top: 12px; } .screw.bl { left: 12px; bottom: 12px; } .screw.br { right: 12px; bottom: 12px; }
+  .plate-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 22px; padding: 0 0 16px; }
+  .plate-h span { font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: 10px; letter-spacing: .18em; color: var(--muted); }
+  .plate-h b { font-size: 15px; font-weight: 800; margin-left: -12px; }
+  .srow { display: grid; gap: 12px 28px; padding: 18px 0; border-top: 1px dashed var(--line2); }
+  @media (min-width: 768px) { .srow { grid-template-columns: 250px minmax(0, 1fr); } }
+  .sk { display: flex; align-items: center; gap: 12px; align-self: start; }
+  .sk .pin { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex: none; border-radius: 50%;
+             background: radial-gradient(circle at 35% 30%, #B5394A, var(--acc) 62%); color: var(--cream); font-family: var(--disp); font-stretch: 112%; font-weight: 800; font-size: 12px;
+             box-shadow: 0 0 0 3px var(--paper), 0 0 0 5px #2D2925; }
+  .sk h3 { margin: 0; font-size: 19px; font-weight: 900; line-height: 1.3; letter-spacing: -.02em; word-break: keep-all; }
+  .sk .cnt { margin-left: auto; font-family: var(--disp); font-stretch: 112%; font-weight: 800; font-size: 13px; color: var(--acc); }
+  @media (min-width: 768px) { .sk .cnt { margin-left: 4px; } }
+  .ev { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .ev li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; font-size: 14.5px; line-height: 1.65; color: var(--body); }
+  .ev li .tx { min-width: 0; }
+  .ev .pchip { height: 26px; font-size: 12px; transform: translateY(-1px); }
+
+  /* ── 05 CONTROLLER: 연락처 ── */
+  .cgrid { display: grid; gap: 36px; align-items: center; }
+  @media (min-width: 1024px) { .cgrid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 48px; } }
+  .padwrap { position: relative; container-type: inline-size; padding-top: 54px; }
+  .ctrl { position: relative; width: 100%; max-width: 620px; aspect-ratio: 2.45; margin: 0 auto; font-size: clamp(7px, 2.75cqi, 17px); border-radius: 2.3em;
+          background: linear-gradient(#F5EFE3, #E2D7C0); box-shadow: inset 0 .16em 0 #fff, 0 .3em 0 #C7B898, 0 1.6em 2em -1.2em rgb(60 36 16 / .55); }
+  .ctrl::before { content: ''; position: absolute; left: 50%; top: -3.6em; width: .5em; height: 3.7em; margin-left: -.25em; border-radius: .3em .3em 0 0; background: #2B2825; }
+  .cface { position: absolute; left: 1.7em; right: 1.7em; top: 2.5em; bottom: 1.9em; border-radius: 1.3em; background: linear-gradient(var(--acc), #761826);
+           box-shadow: inset 0 .16em 0 rgb(255 255 255 / .17), inset 0 -.2em 0 rgb(0 0 0 / .2); }
+  .ctrl .tagline { position: absolute; left: 0; right: 0; top: .8em; text-align: center; font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: .72em; letter-spacing: .3em; color: var(--muted); }
+  .dpad { position: absolute; left: 2.2em; top: 50%; width: 7.6em; height: 7.6em; margin-top: -3.8em; }
+  .dpad::before { content: ''; position: absolute; left: 2.6em; top: 2.6em; width: 2.4em; height: 2.4em; background: #1E1B19; }
+  .dk { position: absolute; padding: 0; border: 0; background: #1E1B19; color: #8E857A; font-size: .8em; line-height: 1; box-shadow: 0 .2em 0 #0E0C0B; transition: transform .06s, box-shadow .06s, color .15s; }
+  .dk:hover { color: var(--cream); }
+  .dk:active { transform: translateY(.15em); box-shadow: 0 .05em 0 #0E0C0B; }
+  .dk.u { left: 2.6em; top: 0; width: 2.4em; height: 2.7em; border-radius: .35em .35em 0 0; }
+  .dk.d { left: 2.6em; bottom: 0; width: 2.4em; height: 2.7em; border-radius: 0 0 .35em .35em; }
+  .dk.l { left: 0; top: 2.6em; width: 2.7em; height: 2.4em; border-radius: .35em 0 0 .35em; }
+  .dk.r { right: 0; top: 2.6em; width: 2.7em; height: 2.4em; border-radius: 0 .35em .35em 0; }
+  .mid { position: absolute; left: 50%; top: 50%; display: flex; flex-direction: column; align-items: center; gap: .55em; transform: translate(-50%, -38%); }
+  .mid .pl { font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: .7em; letter-spacing: .26em; color: rgb(246 238 221 / .6); white-space: nowrap; }
+  .ss { display: flex; gap: 1.5em; }
+  .ss a, .ss button { display: flex; flex-direction: column; align-items: center; gap: .45em; padding: 0; border: 0; background: none; color: rgb(246 238 221 / .8);
+                      font-family: var(--disp); font-stretch: 125%; font-weight: 800; font-size: .6em; letter-spacing: .16em; }
+  .ss i { display: block; width: 6em; height: 1.75em; border-radius: 1em; background: #1E1B19; box-shadow: 0 .3em 0 #0E0C0B; transition: transform .06s, box-shadow .06s; }
+  .ss a:hover i, .ss button:hover i { box-shadow: 0 .3em 0 #0E0C0B, 0 0 0 .25em var(--gold); }
+  .ss a:active i, .ss button:active i { transform: translateY(.25em); box-shadow: 0 .05em 0 #0E0C0B; }
+  .ab { position: absolute; right: 2.4em; top: 50%; display: flex; gap: 1.3em; transform: translateY(-46%); }
+  .ab a, .ab button { display: flex; flex-direction: column; align-items: center; gap: .55em; padding: 0; border: 0; background: none; color: var(--cream);
+                      font-family: var(--disp); font-stretch: 112%; font-weight: 900; font-size: 1em; }
+  .ab i { display: block; width: 3.3em; height: 3.3em; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #F2605F, #C3262F 58%, #8E1820);
+          box-shadow: 0 0 0 .32em #1E1B19, 0 .32em 0 .32em #0E0C0B; transition: transform .06s, box-shadow .06s; }
+  .ab a:hover i, .ab button:hover i { box-shadow: 0 0 0 .32em #1E1B19, 0 .32em 0 .32em #0E0C0B, 0 0 0 .55em var(--gold); }
+  .ab a:active i, .ab button:active i { transform: translateY(.22em); box-shadow: 0 0 0 .32em #1E1B19, 0 .1em 0 .32em #0E0C0B; }
+  .ab .lb { font-size: .78em; color: rgb(246 238 221 / .8); }
+  .bubble { position: absolute; left: 50%; top: 0; z-index: 2; max-width: 92%; padding: 9px 14px; border-radius: 10px; background: var(--ink); color: var(--cream);
+            font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transform: translateX(-50%); animation: pop .25s var(--spring) both; }
+  .bubble::after { content: ''; position: absolute; left: 50%; bottom: -6px; width: 12px; height: 12px; margin-left: -6px; background: var(--ink); transform: rotate(45deg); }
+  .legend { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+  .legend a, .legend button { display: grid; grid-template-columns: 72px minmax(0, 1fr); align-items: center; gap: 14px; width: 100%; padding: 12px 16px; border-radius: 10px;
+                              border: 1px solid var(--line); background: var(--paper); text-align: left; color: var(--ink); box-shadow: 0 3px 0 var(--line);
+                              transition: transform .08s, box-shadow .08s, border-color .15s; }
+  .legend a:hover, .legend button:hover { border-color: var(--ink); box-shadow: 0 3px 0 var(--ink); }
+  .legend a:active, .legend button:active { transform: translateY(3px); box-shadow: 0 0 0 var(--ink); }
+  .legend .k { display: inline-flex; align-items: center; justify-content: center; height: 26px; border-radius: 13px; background: var(--ink); color: var(--cream);
+               font-family: var(--disp); font-stretch: 112%; font-weight: 900; font-size: 11px; letter-spacing: .08em; }
+  .legend .k.red { background: #B9232D; }
+  .legend .t { display: block; font-size: 15px; font-weight: 800; }
+  .legend .v { display: block; margin-top: 1px; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+  .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; padding: 22px 0 30px; border-top: 1px solid var(--line);
+          font-family: var(--disp); font-stretch: 112%; font-weight: 700; font-size: 11px; letter-spacing: .1em; color: var(--muted); }
+
+  /* ── 크게 보기 ── */
+  .lbx { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 70px 76px; background: rgb(24 20 16 / .9); animation: fadein .2s ease-out; }
+  .lbx figure { margin: 0; max-width: min(1120px, 100%); padding: 14px; border-radius: 22px; background: var(--tv); box-shadow: inset 0 2px 0 rgb(255 255 255 / .1); }
+  .lbx img { display: block; max-width: 100%; max-height: calc(100vh - 230px); width: auto; height: auto; margin: 0 auto; border-radius: 12px; animation: crtOn .45s var(--ease) both; }
+  .lbx figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-top: 12px; padding: 0 4px; font-size: 14px; line-height: 1.5; color: var(--cream); word-break: keep-all; }
+  .lbx figcaption b { font-family: var(--disp); font-stretch: 125%; font-size: 11px; letter-spacing: .12em; color: var(--gold); }
+  .lbx .x { position: absolute; top: 16px; right: 16px; }
+  .lbx .nv { position: absolute; top: 50%; width: 46px; margin-top: -21px; justify-content: center; padding: 0; }
+  .lbx .nv.l { left: 16px; } .lbx .nv.r { right: 16px; }
+  @media (max-width: 719px) { .lbx { padding: 64px 12px 84px; } .lbx .nv { top: auto; bottom: 20px; margin-top: 0; } }
+
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes bob { 50% { translate: 0 -4px; } }
+  @keyframes fadein { from { opacity: 0; } }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+  @keyframes seat { 0% { transform: translateY(-46%); } 72% { transform: translateY(2%); } 100% { transform: none; } }
+  @keyframes clunk { 0% { transform: none; } 35% { transform: translateY(3px); } 100% { transform: none; } }
+  @keyframes crtOn { 0% { transform: scale(0, .004); filter: brightness(7); } 32% { transform: scale(1, .004); filter: brightness(5); }
+                     64% { transform: scale(1, 1.03); filter: brightness(1.5); } 100% { transform: none; filter: none; } }
+  @keyframes crtOff { 0% { transform: none; filter: none; } 55% { transform: scale(1, .004); filter: brightness(5); } 100% { transform: scale(0, .004); filter: brightness(8); opacity: 0; } }
+  @keyframes flipN { from { transform: rotateY(0); } to { transform: rotateY(-180deg); } }
+  @keyframes flipP { from { transform: rotateY(0); } to { transform: rotateY(180deg); } }
+  @keyframes shade { 0% { opacity: 0; } 50% { opacity: .5; } 100% { opacity: 0; } }
+  @keyframes inN { from { opacity: 0; transform: translateX(36px); } to { opacity: 1; transform: none; } }
+  @keyframes inP { from { opacity: 0; transform: translateX(-36px); } to { opacity: 1; transform: none; } }
+  @keyframes pop { from { opacity: 0; transform: translate(-50%, 8px) scale(.92); } to { opacity: 1; transform: translateX(-50%); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+  @media print {
+    .top, .mnav, .itabs, .curl, .flyer, .drop-hint, .padwrap { display: none !important; }
+    .sec { break-inside: avoid; }
+  }
+</style>
+<link rel="stylesheet" href="../theme/typeset.css"><!-- 줄바꿈 규칙(짧은 끝줄 막기): ../theme/layout-principles.md 원칙 2 -->
+</head>
+<body>
+<div id="root"><p style="padding:96px 24px;color:#6B6256;font-family:system-ui,sans-serif">불러오는 중…</p></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useMemo } = React;
+const { flushSync } = ReactDOM;
+
+// 카트리지 껍데기 색(프로젝트 순서대로 돌려 씀). temp3/deck.html의 SHELLS와 같은 순서·같은 색
+const SHELLS = [
+  { shell: '#8E1F2E', band: '#23201C' },   // 마룬
+  { shell: '#2E2B28', band: '#8E1F2E' },   // 먹색
+  { shell: '#B98A2E', band: '#23201C' },   // 금색
+  { shell: '#CFC2A4', band: '#8E1F2E' },   // 짙은 크림
+];
+const shellOf = (i) => SHELLS[((i % SHELLS.length) + SHELLS.length) % SHELLS.length];
+
+// ── 문구 표(theme/strings.tsv): 맨 끝 "내 문구" 칸 → 없으면 기본 문구 ──
+const FALLBACK = {
+  'name.portfolio': '포트폴리오', 'name.deck': '발표 덱', 'name.doc': '상세 기술문서', 'name.doc-short': '상세 문서', 'name.video': '시연 영상',
+  'name.role': '내 역할', 'name.intent': '개발 의도', 'name.team': '팀 프로젝트', 'name.solo': '개인 프로젝트',
+  'page.updated': '업데이트 {date}', 'page.intro': '자기소개', 'page.stack': '기술 스택', 'page.stack-note': '근거 프로젝트와 함께',
+  'page.features': '기능 소개', 'page.see-in-deck': '{name.deck}에서 보기', 'page.deck-all': '{name.deck} 전체',
+  'page.nav-contact': '연락처', 'page.print-email': '이메일', 'ui.preparing': '준비 중…',
+  'en.portfolio': 'PORTFOLIO', 'en.skills': 'SKILLS', 'en.project': 'PROJECT', 'en.contact': 'CONTACT',
+};
+async function loadStrings() {
+  const table = { ...FALLBACK };
+  try {
+    const r = await fetch('../theme/strings.tsv', { cache: 'no-cache' });
+    if (r.ok) {
+      const txt = (await r.text()).replace(/^﻿/, '');
+      for (const line of txt.split(/\r?\n/)) {
+        if (!line || line.startsWith('#')) continue;
+        const c = line.split('\t');
+        if (c.length < 3 || c[0] === '키') continue;
+        const mine = (c[3] || '').trim();
+        table[c[0].trim()] = mine || c[2].trim();
+      }
+    }
+  } catch (e) { /* 표가 없으면 기본 문구 */ }
+  const resolve = (k, depth = 0) => String(table[k] ?? '').replace(/\{([a-z0-9-]+\.[a-z0-9-]+)\}/g, (m, ref) => depth > 4 ? m : resolve(ref, depth + 1));
+  return (k, vars = {}) => resolve(k).replace(/\{([a-z0-9-]+)\}/g, (m, v) => (v in vars ? vars[v] : m));
+}
+
+function Rich({ text }) {
+  if (!text) return null;
+  return String(text).split(/(`[^`]+`)/g).map((p, i) => p.startsWith('`') && p.endsWith('`') && p.length > 1
+    ? <code key={i} className="ic">{p.slice(1, -1)}</code> : <React.Fragment key={i}>{p}</React.Fragment>);
+}
+const pad = (n) => String(n).padStart(2, '0');
+const isUrl = (u) => /^https?:\/\//.test(u || '');
+const img = (p, src) => `../src/${p.id}/${src}`;
+// 발표 덱은 temp3 전용 카트리지 덱(deck.html — 원본 렌더러 + temp3/deck-theme.css 색 + temp3/deck-layout.css 배치). 원본 덱은 ../project.html
+const deckUrl = (p, sid = '') => `deck.html?p=${encodeURIComponent(p.id)}${sid ? `#s=${sid}` : ''}`;
+const docUrl = (p) => `../doc.html?p=${encodeURIComponent(p.id)}`;
+const shortUrl = (u) => String(u || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+const teamLabel = (team, t) => (team?.type === 'team' ? `${t('name.team')}${team.size ? ' · ' + team.size : ''}` : t('name.solo'));
+const metaOf = (p, re) => ((p.meta || []).find((m) => re.test(m.label || '')) || {}).value || '';
+// 기간 값에서 시작 연도만 꺼냄(값의 일부 그대로 — 새 날짜를 만들지 않음)
+const yearOf = (v) => (String(v).match(/(\d{4})\./) || [])[1] || '';
+// 기능 절(section) → 발표 덱 장면 id (원본 포트폴리오 문서와 같은 규칙)
+const norm = (s) => String(s || '').replace(/[`*_~]/g, '').replace(/\s+/g, ' ').trim();
+const keyOk = (k) => /^[a-z][a-z0-9-]{1,31}$/.test(k || '') && !/^s-\d+$/.test(k);
+function deckScene(p, section) {
+  const want = norm(section);
+  if (!want || !p.deck?.slides?.length) return '';
+  const last = (x) => norm((x.sectionPath || []).slice(-1)[0]);
+  const find = (list) => list.find((x) => last(x) === want) || list.find((x) => (x.sectionPath || []).some((s) => norm(s) === want));
+  const sl = find(p.deck.slides);
+  if (sl) return keyOk(sl.key) ? `d-${sl.key}` : '';
+  const hid = find(p.deck.base || []);
+  return hid && keyOk(hid.chapter) && p.deck.slides.some((x) => x.chapter === hid.chapter) ? `ch-${hid.chapter}` : '';
+}
+const reduceMotion = () => !!window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const inView = (r) => r && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth;
+const scrollToId = (id) => document.getElementById(id)?.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'start' });
+
+// [포트폴리오 PDF] — 원본 포트폴리오 문서(../index.html)는 A4 인쇄용(제출 PDF). 보이지 않는 틀에 불러 다 그려진 뒤 그 틀의 인쇄 창을 띄움
+const waitMax = (p, ms) => Promise.race([p, wait(ms)]);
+let printFrame = null;
+async function printOriginal() {
+  if (!printFrame) {
+    const f = document.createElement('iframe');
+    f.title = '인쇄용 포트폴리오 문서';
+    f.tabIndex = -1;
+    f.setAttribute('aria-hidden', 'true');
+    Object.assign(f.style, { position: 'fixed', left: '-12000px', top: '0', width: '1200px', height: '900px', border: '0' });
+    const loaded = new Promise((res, rej) => { f.onload = res; f.onerror = rej; });
+    f.src = '../index.html';
+    document.body.appendChild(f);
+    await waitMax(loaded, 20000);
+    printFrame = f;
+  }
+  const w = printFrame.contentWindow;
+  if (!w || !w.PFPage) { printFrame.remove(); printFrame = null; throw new Error('원본 포트폴리오 문서를 불러오지 못했습니다'); }
+  await waitMax(w.PFPage.whenReady(), 15000);
+  const imgs = [...w.document.images];
+  imgs.forEach((i) => { i.loading = 'eager'; });
+  await waitMax(Promise.all(imgs.map((i) => (i.complete ? null : new Promise((r) => {
+    i.addEventListener('load', r, { once: true }); i.addEventListener('error', r, { once: true }); })))), 15000);
+  try { await waitMax(w.document.fonts.ready, 5000); } catch (e) { /* 글꼴 대기 실패는 무시 */ }
+  w.focus();
+  w.print();
+}
+function usePrint() {
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    if (busy) return;
+    setBusy(true);
+    try { await printOriginal(); }
+    catch (e) { console.warn('[temp3] 인쇄 창을 띄우지 못해 원본 포트폴리오 문서를 새 탭으로 엽니다:', e); window.open('../index.html', '_blank', 'noopener'); }
+    finally { setBusy(false); }
+  };
+  return [busy, run];
+}
+function PdfButton({ t, className = '' }) {
+  const [busy, run] = usePrint();
+  return (
+    <button type="button" className={`btn sm ${className}`} onClick={run} disabled={busy} aria-busy={busy} title="제출용 포트폴리오 문서(A4)를 PDF로 저장">
+      {busy ? t('ui.preparing') : <>{t('name.portfolio')} PDF</>}
+    </button>
+  );
+}
+function Ext() { return <span className="ext" aria-hidden="true">↗</span>; }
+
+// ── 카트리지 한 개: 껍데기 + 위 홈 + 라벨(SOFT 번호·제목 띠 / 대표 그림 / 장르·연도) ──
+function Cart({ p, i, w, sm = false, className = '', style }) {
+  const s = shellOf(i);
+  return (
+    <span className={`cart ${sm ? 'sm' : ''} ${className}`} style={{ '--shell': s.shell, '--band': s.band, ...(w ? { '--w': w } : {}), ...style }}>
+      <span className="grip" aria-hidden="true" />
+      <span className="lab">
+        <span className="lt"><span className="no">SOFT {pad(i + 1)}</span><span className="ti">{p.title}</span></span>
+        <span className="art">{p.cover && <img src={img(p, p.cover)} alt="" draggable="false" loading="lazy" />}</span>
+        <span className="lf"><span>{metaOf(p, /장르/)}</span><span>{yearOf(metaOf(p, /기간/))}</span></span>
+      </span>
+    </span>
+  );
+}
+
+function Head({ no, en, title, children }) {
+  return (
+    <div className="shead">
+      <div className="min-w-0">
+        <p className="eyebrow"><span className="sn">{no}</span>{en}</p>
+        <h2 className="stitle">{title}</h2>
+      </div>
+      {children && <div className="shint">{children}</div>}
+    </div>
+  );
+}
+
+// ── 머리 막대 ──
+function Top({ prof, t, active }) {
+  const items = [['intro', '소개'], ['library', '소프트'], ['manual', '설명서'], ['spec', t('page.stack')], ['contact', t('page.nav-contact')]];
+  return (
+    <header className="top">
+      <div className="wrap topin">
+        <a href="#intro" className="brand"><span className="mini" aria-hidden="true" /><b>{prof.name}</b>{prof.nameEn && <span className="en hidden sm:inline">{prof.nameEn}</span>}</a>
+        <nav className="topnav" aria-label="절 이동">
+          {items.map(([id, l]) => <a key={id} href={`#${id}`} className={active === id ? 'on' : ''} aria-current={active === id ? 'true' : undefined}>{l}</a>)}
+        </nav>
+        <PdfButton t={t} className="pdf" />
+      </div>
+    </header>
+  );
+}
+
+// ── 01 PLAYER: 커다란 카트리지 한 개 = 자기소개 ──
+function Hero({ pf, prof, projects, t }) {
+  const year = (pf.generatedAt || '').slice(0, 4);
+  return (
+    <section id="intro" className="sec">
+      <div className="wrap">
+        <article className="bigcart" aria-label={`${prof.name} 자기소개`}>
+          <span className="grip" aria-hidden="true" />
+          <div className="blabel">
+            <div className="bl-top" aria-hidden="true">
+              <span>PLAYER 1 · <span className="gold">{prof.nameEn || prof.name}</span></span>
+              <span>{t('en.portfolio')}{year ? ` ${year}` : ''}</span>
+            </div>
+            <div className="bl-main">
+              <div className="min-w-0">
+                <p className="eyebrow"><span className="sn">01</span>{t('en.portfolio')}{pf.generatedAt && <span className="muted" style={{ letterSpacing: '.06em' }}>· {t('page.updated', { date: pf.generatedAt })}</span>}</p>
+                <h1 className="pname">{prof.name}</h1>
+                {prof.nameEn && <p className="pname-en">{prof.nameEn}</p>}
+                {prof.job && <p className="pjob"><i aria-hidden="true" />{prof.job}</p>}
+                {prof.headline && <p className="phead"><span><Rich text={prof.headline} /></span></p>}
+              </div>
+              <div className="min-w-0 flex flex-col justify-center">
+                {prof.intro && (
+                  <div className="intro-box">
+                    <span className="lbl">{t('page.intro')}</span>
+                    {prof.intro.split(/\n+/).filter((l) => l.trim()).map((l, i) => <p key={i}><Rich text={l} /></p>)}
+                  </div>
+                )}
+                <div className="pbtns">
+                  {projects.length > 0 && <a className="btn pri" href="#library">소프트 {projects.length}개 꽂아 보기 <span aria-hidden="true">↓</span></a>}
+                  {prof.email && <a className="btn" href={`mailto:${prof.email}`}>{t('page.print-email')}</a>}
+                  {isUrl(prof.github) && <a className="btn" href={prof.github} target="_blank" rel="noopener">GitHub <Ext /></a>}
+                  {(prof.links || []).filter((l) => isUrl(l.url)).map((l, k) => <a key={k} className="btn" href={l.url} target="_blank" rel="noopener">{l.label} <Ext /></a>)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  );
+}
+
+// ── 본체·TV 상태와 동작: 꽂기(선반 → 날아가 꽂힘 → TV 켜짐) · 꺼내기(튀어나와 선반으로) · 전원 · 리셋 ──
+function useConsole(projects) {
+  const n = projects.length;
+  const [cur, setCur] = useState(null);        // 꽂힌 소프트(번호) — 없으면 null
+  const [last, setLast] = useState(0);         // 설명서가 보여 줄 소프트(마지막으로 꽂은 것)
+  const [power, setPower] = useState(true);
+  const [shut, setShut] = useState(false);     // TV가 꺼지는 중(가로줄로 접힘)
+  const [boot, setBoot] = useState(0);         // +1 = TV 켜짐 연출 다시
+  const [seat, setSeat] = useState(0);         // +1 = 카트리지가 슬롯에 내려앉는 연출 다시
+  const [flying, setFlying] = useState(null);  // 날아가는 중인 소프트(선반 자리는 비워 둠)
+  const [hot, setHot] = useState(false);       // 끌고 온 카트리지가 본체 위에 있음
+  const curRef = useRef(null); curRef.current = cur;
+  const powerRef = useRef(true); powerRef.current = power;
+  const busy = useRef(false);
+  const touched = useRef(false);
+  const holderRef = useRef(null), consoleRef = useRef(null), rackRefs = useRef([]);
+
+  const makeFlyer = (el, r, sm) => {
+    const c = el.cloneNode(true);
+    c.classList.remove('seat');
+    c.classList.toggle('sm', !!sm);
+    c.classList.add('flyer');
+    c.setAttribute('aria-hidden', 'true');
+    Object.assign(c.style, { position: 'fixed', left: `${r.left}px`, top: `${r.top}px`, width: `${r.width}px`, margin: '0', transformOrigin: '0 0', transform: 'none', animation: 'none', transition: 'none' });
+    c.style.setProperty('--w', `${r.width}px`);
+    document.body.appendChild(c);
+    return c;
+  };
+  const flyTo = async (c, from, to, arc) => {
+    const s = to.width / from.width;
+    const dx = to.left - from.left, dy = to.top - from.top;
+    const a = c.animate([
+      { transform: 'translate(0, 0) scale(1) rotate(0deg)' },
+      { transform: `translate(${dx * .5}px, ${dy * .5 + arc}px) scale(${(1 + s) / 2}) rotate(${dx < 0 ? -7 : 7}deg)`, offset: .5 },
+      { transform: `translate(${dx}px, ${dy}px) scale(${s}) rotate(0deg)` },
+    ], { duration: 540, easing: 'cubic-bezier(.45, .05, .25, 1)', fill: 'forwards' });
+    try { await a.finished; } catch (e) { /* 취소 */ }
+  };
+  // 꺼내기: 슬롯에서 톡 튀어나와 선반 제자리로 날아감 → TV는 "카트리지 없음" 화면
+  const doEject = async () => {
+    const i = curRef.current;
+    if (i == null) return;
+    const rm = reduceMotion();
+    setShut(true);
+    const hc = holderRef.current?.querySelector('.cart');
+    if (!rm && hc) {
+      const pop = hc.animate([{ transform: 'none' }, { transform: 'translateY(-48%)' }], { duration: 230, easing: 'cubic-bezier(.2, 1.4, .4, 1)', fill: 'forwards' });
+      try { await pop.finished; } catch (e) { /* 취소 */ }
+      const from = hc.getBoundingClientRect();
+      const c = makeFlyer(hc, from, true);
+      flushSync(() => { setCur(null); setFlying(i); });
+      const spot = rackRefs.current[i]?.querySelector('.cart');
+      const to = spot?.getBoundingClientRect();
+      if (to && inView(to)) await flyTo(c, from, to, -50);
+      flushSync(() => setFlying(null));
+      c.remove();
+    } else {
+      flushSync(() => setCur(null));
+      if (!rm) await wait(200);
+    }
+    setShut(false);
+    setBoot((x) => x + 1);
+  };
+  // 꽂기: from = 끌어 놓은 자리(없으면 선반의 그 카트리지 자리)
+  const insert = async (i, from) => {
+    touched.current = true;
+    if (busy.current || i == null || i < 0 || i >= n) return;
+    if (i === curRef.current) { reset(); return; }
+    busy.current = true;
+    try {
+      if (curRef.current != null) await doEject();
+      const src = rackRefs.current[i]?.querySelector('.cart');
+      const r = from || src?.getBoundingClientRect();
+      let c = null;
+      if (!reduceMotion() && src && r && inView(r) && holderRef.current) {
+        c = makeFlyer(src, r, true);
+        flushSync(() => setFlying(i));
+        const h = holderRef.current.getBoundingClientRect();
+        await flyTo(c, r, { left: h.left, top: h.top - h.height * .46, width: h.width }, -80);
+      }
+      flushSync(() => { setCur(i); setLast(i); setFlying(null); setPower(true); setShut(false); setSeat((x) => x + 1); setBoot((x) => x + 1); });
+      c?.remove();
+    } finally { busy.current = false; }
+  };
+  const eject = async () => {
+    touched.current = true;
+    if (busy.current || curRef.current == null) return;
+    busy.current = true;
+    try { await doEject(); } finally { busy.current = false; }
+  };
+  const reset = () => { touched.current = true; setPower(true); setShut(false); setBoot((x) => x + 1); };
+  const togglePower = async () => {
+    touched.current = true;
+    if (busy.current) return;
+    if (powerRef.current) {
+      busy.current = true;
+      setShut(true);
+      await wait(reduceMotion() ? 0 : 360);
+      flushSync(() => { setPower(false); setShut(false); });
+      busy.current = false;
+    } else { setPower(true); setBoot((x) => x + 1); }
+  };
+  const step = (d) => insert(((curRef.current ?? (d > 0 ? -1 : 0)) + d + n) % n);
+  return { n, cur, last, power, shut, boot, seat, flying, hot, setHot, insert, eject, reset, togglePower, step, touched, holderRef, consoleRef, rackRefs };
+}
+
+function TV({ p, i, power, shut, boot, prof, onCh }) {
+  const [ratio, setRatio] = useState(16 / 9);
+  const body = !power ? null : p?.cover ? (
+    <img src={img(p, p.cover)} alt={`${p.title} 대표 화면`} onLoad={(e) => { const m = e.currentTarget; if (m.naturalWidth && m.naturalHeight) setRatio(m.naturalWidth / m.naturalHeight); }} />
+  ) : (
+    <div className="idle" role="img" aria-label={p ? `${p.title}` : '카트리지 없음 — 소프트를 꽂아 주세요'}>
+      <span className="bars" aria-hidden="true" />
+      {p ? <p className="nm">{p.title}</p> : <>
+        <p className="p1">PLAYER 1</p>
+        <p className="nm">{prof.name}</p>
+        <p className="msg">카트리지가 없습니다 · 소프트를 꽂아 주세요</p>
+        <p className="go blink">▼ INSERT CARTRIDGE</p>
+      </>}
+    </div>
+  );
+  return (
+    <div className="tv">
+      {/* 화면 틀 = 대표 그림 비율(그림 틀 = 그림 비율). 화면 위에는 아무것도 얹지 않음 */}
+      <div className="scr" style={{ aspectRatio: p?.cover ? ratio : 16 / 9 }}>
+        {body && <div key={boot} className={`cont ${shut ? 'shut' : 'boot'}`}>{body}</div>}
+      </div>
+      <div className="tvside">
+        <button type="button" className="knob" onClick={onCh} aria-label="채널 돌리기 — 다음 소프트 꽂기" title="다음 소프트"><i style={{ transform: `rotate(${((i ?? -1) + 1) * 45}deg)` }} /></button>
+        <span className="chl">CH {p ? pad(i + 1) : '--'}</span>
+        <span className="grille" aria-hidden="true" />
+        <span className={`pled ${power ? 'on' : ''}`} aria-hidden="true" />
+      </div>
+    </div>
+  );
+}
+
+function Console({ c, projects }) {
+  const p = c.cur != null ? projects[c.cur] : null;
+  const bodyRef = useRef(null);
+  // 꽂힐 때 본체가 한 번 덜컥(다시 그리지 않고 클래스만 다시 붙임)
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el || !c.seat) return;
+    el.classList.remove('clunk'); void el.offsetWidth; el.classList.add('clunk');
+  }, [c.seat]);
+  return (
+    <div ref={c.consoleRef} className={`console ${c.hot ? 'hot' : ''}`}>
+      <div ref={c.holderRef} className="holder">
+        {p && <Cart key={c.seat} p={p} i={c.cur} className="seat" />}
+      </div>
+      <span className="drop-hint" aria-hidden="true">▼ 여기에 꽂기</span>
+      <div ref={bodyRef} className="cbody">
+        <div className="ctop"><span className="slot" aria-hidden="true" /><span className="vent l" aria-hidden="true" /><span className="vent r" aria-hidden="true" /></div>
+        <div className="cfront">
+          <button type="button" className={`sw ${c.power ? 'on' : ''}`} onClick={c.togglePower} aria-pressed={c.power} aria-label="전원">
+            <span className="lever"><i /></span><span aria-hidden="true">POWER</span>
+          </button>
+          <span className={`led ${c.power ? 'on' : ''}`} aria-hidden="true" />
+          <button type="button" className="sw rs" onClick={c.reset} aria-label="리셋 — 화면 다시 켜기">
+            <span className="lever"><i /></span><span aria-hidden="true">RESET</span>
+          </button>
+          <span className="plate" aria-hidden="true">PORTFOLIO SYSTEM</span>
+          <button type="button" className="ej" onClick={c.eject} disabled={!p} aria-label="카트리지 꺼내기">
+            <span className="ejl" /><span aria-hidden="true">EJECT</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NowPlaying({ p, i, n, t }) {
+  if (!p) {
+    return (
+      <div className="info empty">
+        <p className="np"><span className="led" aria-hidden="true" />NO CARTRIDGE</p>
+        <h3 style={{ marginTop: 0 }}>소프트를 골라 꽂아 보세요</h3>
+        <ol>
+          <li><b>1</b><span>아래 선반의 카트리지를 <strong>누르거나 끌어다</strong> 본체에 꽂으면</span></li>
+          <li><b>2</b><span>TV가 켜지고 이 창에 그 프로젝트의 정보가 나옵니다</span></li>
+          <li><b>3</b><span>그 아래 <strong>설명서</strong>가 꽂은 소프트로 바뀝니다</span></li>
+        </ol>
+      </div>
+    );
+  }
+  const meta = (p.meta || []).filter((m) => m.value);
+  const L = p.links || {};
+  return (
+    <div key={p.id} className="info swap" aria-live="polite">
+      <p className="np"><span className="led on blink" aria-hidden="true" />NOW PLAYING · SOFT {pad(i + 1)}/{pad(n)}<span className="muted" style={{ letterSpacing: '.04em', fontFamily: 'var(--sans)', fontStretch: '100%' }}>· {teamLabel(p.team, t)}</span></p>
+      <h3>{p.title}</h3>
+      {p.tagline && <p className="tg"><Rich text={p.tagline} /></p>}
+      <dl className="meta">
+        {meta.map((m, k) => <div key={k}><dt>{m.label}</dt><dd>{m.value}</dd></div>)}
+        {p.team?.role && <div><dt>{t('name.role')}</dt><dd><Rich text={p.team.role} /></dd></div>}
+      </dl>
+      {(p.tags || []).length > 0 && <div className="tags">{p.tags.map((g, k) => <span key={k} className="tag">{g}</span>)}</div>}
+      <div className="ibtns">
+        <a className="btn pri sm" href="#manual">설명서 펼치기 <span aria-hidden="true">↓</span></a>
+        <a className="btn sm" href={deckUrl(p)} target="_blank" rel="noopener">{t('name.deck')} <Ext /></a>
+        <a className="btn sm" href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc')} <Ext /></a>
+        {isUrl(L.github) && <a className="btn sm" href={L.github} target="_blank" rel="noopener">GitHub <Ext /></a>}
+        {isUrl(L.video) && <a className="btn sm" href={L.video} target="_blank" rel="noopener">{t('name.video')} <Ext /></a>}
+      </div>
+    </div>
+  );
+}
+
+// 선반의 카트리지 한 개: 누르면 꽂힘. 마우스로 끌어다 본체 위에 놓아도 꽂힘(터치는 누르기만 — 화면 밀기와 겹치지 않게)
+function RackItem({ p, i, c }) {
+  const state = c.cur === i ? 'in' : c.flying === i ? 'fly' : 'idle';
+  const btn = useRef(null);
+  const drag = useRef(null);
+  const skip = useRef(false);
+  const [dragging, setDragging] = useState(false);
+  const cartEl = () => btn.current?.querySelector('.cart');
+  const down = (e) => {
+    skip.current = false;
+    if (e.button !== 0 || e.pointerType === 'touch' || state !== 'idle') return;
+    drag.current = { x: e.clientX, y: e.clientY, id: e.pointerId, moved: false, over: false, dx: 0, dy: 0 };
+  };
+  const move = (e) => {
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId) return;
+    d.dx = e.clientX - d.x; d.dy = e.clientY - d.y;
+    if (!d.moved) {
+      if (Math.hypot(d.dx, d.dy) < 6) return;
+      d.moved = true;
+      try { btn.current.setPointerCapture(e.pointerId); } catch (err) { /* 무시 */ }
+      setDragging(true);
+    }
+    const el = cartEl();
+    if (el) el.style.transform = `translate(${d.dx}px, ${d.dy}px) rotate(${Math.max(-9, Math.min(9, d.dx / 26))}deg) scale(1.05)`;
+    const r = c.consoleRef.current?.getBoundingClientRect();
+    const over = !!r && e.clientX > r.left - 24 && e.clientX < r.right + 24 && e.clientY > r.top - 70 && e.clientY < r.bottom + 24;
+    if (over !== d.over) { d.over = over; c.setHot(over); }
+  };
+  const up = () => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d || !d.moved) return;
+    skip.current = true;
+    setDragging(false);
+    c.setHot(false);
+    const el = cartEl();
+    if (!el) return;
+    const was = el.style.transform;
+    el.style.transform = '';
+    if (d.over) {
+      const r = el.getBoundingClientRect();
+      c.insert(i, { left: r.left + d.dx, top: r.top + d.dy, width: r.width });
+    } else if (!reduceMotion()) {
+      el.animate([{ transform: was }, { transform: 'none' }], { duration: 340, easing: 'cubic-bezier(.34, 1.56, .64, 1)' });
+    }
+  };
+  const click = () => { if (skip.current) { skip.current = false; return; } c.insert(i); };
+  return (
+    <li ref={(el) => { c.rackRefs.current[i] = el; }} className={`ritem ${dragging ? 'drag' : ''}`}>
+      {state === 'in' ? (
+        <>
+          <div className="ghost"><span>IN SLOT</span><button type="button" className="btn sm" onClick={c.eject}>⏏ 꺼내기</button></div>
+          <span className="rcap in">{p.title} · 꽂힘</span>
+        </>
+      ) : (
+        <>
+          <button ref={btn} type="button" className="rbtn" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onClick={click}
+                  aria-label={`${p.title} 카트리지 꽂기`} title="누르거나 끌어다 본체에 꽂기">
+            <Cart p={p} i={i} sm style={state === 'fly' ? { visibility: 'hidden' } : undefined} />
+          </button>
+          <span className="rcap">{p.title}</span>
+        </>
+      )}
+    </li>
+  );
+}
+
+// ── 02 SOFTWARE ──
+function Library({ projects, prof, t, c }) {
+  const p = c.cur != null ? projects[c.cur] : null;
+  const ref = useRef(null);
+  // 처음 화면에 들어오면 첫 소프트가 저절로 꽂힘(손대기 전까지만 — 꽂는 방법을 보여 줌). 주소 #soft-<폴더 이름>이면 그 소프트
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !('IntersectionObserver' in window)) return;
+    const want = (/^#soft-(.+)$/.exec(decodeURIComponent(location.hash)) || [])[1];
+    const k = Math.max(0, projects.findIndex((x) => x.id === want));
+    let tm = 0;
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      tm = setTimeout(() => { if (!c.touched.current) c.insert(k); }, 650);
+    }, { threshold: .45 });
+    io.observe(el);
+    return () => { io.disconnect(); clearTimeout(tm); };
+  }, []);
+  return (
+    <section id="library" className="sec" ref={ref}>
+      <div className="wrap">
+        <Head no="02" en="SOFTWARE" title="소프트 라이브러리">
+          <span>카트리지를 <b>누르거나 끌어다</b> 본체에 꽂으세요</span>
+          <span className="hidden md:inline"><kbd>◀</kbd><kbd>▶</kbd> 바꿔 꽂기</span>
+        </Head>
+        <div className="lib">
+          <div className="setup">
+            <TV p={p} i={c.cur} power={c.power} shut={c.shut} boot={c.boot} prof={prof} onCh={() => c.step(1)} />
+            <Console c={c} projects={projects} />
+          </div>
+          <div className="side">
+            <NowPlaying p={p} i={c.cur} n={projects.length} t={t} />
+            <div>
+              <div className="rack-h"><span className="eyebrow">SOFT RACK · {pad(projects.length)}</span><span className="muted">누르거나 끌어서 꽂기</span></div>
+              <ul className="rack" aria-label="소프트 선반">
+                {projects.map((x, i) => <RackItem key={x.id} p={x} i={i} c={c} />)}
+              </ul>
+              <div className="shelf" aria-hidden="true" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── 03 MANUAL: 취급 설명서 ──
+const GROUPS = { intro: '게임 소개', feat: '기능 소개', trouble: '곤란할 때는', result: '결과', memo: 'MEMO' };
+const TABS = [['intro', '소개'], ['feat', '기능'], ['trouble', '문제 해결'], ['result', '결과']];
+function buildPages(p) {
+  const out = [{ key: 'intro', kind: 'intro', g: 'intro' }, { key: 'toc', kind: 'toc', g: 'intro' }];
+  (p.highlights || []).forEach((h, k, a) => out.push({ key: `f${k}`, kind: 'feat', g: 'feat', h, k, n: a.length }));
+  (p.troubleshooting || []).forEach((b, k, a) => out.push({ key: `t${k}`, kind: 'trouble', g: 'trouble', b, k, n: a.length }));
+  if ((p.retro?.achieved || []).length) out.push({ key: 'res', kind: 'result', g: 'result' });
+  if ((p.screenshots || []).length) out.push({ key: 'shots', kind: 'shots', g: 'result' });
+  return out;
+}
+
+function PIntro({ p, i, t }) {
+  const meta = (p.meta || []).filter((m) => m.value);
+  return (
+    <>
+      <p className="ptab"><b>i</b>{GROUPS.intro}</p>
+      <div className="pcart">
+        <Cart p={p} i={i} />
+        <div className="min-w-0">
+          <span className="k">SOFT {pad(i + 1)} · {teamLabel(p.team, t)}</span>
+          <h4>{p.title}</h4>
+        </div>
+      </div>
+      {p.tagline && <p className="ptg"><Rich text={p.tagline} /></p>}
+      {p.intent?.text && <div className="pint"><span className="k">{t('name.intent')}</span><p><Rich text={p.intent.text} /></p></div>}
+      <dl className="meta">
+        {meta.map((m, k) => <div key={k}><dt>{m.label}</dt><dd>{m.value}</dd></div>)}
+        {p.team?.role && <div><dt>{t('name.role')}</dt><dd><Rich text={p.team.role} /></dd></div>}
+      </dl>
+    </>
+  );
+}
+function PToc({ p, list, jump, t }) {
+  const at = (pred) => list.findIndex(pred);
+  const Row = ({ idx, label, no, sub }) => idx < 0 ? null : (
+    <li className={sub ? 'sub' : ''}>
+      <button type="button" onClick={() => jump(idx)}>{no && <span className="n">{no}</span>}<span className="t">{label}</span><span className="dots" aria-hidden="true" /><span className="pg">{idx + 1}</span></button>
+    </li>
+  );
+  return (
+    <>
+      <p className="ptab"><b>≡</b>목차 <span>CONTENTS</span></p>
+      <ul className="toc">
+        <Row idx={at((x) => x.kind === 'intro')} label={GROUPS.intro} />
+        {list.some((x) => x.kind === 'feat') && <Row idx={at((x) => x.kind === 'feat')} label={t('page.features')} />}
+        {list.map((x, j) => x.kind === 'feat' ? <Row key={x.key} idx={j} label={x.h.title} no={pad(x.k + 1)} sub /> : null)}
+        {list.some((x) => x.kind === 'trouble') && <Row idx={at((x) => x.kind === 'trouble')} label={`${GROUPS.trouble} — 문제 해결`} />}
+        {list.map((x, j) => x.kind === 'trouble' ? <Row key={x.key} idx={j} label={x.b.title} no={pad(x.k + 1)} sub /> : null)}
+        <Row idx={at((x) => x.kind === 'result')} label={GROUPS.result} />
+        <Row idx={at((x) => x.kind === 'shots')} label="스크린샷" />
+      </ul>
+      <p className="pnote">더 자세한 설계·코드는 <a href={deckUrl(p)} target="_blank" rel="noopener">{t('name.deck')} <Ext /></a> · <a href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc')} <Ext /></a></p>
+    </>
+  );
+}
+function PFeat({ p, pg, t, zoom }) {
+  const { h, k, n } = pg;
+  const pic = h.image?.src;
+  const cap = h.image?.caption || '';
+  const sid = deckScene(p, h.section);
+  return (
+    <>
+      <p className="ptab"><b>{k + 1}</b>{t('page.features')} <span>{k + 1}/{n}</span></p>
+      <h4 className="ph">{h.title}</h4>
+      {h.what && <p className="pwhat"><Rich text={h.what} /></p>}
+      {pic && (
+        <figure className="pfig">
+          <button type="button" className="zoom" onClick={() => zoom(p, [{ src: pic, caption: cap || h.title }], 0)} aria-label={`크게 보기: ${cap || h.title}`}>
+            <img src={img(p, pic)} alt={cap || h.title} loading="lazy" {...(h.image.w && h.image.h ? { width: h.image.w, height: h.image.h } : {})} />
+          </button>
+          {cap && <figcaption>{cap} · 누르면 크게</figcaption>}
+        </figure>
+      )}
+      <dl className="pdl">
+        {[['구현', 'how'], ['선택 이유', 'why']].filter(([, f]) => h[f]).map(([l, f]) => <div key={f}><dt>{l}</dt><dd><Rich text={h[f]} /></dd></div>)}
+      </dl>
+      <p className="pgo"><a href={deckUrl(p, sid)} target="_blank" rel="noopener">▶ {t('page.see-in-deck')} <Ext /></a>{h.section && <span>원문 {h.section}</span>}</p>
+    </>
+  );
+}
+function PTrouble({ pg }) {
+  const { b, k, n } = pg;
+  const rows = [['문제', b.problem], ['원인', b.cause], ['해결', b.solution, 'sol'], ['결과', b.result], ['배운 점', b.lesson]].filter((r) => r[1]);
+  return (
+    <>
+      <p className="ptab q"><b>?</b>문제 해결 <span>{k + 1}/{n}</span></p>
+      <h4 className="ph">{b.title}</h4>
+      <dl className="qa">{rows.map(([l, v, cls]) => <div key={l} className={cls || ''}><dt>{l}</dt><dd><Rich text={v} /></dd></div>)}</dl>
+    </>
+  );
+}
+function PResult({ p, t }) {
+  const rt = p.retro || {};
+  const left = (rt.regrets || []).length, plans = (rt.plans || []).length;
+  return (
+    <>
+      <p className="ptab"><b>✓</b>{GROUPS.result} <span>이룬 것</span></p>
+      <ul className="ach">{(rt.achieved || []).map((a, j) => <li key={j}><i aria-hidden="true">✓</i><span className="min-w-0"><Rich text={a} /></span></li>)}</ul>
+      {(left > 0 || plans > 0) && (
+        <p className="pnote">
+          {left > 0 && <>아쉬운 점 {left}건</>}{left > 0 && plans > 0 && ' · '}{plans > 0 && <>개선 계획 {plans}건</>} — <a href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc')} <Ext /></a>
+        </p>
+      )}
+    </>
+  );
+}
+function PShots({ p, t, zoom }) {
+  const shots = p.screenshots || [];
+  const L = p.links || {};
+  return (
+    <>
+      <p className="ptab"><b>▣</b>스크린샷 <span>{shots.length}장</span></p>
+      <div className="shots">
+        {shots.map((s, k) => (
+          <figure key={k}>
+            <button type="button" className="zoom" onClick={() => zoom(p, shots, k)} aria-label={`크게 보기: ${s.caption || `스크린샷 ${k + 1}`}`}>
+              <img src={img(p, s.src)} alt={s.caption || ''} loading="lazy" {...(s.w && s.h ? { width: s.w, height: s.h } : {})} />
+            </button>
+            {s.caption && <figcaption>{s.caption}</figcaption>}
+          </figure>
+        ))}
+      </div>
+      <div className="plinks">
+        <a className="btn sm pri" href={deckUrl(p)} target="_blank" rel="noopener">{t('name.deck')} <Ext /></a>
+        <a className="btn sm" href={docUrl(p)} target="_blank" rel="noopener">{t('name.doc')} <Ext /></a>
+        {isUrl(L.github) && <a className="btn sm" href={L.github} target="_blank" rel="noopener">GitHub <Ext /></a>}
+      </div>
+    </>
+  );
+}
+function PageBody({ pg, ctx }) {
+  const { p, i, t, list, jump, zoom } = ctx;
+  switch (pg.kind) {
+    case 'intro': return <PIntro p={p} i={i} t={t} />;
+    case 'toc': return <PToc p={p} list={list} jump={jump} t={t} />;
+    case 'feat': return <PFeat p={p} pg={pg} t={t} zoom={zoom} />;
+    case 'trouble': return <PTrouble pg={pg} />;
+    case 'result': return <PResult p={p} t={t} />;
+    case 'shots': return <PShots p={p} t={t} zoom={zoom} />;
+    default: return <><p className="ptab q"><b>✎</b>MEMO</p><div className="memo" aria-hidden="true" /></>;
+  }
+}
+function Page({ idx, side, on, extra = '', ctx }) {
+  const pg = ctx.list[idx];
+  if (!pg) return null;
+  return (
+    <div className={`page ${side} ${on ? 'on' : ''} ${extra}`} aria-hidden={on ? undefined : 'true'} role="group" aria-label={on ? `${idx + 1}쪽 — ${GROUPS[pg.g]}` : undefined}>
+      <div className="rh" aria-hidden="true"><span>{ctx.p.title} <i>취급 설명서</i></span><span>{GROUPS[pg.g]}</span></div>
+      <div className="pbody"><PageBody pg={pg} ctx={ctx} /></div>
+      <div className="pn" aria-hidden="true">— {idx + 1} —</div>
+    </div>
+  );
+}
+function useWidth(ref) {
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const on = () => setW(el.clientWidth);
+    on();
+    const ro = new ResizeObserver(on);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return w;
+}
+
+function Manual({ projects, t, c, keys, zoom }) {
+  const i = c.last;
+  const p = projects[i];
+  const wrapRef = useRef(null);
+  const width = useWidth(wrapRef);
+  const wide = width >= 860;
+  const per = wide ? 2 : 1;
+  const base = useMemo(() => buildPages(p), [p]);
+  const list = useMemo(() => (wide && base.length % 2 ? [...base, { key: 'memo', kind: 'memo', g: 'memo' }] : base), [base, wide]);
+  const total = Math.ceil(list.length / per);
+  const [s, setS] = useState(0);
+  const [flip, setFlip] = useState(null);     // { from, to } — 넓은 화면의 책장 넘김
+  const [dir, setDir] = useState(0);          // 좁은 화면의 미끄러짐 방향
+  const sRef = useRef(0); sRef.current = s;
+  const flipRef = useRef(null); flipRef.current = flip;
+  useEffect(() => { setS(0); setFlip(null); }, [p.id, per]);
+  const done = useRef(0);
+  const finish = () => { const f = flipRef.current; if (!f) return; clearTimeout(done.current); setS(f.to); setFlip(null); };
+  const go = (to) => {
+    if (flipRef.current) return;
+    const from = sRef.current;
+    to = Math.max(0, Math.min(total - 1, to));
+    if (to === from) return;
+    if (!wide || reduceMotion()) { setDir(to > from ? 1 : -1); setS(to); return; }
+    setFlip({ from, to });
+    done.current = setTimeout(finish, 1000);   // 애니메이션 끝 알림이 오지 않아도 넘어가게
+  };
+  const jump = (idx) => go(Math.floor(idx / per));
+  keys.current.manual = (d) => go(sRef.current + d);
+  const ctx = { p, i, t, list, jump, zoom };
+  // 어느 쪽이 보이나
+  const L = (sp) => sp * 2, R = (sp) => sp * 2 + 1;
+  let showL, showR, leaf = null;
+  if (wide) {
+    if (flip) {
+      const fwd = flip.to > flip.from;
+      showL = fwd ? L(flip.from) : L(flip.to);
+      showR = fwd ? R(flip.to) : R(flip.from);
+      leaf = fwd ? { cls: 'n', front: [R(flip.from), 'r'], back: [L(flip.to), 'l'] } : { cls: 'p', front: [L(flip.from), 'l'], back: [R(flip.to), 'r'] };
+    } else { showL = L(s); showR = R(s); }
+  }
+  const curIdx = wide ? L(flip ? flip.to : s) : s;
+  const curGroup = list[curIdx]?.g;
+  const firstOf = (g) => list.findIndex((x) => x.g === g);
+  // 휴대폰: 옆으로 밀어 넘기기
+  const sw = useRef(null);
+  const onDown = (e) => { if (e.pointerType === 'touch') sw.current = { x: e.clientX, y: e.clientY }; };
+  const onUp = (e) => {
+    const a = sw.current; sw.current = null;
+    if (!a) return;
+    const dx = e.clientX - a.x, dy = e.clientY - a.y;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) go(sRef.current + (dx < 0 ? 1 : -1));
+  };
+  const pagesLabel = wide ? `${L(s) + 1}–${Math.min(R(s) + 1, list.length)}` : `${s + 1}`;
+  return (
+    <section id="manual" className="sec">
+      <div className="wrap">
+        <Head no="03" en="INSTRUCTION MANUAL" title={<>{p.title} <span style={{ color: 'var(--acc)' }}>취급 설명서</span></>}>
+          <span>위에서 꽂은 소프트의 설명서입니다</span>
+          <span className="hidden md:inline"><kbd>◀</kbd><kbd>▶</kbd> 넘기기 · 모서리·옆 색인도 됨</span>
+        </Head>
+        <div className="mtop" role="group" aria-label="설명서 고르기">
+          <span className="lb">소프트</span>
+          {projects.map((x, k) => (
+            <button key={x.id} type="button" className="pchip" style={{ '--shell': shellOf(k).shell }} aria-pressed={k === i} onClick={() => c.insert(k)}><i aria-hidden="true" />{x.title}</button>
+          ))}
+        </div>
+        <div className="bookwrap" ref={wrapRef}>
+          <div className={`book ${wide ? 'wide' : ''}`} style={{ '--shell': shellOf(i).shell }} onPointerDown={onDown} onPointerUp={onUp}>
+            <div className="spread" key={`${p.id}-${per}`}>
+              {wide ? (
+                <>
+                  <div className="pslot">{list.map((_, j) => j % 2 === 0 ? <Page key={j} idx={j} side="l" on={j === showL} ctx={ctx} /> : null)}</div>
+                  <div className="pslot">{list.map((_, j) => j % 2 === 1 ? <Page key={j} idx={j} side="r" on={j === showR} ctx={ctx} /> : null)}</div>
+                  {leaf && (
+                    <div className={`leaf ${leaf.cls}`} onAnimationEnd={(e) => { if (e.target === e.currentTarget) finish(); }} aria-hidden="true">
+                      <div className="face"><Page idx={leaf.front[0]} side={leaf.front[1]} on ctx={ctx} /></div>
+                      <div className="face back"><Page idx={leaf.back[0]} side={leaf.back[1]} on ctx={ctx} /></div>
+                    </div>
+                  )}
+                  <button type="button" className="curl l" onClick={() => go(s - 1)} disabled={s === 0} aria-label="이전 쪽" />
+                  <button type="button" className="curl r" onClick={() => go(s + 1)} disabled={s >= total - 1} aria-label="다음 쪽" />
+                </>
+              ) : (
+                <div className="pslot">{list.map((_, j) => <Page key={j} idx={j} side="" on={j === s} extra={j === s && dir ? (dir > 0 ? 'in-n' : 'in-p') : ''} ctx={ctx} />)}</div>
+              )}
+            </div>
+          </div>
+          <nav className="itabs" aria-label="설명서 색인">
+            {TABS.filter(([g]) => firstOf(g) >= 0).map(([g, l]) => (
+              <button key={g} type="button" className={`itab ${curGroup === g ? 'on' : ''}`} onClick={() => jump(firstOf(g))}>{l}</button>
+            ))}
+          </nav>
+        </div>
+        <div className="mnav">
+          <button type="button" className="btn sm" onClick={() => go(s - 1)} disabled={s === 0} aria-label="이전 쪽">◀ 이전</button>
+          <span className="ct" aria-live="polite">{pagesLabel} / {list.length}</span>
+          <button type="button" className="btn sm pri" onClick={() => go(s + 1)} disabled={s >= total - 1} aria-label="다음 쪽">다음 ▶</button>
+          {!wide && (
+            <div className="flex flex-wrap justify-center gap-2 w-full">
+              {TABS.filter(([g]) => firstOf(g) >= 0).map(([g, l]) => (
+                <button key={g} type="button" className="pchip" style={{ '--shell': curGroup === g ? 'var(--acc)' : 'var(--line2)' }} aria-pressed={curGroup === g} onClick={() => jump(firstOf(g))}><i aria-hidden="true" />{l}</button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── 04 SPEC: 기술 스택 명판 ──
+function Spec({ pf, prof, projects, t, goSoft }) {
+  const skills = pf.skills || [];
+  if (!skills.length) return null;
+  const at = Object.fromEntries(projects.map((p, i) => [p.id, i]));
+  return (
+    <section id="spec" className="sec">
+      <div className="wrap">
+        <Head no="04" en="SPEC SHEET" title={t('page.stack')}>
+          <span>{t('page.stack-note')} · 칩을 누르면 그 소프트를 꽂습니다</span>
+        </Head>
+        <div className="plate-box">
+          <span className="screw tl" aria-hidden="true" /><span className="screw tr" aria-hidden="true" /><span className="screw bl" aria-hidden="true" /><span className="screw br" aria-hidden="true" />
+          <div className="plate-h" aria-hidden="true">
+            <span>PLAYER</span><b>{prof.nameEn || prof.name}</b>
+            {prof.job && <><span>CLASS</span><b>{prof.job}</b></>}
+            <span>SLOTS</span><b>{pad(skills.length)}</b>
+          </div>
+          {skills.map((s, k) => {
+            const ev = s.evidence || [];
+            const cnt = new Set(ev.map((e) => e.project).filter((id) => id in at)).size;
+            return (
+              <div key={k} className="srow">
+                <div className="sk">
+                  <span className="pin" aria-hidden="true">{pad(k + 1)}</span>
+                  <h3>{s.name}</h3>
+                  {cnt > 0 && <span className="cnt" aria-label={`근거 프로젝트 ${cnt}개`}>×{cnt}</span>}
+                </div>
+                <ul className="ev">
+                  {ev.map((e, j) => (
+                    <li key={j}>
+                      <span className="tx"><Rich text={e.text} /></span>
+                      {e.project in at && (
+                        <button type="button" className="pchip" style={{ '--shell': shellOf(at[e.project]).shell }} onClick={() => goSoft(at[e.project])}
+                                aria-label={`${projects[at[e.project]].title} 꽂아 보기`}><i aria-hidden="true" />{projects[at[e.project]].title}</button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── 05 CONTROLLER: 연락처 ──
+function Contact({ prof, projects, t, c, goSoft }) {
+  const [say, setSay] = useState(null);
+  const [busy, print] = usePrint();
+  const tm = useRef(0);
+  const tell = (msg) => { clearTimeout(tm.current); setSay({ msg, k: Date.now() }); tm.current = setTimeout(() => setSay(null), 2200); };
+  useEffect(() => () => clearTimeout(tm.current), []);
+  const n = projects.length;
+  const soft = (d) => { const k = ((c.cur ?? c.last) + d + n) % n; tell(`◀▶ ${projects[k].title} 꽂는 중`); goSoft(k); };
+  const items = [
+    prof.email && { k: 'A', red: true, t: '메일 보내기', v: prof.email, href: `mailto:${prof.email}`, msg: '메일 앱을 엽니다' },
+    isUrl(prof.github) && { k: 'B', red: true, t: 'GitHub', v: shortUrl(prof.github), href: prof.github, ext: true, msg: 'GitHub를 새 탭에서 엽니다' },
+    { k: 'START', t: `${t('name.portfolio')} PDF`, v: busy ? t('ui.preparing') : '제출용 문서(A4)를 PDF로 저장', on: () => { tell('인쇄 창을 준비합니다'); print(); } },
+    { k: 'SELECT', t: '처음으로', v: '맨 위 자기소개로', href: '#intro', msg: '처음으로 돌아갑니다' },
+  ].filter(Boolean);
+  const btnA = items.find((x) => x.k === 'A'), btnB = items.find((x) => x.k === 'B');
+  return (
+    <section id="contact" className="sec">
+      <div className="wrap">
+        <Head no="05" en="CONTROLLER" title={t('page.nav-contact')}>
+          <span>컨트롤러 버튼을 누르거나 오른쪽 목록을 고르세요</span>
+        </Head>
+        <div className="cgrid">
+          <div className="padwrap">
+            {say && <div key={say.k} className="bubble" role="status">{say.msg}</div>}
+            <div className="ctrl">
+              <span className="tagline" aria-hidden="true">PLAYER 1</span>
+              <div className="cface">
+                <div className="dpad" role="group" aria-label="방향 버튼">
+                  <a className="dk u" href="#intro" onClick={() => tell('▲ 맨 위로')} aria-label="위 — 맨 위로">▲</a>
+                  <a className="dk d" href="#manual" onClick={() => tell('▼ 설명서로')} aria-label="아래 — 설명서로">▼</a>
+                  <button type="button" className="dk l" onClick={() => soft(-1)} aria-label="왼쪽 — 이전 소프트 꽂기">◀</button>
+                  <button type="button" className="dk r" onClick={() => soft(1)} aria-label="오른쪽 — 다음 소프트 꽂기">▶</button>
+                </div>
+                <div className="mid">
+                  <span className="pl" aria-hidden="true">{(prof.nameEn || '').toUpperCase() || 'PLAYER 1'}</span>
+                  <div className="ss">
+                    <a href="#intro" onClick={() => tell('SELECT — 처음으로')} aria-label="SELECT — 처음으로"><span aria-hidden="true">SELECT</span><i /></a>
+                    <button type="button" onClick={() => { tell('START — 인쇄 창을 준비합니다'); print(); }} aria-label={`START — ${t('name.portfolio')} PDF`}><span aria-hidden="true">START</span><i /></button>
+                  </div>
+                </div>
+                <div className="ab">
+                  {btnB ? <a href={btnB.href} target="_blank" rel="noopener" onClick={() => tell(btnB.msg)} aria-label="B — GitHub"><i /><span className="lb">B</span></a>
+                        : <button type="button" disabled aria-label="B"><i /><span className="lb">B</span></button>}
+                  {btnA ? <a href={btnA.href} onClick={() => tell(btnA.msg)} aria-label={`A — 메일 보내기 (${prof.email})`}><i /><span className="lb">A</span></a>
+                        : <button type="button" disabled aria-label="A"><i /><span className="lb">A</span></button>}
+                </div>
+              </div>
+            </div>
+          </div>
+          <ul className="legend">
+            {items.map((x) => (
+              <li key={x.k}>
+                {x.href ? (
+                  <a href={x.href} {...(x.ext ? { target: '_blank', rel: 'noopener' } : {})} onClick={() => tell(x.msg)}>
+                    <span className={`k ${x.red ? 'red' : ''}`}>{x.k}</span><span className="min-w-0"><span className="t">{x.t} {x.ext && <Ext />}</span><span className="v">{x.v}</span></span>
+                  </a>
+                ) : (
+                  <button type="button" onClick={x.on} disabled={busy}>
+                    <span className="k">{x.k}</span><span className="min-w-0"><span className="t">{x.t}</span><span className="v">{x.v}</span></span>
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// 크게 보기: 그림 비율 그대로(화면 안에 맞춤). ◀ ▶ 로 넘기고 Esc·바깥 누르기로 닫음
+function Lightbox({ p, items, start, onClose }) {
+  const [k, setK] = useState(start);
+  const closeRef = useRef(null);
+  const n = items.length;
+  const move = (d) => setK((x) => (x + d + n) % n);
+  useEffect(() => {
+    const back = document.activeElement;
+    document.body.classList.add('lb-open');
+    closeRef.current?.focus();
+    const on = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); }
+      else if (e.key === 'ArrowRight' && n > 1) { e.preventDefault(); move(1); }
+      else if (e.key === 'ArrowLeft' && n > 1) { e.preventDefault(); move(-1); }
+    };
+    window.addEventListener('keydown', on);
+    return () => { window.removeEventListener('keydown', on); document.body.classList.remove('lb-open'); back?.focus?.({ preventScroll: true }); };
+  }, []);
+  const it = items[k];
+  return ReactDOM.createPortal(
+    <div className="lbx" role="dialog" aria-modal="true" aria-label={it.caption || p.title} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <figure>
+        <img key={it.src} src={img(p, it.src)} alt={it.caption || ''} />
+        <figcaption>{n > 1 && <b>SHOT {pad(k + 1)}/{pad(n)}</b>}<span>{it.caption}</span></figcaption>
+      </figure>
+      <button ref={closeRef} type="button" className="x btn sm" onClick={onClose}>✕ 닫기 <kbd>Esc</kbd></button>
+      {n > 1 && <>
+        <button type="button" className="nv l btn" onClick={() => move(-1)} aria-label="이전 그림">◀</button>
+        <button type="button" className="nv r btn" onClick={() => move(1)} aria-label="다음 그림">▶</button>
+      </>}
+    </div>,
+    document.body,
+  );
+}
+
+// 지금 보고 있는 절
+function useActive(ids) {
+  const [active, setActive] = useState(ids[0]);
+  const ref = useRef(active); ref.current = active;
+  useEffect(() => {
+    const els = ids.map((id) => document.getElementById(id)).filter(Boolean);
+    if (!('IntersectionObserver' in window) || !els.length) return;
+    const io = new IntersectionObserver((ents) => ents.forEach((e) => e.isIntersecting && setActive(e.target.id)), { rootMargin: '-42% 0px -52% 0px' });
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [ids.join('|')]);
+  return [active, ref];
+}
+
+function Main({ pf, prof, projects, t }) {
+  const c = useConsole(projects);
+  const [lb, setLb] = useState(null);
+  const keys = useRef({});
+  const ids = ['intro', projects.length && 'library', projects.length && 'manual', (pf.skills || []).length && 'spec', 'contact'].filter(Boolean);
+  const [active, activeRef] = useActive(ids);
+  const zoom = (p, items, start) => setLb({ p, items, start });
+  // 다른 절에서 소프트를 고르면: 선반이 보이게 올라간 뒤 꽂음(날아가는 연출이 화면 안에서 보이게)
+  const goSoft = async (k) => {
+    c.touched.current = true;
+    const el = document.getElementById('library');
+    const r = el?.getBoundingClientRect();
+    if (r && (r.top > 80 || r.bottom < innerHeight * .6)) { scrollToId('library'); await wait(reduceMotion() ? 0 : 700); }
+    c.insert(k);
+  };
+  keys.current.library = (d) => c.step(d);
+  // ◀ ▶ = 지금 보는 절 안에서(소프트 = 바꿔 꽂기, 설명서 = 쪽 넘기기)
+  useEffect(() => {
+    const on = (e) => {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (document.body.classList.contains('lb-open')) return;
+      const tg = e.target;
+      if (tg && tg.closest && tg.closest('input, textarea, select, [contenteditable="true"]')) return;
+      const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+      const h = d && keys.current[activeRef.current];
+      if (!h) return;
+      e.preventDefault();
+      h(d);
+    };
+    window.addEventListener('keydown', on);
+    return () => window.removeEventListener('keydown', on);
+  }, []);
+  return (
+    <>
+      <Top prof={prof} t={t} active={active} />
+      <main>
+        <Hero pf={pf} prof={prof} projects={projects} t={t} />
+        {projects.length > 0 && <Library projects={projects} prof={prof} t={t} c={c} />}
+        {projects.length > 0 && <Manual projects={projects} t={t} c={c} keys={keys} zoom={zoom} />}
+        <Spec pf={pf} prof={prof} projects={projects} t={t} goSoft={goSoft} />
+        <Contact prof={prof} projects={projects} t={t} c={c} goSoft={goSoft} />
+      </main>
+      <footer className="wrap">
+        <div className="foot"><span>© {prof.nameEn || prof.name}</span><span>{pf.generatedAt ? `UPDATED ${pf.generatedAt.replace(/-/g, '.')}` : ''}</span></div>
+      </footer>
+      {lb && <Lightbox p={lb.p} items={lb.items} start={lb.start} onClose={() => setLb(null)} />}
+    </>
+  );
+}
+
+function App() {
+  const [state, setState] = useState({ ok: false });
+  useEffect(() => {
+    (async () => {
+      try {
+        const [t, pf] = await Promise.all([loadStrings(), fetch('../data/portfolio.json', { cache: 'no-cache' }).then((r) => r.json())]);
+        const projects = (await Promise.all((pf.projects || []).map((id) =>
+          fetch(`../data/projects/${encodeURIComponent(id)}.json`, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null)))).filter(Boolean);
+        const prof = pf.profile || {};
+        document.title = `${prof.name ? prof.name + ' · ' : ''}${t('name.portfolio')}`;
+        setState({ ok: true, t, pf, prof, projects });
+      } catch (e) {
+        setState({ ok: false, err: String(e) });
+      }
+    })();
+  }, []);
+  // 주소에 #절 이 있으면 그려진 뒤 그 절로(#soft-<폴더 이름>은 소프트 절)
+  useEffect(() => {
+    if (!state.ok || !location.hash) return;
+    const h = decodeURIComponent(location.hash.slice(1));
+    const id = h.startsWith('soft-') ? 'library' : h;
+    requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start' }));
+  }, [state.ok]);
+  if (state.err) return <p className="px-6 py-24 muted">데이터를 읽지 못했습니다. 로컬 서버로 열었는지 확인하세요. ({state.err})</p>;
+  if (!state.ok) return <p className="px-6 py-24 muted">불러오는 중…</p>;
+  return <Main {...state} />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

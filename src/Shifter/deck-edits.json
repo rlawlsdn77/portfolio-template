@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "pin": [
+    {
+      "key": "flow-screens",
+      "after": "architecture",
+      "chapter": "structure",
+      "layout": "full",
+      "tab": "흐름",
+      "title": {"text": "2.1 씬 구성과 흐름", "verbatim": true},
+      "lead": {"text": "HP가 0이 되면 게임오버 화면이 뜨고 시간이 멈추며, Esc는 일시정지 화면을 엽니다.", "verbatim": true},
+      "sectionPath": ["2. 시스템 구조", "2.1 씬 구성과 흐름"],
+      "points": [],
+      "visuals": [{"kind": "table", "n": 2, "fp": "메뉴|게임오버|일시정지"}]
+    },
+    {
+      "key": "architecture",
+      "after": "flow-screens",
+      "chapter": "structure",
+      "layout": "visual",
+      "tab": "구조",
+      "title": {"text": "2.2 아키텍처", "verbatim": true},
+      "lead": null,
+      "sectionPath": ["2. 시스템 구조", "2.2 아키텍처"],
+      "points": [
+        {"label": "", "text": "실선은 직접 호출, 점선은 값을 읽기만 하는 관계입니다.", "verbatim": true},
+        {"label": "", "text": "플레이어의 속성(태그)을 바꾸는 곳은 `Shifter.ShiftTag()` 하나이고, 나머지는 모두 읽기만 합니다.", "verbatim": true}
+      ],
+      "visuals": [{"kind": "mermaid", "n": 1, "fp": "flowchart TB"}],
+      "from": {"key": "architecture", "sectionPath": ["2. 시스템 구조", "2.2 아키텍처"], "sig": ["2.2 아키텍처|mermaid|1|flowchart TB"]}
+    },
+    {
+      "key": "stage1-screens",
+      "after": "stage-screens",
+      "chapter": "gimmick",
+      "layout": "full",
+      "tab": "결과",
+      "title": {"text": "4.1 문제와 구조", "verbatim": true},
+      "lead": {"text": "박스를 밀며 달리는 중이고(골 지점은 약 60유닛 오른쪽), 아래에서 흰 총알이 올라옵니다.", "verbatim": true},
+      "sectionPath": ["4. 스테이지 기믹과 퍼즐", "4.1 문제와 구조"],
+      "points": [],
+      "visuals": [{"kind": "table", "n": 2, "fp": "박스 운반|전구 퍼즐"}]
+    },
+    {
+      "key": "stage-screens",
+      "after": "stage1-screens",
+      "chapter": "gimmick",
+      "layout": "full",
+      "tab": "결과",
+      "title": {"text": "4.1 문제와 구조", "verbatim": true},
+      "lead": {"text": "레이저는 흰 막대 거울 3개에서 꺾여 오른쪽 센서에 닿고, 가운데 회색 기둥(흰 발판)은 반투명해져 빛이 그대로 지나갑니다.", "verbatim": true},
+      "sectionPath": ["4. 스테이지 기믹과 퍼즐", "4.1 문제와 구조"],
+      "points": [],
+      "visuals": [{"kind": "table", "n": 3, "fp": "레이저 조준 모드|크러셔 벽"}],
+      "from": {
+        "key": "stage-screens",
+        "sectionPath": ["4. 스테이지 기믹과 퍼즐", "4.1 문제와 구조"],
+        "sig": ["4.1 문제와 구조|table|3|레이저 조준 모드|크러셔 벽"]
+      }
+    },
+    {
+      "key": "boss-groggy",
+      "after": "boss-pattern-change",
+      "chapter": "boss",
+      "layout": "full",
+      "tab": "결과",
+      "title": {"text": "5.3 핵심 동작", "verbatim": true},
+      "lead": {"text": "패턴 3회가 끝나면 보스 가슴에 약점이 5초 동안 나타나고, 위에서 밟으면 보스 체력 바가 한 칸 줄고 플레이어 HP가 30 회복됩니다.", "verbatim": true},
+      "sectionPath": ["5. 보스전", "5.3 핵심 동작"],
+      "points": [],
+      "visuals": [{"kind": "image", "src": "images/14_boss_groggy.png", "w": 1920, "h": 1080, "caption": {"text": "그로기 중 열린 약점", "verbatim": true}}]
+    }
+  ],
+  "hide": []
+}

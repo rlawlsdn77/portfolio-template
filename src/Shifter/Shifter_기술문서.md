@@ -73,7 +73,7 @@
 | 엔진 | Unity 6 (6000.3.15f1), URP 2D |
 | 언어 | C# |
 | 주요 패키지 | Input System, uGUI + TextMeshPro |
-| 공용 유틸리티 | `CharacterController2D`(키네마틱 2D 이동), `SimpleInput`(Input System 래퍼): 강의 저장소의 `Study.Utilities` 코드. `CharacterController2D`에는 박스 밀기를 직접 추가 ([6.2](#62-박스-밀기-공용-유틸리티에-추가한-부분)) |
+| 공용 유틸리티 | `CharacterController2D`(키네마틱 2D 이동), `SimpleInput`(Input System 래퍼): 강의 저장소의 `Study.Utilities` 코드. `CharacterController2D`에는 박스 밀기를 직접 추가 ([6장 ②](#6-기타-구현)) |
 | 외부 에셋 | 플레이어·보스·타일·배경·UI 스프라이트와 Super Pixel Projectiles Pack 1(보스 탄환). 모두 구매하거나 무료로 배포된 에셋을 사용 |
 | 도구 | JetBrains Rider, Git / GitHub |
 | 기간 | 2026.06.24 ~ 2026.07.10 (07.07 완성, 07.10 리팩토링) · 2026.11.09 문서화 검수 (테스트 플레이, 빌드 에러 재수정) |
@@ -83,7 +83,7 @@
 ### 1.4 링크
 
 - GitHub: https://github.com/rlawlsdn77/Unity-2D-Shifter
-- 시연 영상: (링크 첨부 예정)
+- 시연 영상: (추가 예정)
 
 ### 1.5 핵심 루프
 
@@ -102,14 +102,14 @@ flowchart LR
 
 ### 1.6 조작법
 
-| 입력 | 동작 |
-|---|---|
-| A · D / ← · → | 좌우 이동 (초당 8유닛) |
-| Space | 점프. 공중에서 한 번 더 (2단 점프) |
-| Shift (왼쪽 · 오른쪽) | 속성 전환. 시작은 회색(Common), 이후 흰 ↔ 검 (쿨타임 1초) |
-| W / ↑ | 포탈 안에서 다음 스테이지로 |
-| Esc | 일시정지 · 해제 |
-| 마우스 | 레이저 퍼즐 조준 모드에서 빛의 방향 |
+| 상황 | 입력 | 동작 |
+|---|---|---|
+| 공통 | A · D / ← · → | 좌우 이동 (초당 8유닛) |
+| 공통 | Space | 점프. 공중에서 한 번 더 (2단 점프) |
+| 공통 | Shift (왼쪽 · 오른쪽) | 속성 전환. 시작은 회색(Common), 이후 흰 ↔ 검 (쿨타임 1초) |
+| 공통 | Esc | 일시정지 · 해제 |
+| 포탈 안 | W / ↑ | 다음 스테이지로 |
+| 레이저 퍼즐 조준 모드 | 마우스 | 빛의 방향 |
 
 ### 1.7 레퍼런스
 
@@ -152,6 +152,8 @@ stateDiagram-v2
 | 메뉴 | 게임오버 | 일시정지 |
 |---|---|---|
 | ![메뉴 화면](images/03_menu.png) | ![게임오버 화면](images/04_gameover.png) | ![일시정지 화면](images/05_pause.png) |
+
+*메뉴에는 조작법(HOW TO PLAY)과 START · Exit Game 버튼이 있습니다. HP가 0이 되면 게임오버 화면이 뜨고 시간이 멈추며, Esc는 일시정지 화면을 엽니다. 두 화면 모두 다시 시작하는 버튼과 메뉴로 돌아가는 버튼이 있습니다.*
 
 ### 2.2 아키텍처
 
@@ -1037,9 +1039,9 @@ private IEnumerator PlayDeathAndDisappear()
 | 기능 | 구현 요점 | 클래스 |
 |---|---|---|
 | 키네마틱 이동 | 공용 `CharacterController2D` 사용. 물리 프레임마다 가로·세로를 따로 BoxCast해 막힌 거리까지만 이동(skinWidth 0.01), 세로가 막히면 낙하 속도 0. 땅에 닿으면 점프 횟수 초기화(2단 점프). 수치: 속도 8, 중력 −24, 점프력 11 | `CharacterController2D` |
-| 박스 밀기 (추가 구현) | 가로 BoxCast에 맞은 대상이 Dynamic `Rigidbody2D`면 그 속도를 플레이어 속도로 덮어써 민다 (아래 6.2) | `CharacterController2D`, 박스 |
+| 박스 밀기 (추가 구현) | 가로 BoxCast에 맞은 대상이 Dynamic `Rigidbody2D`면 그 속도를 플레이어 속도로 덮어써 민다 (아래 ②) | `CharacterController2D`, 박스 |
 | 좌우 반전 | 루트의 `transform.localScale.x`를 ±1로 뒤집어 그림과 콜라이더가 함께 반전된다 ([7.2 ①](#72-문제-해결-경험)) | `ShifterController` |
-| 카메라 | 비대칭 데드존(좌우 ±4, 위 5, 아래 1) 밖으로 나갈 때만 목표를 옮기고, 카메라는 목표를 Lerp로 따라간다 (아래 6.1) | `CameraController` |
+| 카메라 | 비대칭 데드존(좌우 ±4, 위 5, 아래 1) 밖으로 나갈 때만 목표를 옮기고, 카메라는 목표를 Lerp로 따라간다 (아래 ①) | `CameraController` |
 | 피해와 HP | 피해는 `ITakeDamage` 하나로 받는다. HP 프로퍼티가 0~100으로 자르고 HP 바를 갱신, 0이면 게임오버 화면과 `timeScale` 0. 피격 시 0.1초 간격으로 빨간색 3번 점멸 | `Shifter`, `ITakeDamage` |
 | 레드 타일 | 부모 하나가 자식 타일 콜라이더 전체를 `IsTouching`으로 검사한다. 닿아 있는 동안 타이머를 쌓아 간격마다 피해, 떨어지면 타이머 초기화 | `Red` |
 | 총알 발사기 | `firePivot` → `endPivot` 방향으로 일정 간격 발사. 사거리 = 두 점 사이 거리라 레벨에서 끝점만 옮기면 된다 | `BulletLauncher`, `Bullet` |
@@ -1048,7 +1050,7 @@ private IEnumerator PlayDeathAndDisappear()
 | 씬 전환 | UI 버튼이 문자열 인자(`Exit` / `Restart` / `Menu` / 씬 이름)로 `ChangeSceneByName`을 부른다. 포탈은 W·↑로 다음 빌드 인덱스 | `SceneChanger`, `Portal` |
 | 보스 UI | 입장 트리거가 보스 이름·체력·타이머 UI를 켠다. 체력 바 = 남은 체력 / 3, 타이머 = 입장부터 격파까지(mm:ss) | `OnBosspattern`, `BossHealthUI`, `BossTimerUI` |
 
-### 6.1 카메라: 위는 넓게, 아래는 좁게
+**① 카메라: 위는 넓게, 아래는 좁게**
 
 ```csharp
 // CameraController.cs (발췌) — 데드존 밖으로 나간 만큼만 목표를 옮기고, 카메라는 목표를 부드럽게 따라간다
@@ -1083,7 +1085,7 @@ void LateUpdate()
 
 *Scene 뷰에 그린 데드존(초록 상자). 위쪽이 넓고 아래쪽이 좁은 비대칭 상자이며, 플레이어가 이 상자를 벗어날 때만 카메라 목표가 움직입니다.*
 
-### 6.2 박스 밀기: 공용 유틸리티에 추가한 부분
+**② 박스 밀기: 공용 유틸리티에 추가한 부분**
 
 ```csharp
 // CharacterController2D.cs (발췌) — 가로 이동이 Dynamic 물체에 막히면, 그 물체에 플레이어 속도를 준다
@@ -1180,7 +1182,7 @@ if (sceneName == "Exit")
 
 **② 구조의 기술 부채**
 
-| 아쉬운 점 | 왜 문제인가 | 향후 계획 (To-Be) |
+| 아쉬운 점 (기술 부채) | 왜 문제인가 | 향후 계획 (To-Be) |
 |---|---|---|
 | `PlatformManager`가 매 프레임 태그로 발판을 다시 찾고, `Rigidbody2D` 유무로 관리 대상을 거른다 | 이유였던 보스전 랜덤 발판은 사라졌는데, 판정이 바뀌는 순간(Shift)과 무관하게 매 프레임 배열 4개 할당과 `GetComponent`가 반복된다. 크러셔 벽처럼 관리에서 빼려면 `Rigidbody2D`를 붙여야 하는 암묵 규칙도 남았다. 거꾸로 `Rigidbody2D`가 없는 STAGE 1 총알은 흰·검 태그 때문에 '발판'으로 관리되어, 반대 색 총알이 반투명해지는 의도하지 않은 효과도 생긴다 | 시작할 때 한 번 모으고(관리할 발판은 컴포넌트로 명시), `Shifter`가 속성을 바꿀 때 이벤트를 내면 그때만 갱신한다. `UIModManager`가 이미 '바뀔 때만 갱신'으로 동작한다 |
 | 속성이 태그를 차지해, 플레이어를 이름 문자열 `"Shifter"`로 판별한다 (6개 파일 7곳) | 오브젝트 이름을 바꾸면 7곳이 조용히 깨진다. 플레이어 태그가 시작하자마자 `Common`으로 바뀌므로, `UIModManager`의 `FindWithTag("Player")` 대체 경로는 실행 순서에 따라 플레이어를 찾지 못한다 | 속성을 enum 컴포넌트로 옮기고 태그는 `Player`로 되돌린다. 플레이어 판별은 컴포넌트(`TryGetComponent<Shifter>`)나 Player 레이어로 |
