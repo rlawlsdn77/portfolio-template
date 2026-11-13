@@ -1,5 +1,6 @@
 // 포트폴리오 문서(index.html) — 아래로 읽는 한 페이지 + A4 인쇄(제출 PDF)
-//   순서: 머리(이름·정체성·연락처) → 자기소개 → 기술 스택 → 프로젝트마다 소개 + 기능 소개 → 한눈에 보기 → 연락처
+//   순서: 머리(이름·정체성·연락처) → 자기소개 → 기술 스택 → 한눈에 보기 → 프로젝트마다 소개 + 기능 소개 → 연락처
+//     (한눈에 보기는 기술 스택 바로 다음 — theme/layout-principles.md 원칙 3. /portfolio-update로 이 파일을 다시 받으면 예전 순서로 돌아가니 다시 맞춤)
 //   기능 소개: 화면(그 기능 절의 이미지 highlights[].image만)은 왼쪽에 모으고, 기능 설명과 [발표 덱에서 보기]는 오른쪽 목록에 한 열로 맞춤
 //   모든 글은 data/portfolio.json·data/projects/*.json 값 그대로입니다. 절 이름·버튼 같은 UI 문구는 문구 표(PF.t, assets/strings.js + theme/strings.tsv)에서 옵니다.
 //   주소: #<절 id>(cover · intro · stack · p-<폴더> · p-<폴더>-core · glance · contact). 예전 포트폴리오 덱 주소(#s=<장면 id> · #<번호>)는 같은 절로 넘깁니다.
@@ -110,20 +111,20 @@
     if ((pf.skills || []).length) out.push(sec('stack', t('en.skills'), t('page.stack'), t('page.stack-note'),`<ul class="skills">${pf.skills.map((s) => `<li class="skill">
       <h3>${esc(s.name)}</h3><ul>${(s.evidence || []).map((e) => `<li><span>${inline(e.text)}</span>${byId[e.project] ? link({ href: `#p-${e.project}`, label: esc(byId[e.project].title), kind: 'anchor', cls: 'chip' }) : ''}</li>`).join('')}</ul></li>`).join('')}</ul>`, 'tint'));
 
-    // ④ 프로젝트마다 소개 + 기능 소개
+    // ④ 한눈에 보기(format/01 §1 프로젝트 요약 표) — 기술 스택 바로 다음(레이아웃 원칙 3). 좁은 화면에서도 가로 스크롤이 없도록 표 대신 행 목록
+    if (projects.length) out.push(sec('glance', t('en.glance'), t('page.glance'), '',`<ul class="glance">${projects.map((p) => `<li>
+      <div class="g-t">${link({ href: `#p-${p.id}`, label: esc(p.title), kind: 'anchor' })}<p>${esc(PF.teamLabel(p.team))}</p></div>
+      <div class="g-b">${p.tagline ? `<p>${inline(p.tagline)}</p>` : ''}${(p.tags || []).length ? `<p class="g-tags">${esc(p.tags.slice(0, 4).join(' · '))}</p>` : ''}
+        ${p.team?.role ? `<p class="g-role"><b>${T('name.role-short')}</b> ${inline(p.team.role)}</p>` : ''}</div>
+      <div class="g-l">${projLinks(p)}</div></li>`).join('')}</ul>`));
+
+    // ⑤ 프로젝트마다 소개 + 기능 소개
     projects.forEach((p, j) => {
       const no = t('page.project-no', { no: pad2(j + 1), total });
       out.push(projectIntro(p, no, sec, btn, printUrls));
       const fe = features(p, no, sec, btn);
       if (fe) out.push(fe);
     });
-
-    // ⑤ 한눈에 보기(format/01 §1 프로젝트 요약 표) — 좁은 화면에서도 가로 스크롤이 없도록 표 대신 행 목록
-    if (projects.length) out.push(sec('glance', t('en.glance'), t('page.glance'), '',`<ul class="glance">${projects.map((p) => `<li>
-      <div class="g-t">${link({ href: `#p-${p.id}`, label: esc(p.title), kind: 'anchor' })}<p>${esc(PF.teamLabel(p.team))}</p></div>
-      <div class="g-b">${p.tagline ? `<p>${inline(p.tagline)}</p>` : ''}${(p.tags || []).length ? `<p class="g-tags">${esc(p.tags.slice(0, 4).join(' · '))}</p>` : ''}
-        ${p.team?.role ? `<p class="g-role"><b>${T('name.role-short')}</b> ${inline(p.team.role)}</p>` : ''}</div>
-      <div class="g-l">${projLinks(p)}</div></li>`).join('')}</ul>`, 'tint'));
 
     // ⑥ 연락처 + 프로젝트별 링크(그 밖의 링크는 주소까지)
     out.push(`<footer id="contact" class="sec contact"><div class="wrap">
@@ -138,8 +139,8 @@
           .map((l) => `<span class="ex">${esc(l.label)} ${link({ href: l.url, label: `<span class="url">${esc(shortUrl(l.url))}</span>` })}</span>`).join('')}</div>`).join('')}</div>
       </div></div></footer>`);
 
-    const nav = [['intro', t('page.nav-intro'), prof.intro], ['stack', t('page.nav-stack'), (pf.skills || []).length], [projects[0] ? `p-${projects[0].id}` : '', t('page.nav-projects'), projects.length],
-      ['glance', t('page.nav-glance'), projects.length], ['contact', t('page.nav-contact'), true]].filter((x) => x[0] && x[2]);
+    const nav = [['intro', t('page.nav-intro'), prof.intro], ['stack', t('page.nav-stack'), (pf.skills || []).length], ['glance', t('page.nav-glance'), projects.length],
+      [projects[0] ? `p-${projects[0].id}` : '', t('page.nav-projects'), projects.length], ['contact', t('page.nav-contact'), true]].filter((x) => x[0] && x[2]);
     root.innerHTML = `<header class="top no-print"><div class="wrap top-in">
         <a class="top-name" href="#cover">${esc(nameT)}</a>
         <nav aria-label="절 이동"><ul>${nav.map(([id, label]) => `<li><a href="#${esc(id)}">${esc(label)}</a></li>`).join('')}</ul></nav>

@@ -8,13 +8,13 @@
 <!-- temp3 — 카트리지 포트폴리오 (직접 생성 모드)
      80년대 가정용 게임기 카트리지의 모양(손잡이 홈 · 오목한 라벨 창 · 아래 금속 접점 · 소프트마다 다른 껍데기 색)을 빌려 온 아래로 읽는 한 페이지.
      실제 회사·게임기의 이름·로고·라벨 그림은 쓰지 않습니다(모양과 색 인상만).
-     흐름 = 카트리지 한 개를 앞에서 뒤, 속, 그리고 소프트 목록까지 보는 순서
+     흐름 = 카트리지 한 개를 앞에서 뒤, 속까지 본 뒤 소프트 선반 → 소프트 하나씩 (한눈에 보기는 기술 스택 바로 다음 — ../theme/layout-principles.md 원칙 3)
        #cover          앞면   — 내 카트리지(라벨 = 이름 · 영문 이름 · 한 줄 정체성 · 직무 · 연락처)
        #intro          뒷면   — 뒷면 스티커에 자기소개 원문 그대로
        #stack          속     — 기판 위 칩 하나 = 기술 하나(근거 문장 + 근거 프로젝트 칩)
+       #glance         선반   — 카트리지 선반 + 꽂는 슬롯(꽂은 프로젝트의 제목 · 한 줄 소개 · 장르·기간 · 핵심 기술 · 역할 · 링크)
        #p-<폴더>       소프트 — 프로젝트 카트리지(라벨 = 대표 화면 · 제목 · 한 줄 소개, 누르면 발표 덱) + 상자 뒷면 사양(장르·기간·인원·환경 · 역할 · 개발 의도 · 태그 · 링크)
        #p-<폴더>-core  기능   — 화면 왼쪽 · FEATURE 목록 오른쪽(올리면 짝 강조, 화면을 누르면 크게)
-       #glance         보관함 — 카트리지를 세워 꽂은 상자(책등 = 제목 · 한 줄 소개 · 핵심 기술 · 역할 · 링크)
        #contact        접점   — 연락처 + 프로젝트별 링크
      내용: ../data/portfolio.json · ../data/projects/*.json(기능 = highlights). UI 문구: ../theme/strings.tsv(원본 렌더러의 assets/strings.js로 읽음).
      공통 함수(글 조각 → HTML, 링크 규칙, 발표 덱 장면 찾기)는 원본 ../assets/common.js를 그대로 씁니다. 이 페이지는 그 파일들을 고치지 않습니다.
@@ -609,14 +609,7 @@
           }).join('')}</ul></li>`).join('')}</ul><i class="edge" aria-hidden="true"></i></div></div></section>`);
     }
 
-    // ④⑤ 프로젝트마다 카트리지(소개) + 기능 소개
-    projects.forEach((p, j) => {
-      out.push(projectIntro(p, j, total, shells, projects));
-      const fe = features(p, j, total, shells[j]);
-      if (fe) out.push(fe);
-    });
-
-    // ⑥ 한눈에 보기: 카트리지 선반 + 꽂는 슬롯(꽂은 프로젝트의 요약이 옆 칸에). 처음에는 첫 프로젝트가 꽂혀 있음(bind → dock)
+    // ④ 한눈에 보기(기술 스택 바로 다음 — 레이아웃 원칙 3): 카트리지 선반 + 꽂는 슬롯(꽂은 프로젝트의 요약이 옆 칸에). 처음에는 첫 프로젝트가 꽂혀 있음(bind → dock)
     G.projects = projects; G.shells = shells;
     if (total) {
       out.push(`<section id="glance" class="sec"><div class="wrap">${head(t('en.glance'), t('page.glance'))}
@@ -636,6 +629,13 @@
         </div></div></section>`);
     }
 
+    // ⑤⑥ 프로젝트마다 카트리지(소개) + 기능 소개
+    projects.forEach((p, j) => {
+      out.push(projectIntro(p, j, total, shells, projects));
+      const fe = features(p, j, total, shells[j]);
+      if (fe) out.push(fe);
+    });
+
     // ⑦ 연락처
     out.push(`<footer id="contact" class="contact"><i class="pins-edge" aria-hidden="true"></i><div class="wrap"><div class="ct">
       <div class="ct-me"><p class="eyebrow">${T('en.contact')}</p><p class="ct-name">${esc(name)}</p>
@@ -646,8 +646,8 @@
       <div class="ct-lk">${projects.map((p, j) => `<div class="ct-row" style="${T3Carts.vars(shells[j])}"><b><i class="mc" aria-hidden="true"></i>${esc(p.title)}</b><span class="row">${projLinks(p)}</span></div>`).join('')}</div>
     </div></div></footer>`);
 
-    const nav = [['intro', t('page.nav-intro'), prof.intro], ['stack', t('page.nav-stack'), (pf.skills || []).length], [projects[0] ? `p-${projects[0].id}` : '', t('page.nav-projects'), total],
-      ['glance', t('page.nav-glance'), total], ['contact', t('page.nav-contact'), true]].filter((x) => x[0] && x[2]);
+    const nav = [['intro', t('page.nav-intro'), prof.intro], ['stack', t('page.nav-stack'), (pf.skills || []).length], ['glance', t('page.nav-glance'), total],
+      [projects[0] ? `p-${projects[0].id}` : '', t('page.nav-projects'), total], ['contact', t('page.nav-contact'), true]].filter((x) => x[0] && x[2]);
     app.innerHTML = `<header class="top"><div class="wrap top-in">
         <a class="brand" href="#cover"><i class="mini" aria-hidden="true"></i><span>${esc(name)}</span>${prof.nameEn ? `<span class="en" lang="en">${esc(prof.nameEn)}</span>` : ''}</a>
         <nav aria-label="절 이동"><ul>${nav.map(([id, label]) => `<li><a href="#${esc(id)}" data-nav="${esc(id)}">${esc(label)}</a></li>`).join('')}</ul></nav>

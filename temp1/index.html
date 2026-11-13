@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>포트폴리오</title>
 <!-- /portfolio-custom 직접 생성 모드(temp1) — 종이 카탈로그 · 가로 선반 · 한번에 보기 · 기능 소개.
+     순서: 소개 → 기술 스택 → 한눈에 보기 → 프로젝트(테이프 선반) → 기능 소개 → 연락처 (한눈에 보기는 기술 스택 바로 다음 — ../theme/layout-principles.md 원칙 3)
      내용은 ../data/*.json, UI 문구는 ../theme/strings.tsv에서 읽습니다(이 파일에 내용을 복사하지 않음). -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -426,7 +427,6 @@ function App() {
   const [state, setState] = useState({ loading: true });
   const [active, setActive] = useState(0);
   const deepFeature = useRef(/^#f-(.+)$/.exec(decodeURIComponent(location.hash))?.[1] || '');   // #f-<폴더 이름> → 그 프로젝트 기능 소개로
-  const [view, setView] = useState(() => (location.hash === '#glance' ? 'glance' : 'shelf'));
   const shelfRef = useRef(null);
 
   useEffect(() => {
@@ -439,6 +439,7 @@ function App() {
         setState({ loading: false, t, pf: pr, projects });
         const fi = projects.findIndex((x) => x.id === deepFeature.current);
         if (fi >= 0) { setActive(fi); scrollToId('features'); }
+        else if (/^#[a-z][\w-]*$/i.test(location.hash)) scrollToId(location.hash.slice(1));   // #stack · #glance 등 — 내용을 늦게 그려 브라우저 기본 이동이 닿지 않음
       } catch (e) {
         setState({ loading: false, error: String(e) });
       }
@@ -447,14 +448,14 @@ function App() {
 
   useEffect(() => {
     const onKey = (e) => {
-      if (view !== 'shelf' || !state.projects) return;
+      if (!state.projects) return;
       if (e.target && e.target.closest && e.target.closest('input,textarea,select')) return;
       if (e.key === 'ArrowRight') setActive((a) => (a + 1) % state.projects.length);
       if (e.key === 'ArrowLeft') setActive((a) => (a - 1 + state.projects.length) % state.projects.length);
     };
     addEventListener('keydown', onKey);
     return () => removeEventListener('keydown', onKey);
-  }, [view, state.projects]);
+  }, [state.projects]);
 
   if (state.loading) return <p className="p-10 lbl text-muted">Loading…</p>;
   if (state.error) return <p className="p-10 text-[14px]">데이터를 읽지 못했습니다. 로컬 서버로 열었는지, <code className="ic">/portfolio-build</code>를 했는지 확인해 주세요. ({state.error})</p>;
@@ -463,14 +464,15 @@ function App() {
   const P = pf.profile || {};
   const n = projects.length;
   const go = (d) => setActive((a) => (a + d + n) % n);
-  const pick = (i) => { setActive(i); setView('shelf'); scrollToId('projects'); };
+  const pick = (i) => { setActive(i); scrollToId('projects'); };
   const showFeatures = (i) => { setActive(i); scrollToId('features'); };
   const byId = Object.fromEntries(projects.map((p, i) => [p.id, i]));
 
+  // 메뉴도 절 순서대로: 소개 → 기술 스택 → 한눈에 보기 → 프로젝트 → 기능 소개 → 연락처
   const nav = [
-    ['#intro', t('page.nav-intro')], ['#projects', t('page.nav-projects'), 'shelf'], ['#glance', t('page.nav-glance'), 'glance'],
-    ['#features', t('page.features')], ['#stack', t('page.nav-stack')], ['#contact', t('page.nav-contact')],
-  ];
+    ['#intro', t('page.nav-intro')], ['#stack', t('page.nav-stack'), (pf.skills || []).length > 0], ['#glance', t('page.nav-glance'), n > 0],
+    ['#projects', t('page.nav-projects')], ['#features', t('page.features')], ['#contact', t('page.nav-contact')],
+  ].filter((x) => x[2] !== false);
 
   return (
     <>
@@ -482,8 +484,8 @@ function App() {
             {P.nameEn && <span className="lbl text-[9px] tracking-[.3em] text-cobalt mt-1">{P.nameEn}</span>}
           </a>
           <nav className="hidden md:flex items-center gap-6" aria-label="섹션">
-            {nav.map(([href, label, v]) => (
-              <a key={label} href={href} className="lbl text-ink hover:text-cobalt" onClick={() => v && setView(v)}>{label}</a>
+            {nav.map(([href, label]) => (
+              <a key={label} href={href} className="lbl text-ink hover:text-cobalt">{label}</a>
             ))}
           </nav>
           <span className="lbl text-muted hidden sm:inline">{t('page.updated', { date: pf.generatedAt || '' })}</span>
@@ -511,43 +513,6 @@ function App() {
             </div>
           )}
         </section>
-
-        {/* 프로젝트: 선반 · 한번에 보기 */}
-        <section id="projects" className="pt-14 pb-20 border-b border-ink scroll-mt-16">
-          <span id="glance" className="block scroll-mt-24" aria-hidden="true" />
-          <div className="flex flex-wrap items-end justify-between gap-5 mb-8">
-            <div>
-              <span className="lbl text-cobalt">{t('en.project')} · {pad(n)}</span>
-              <h2 className="font-serif font-bold text-[36px] md:text-[44px] leading-[1.05] tracking-[-.02em] mt-3">{t('page.nav-projects')}</h2>
-            </div>
-            <Seg value={view} onChange={setView} items={[{ value: 'shelf', label: '선반으로 보기' }, { value: 'glance', label: '한번에 보기' }]} />
-          </div>
-
-          {view === 'shelf' ? (
-            <>
-              <div className="shelf" ref={shelfRef}>
-                {projects.map((p, i) => <Tape key={p.id} p={p} i={i} total={n} open={i === active} onOpen={setActive} t={t} />)}
-              </div>
-              <div className="flex items-center justify-between gap-4 mt-6">
-                <button type="button" className="btn !w-11 !px-0 justify-center" onClick={() => go(-1)} aria-label="이전 프로젝트"><Arrow dir={-1} /></button>
-                <div className="flex gap-[6px]" role="tablist" aria-label="프로젝트">
-                  {projects.map((p, i) => (
-                    <button key={p.id} type="button" role="tab" aria-selected={i === active} onClick={() => setActive(i)}
-                            className={'lbl h-8 px-3 border transition-colors ' + (i === active ? 'bg-cobalt border-cobalt text-white' : 'border-btn text-ink')}>
-                      {pad(i + 1)}<span className="hidden sm:inline">&nbsp;{p.title}</span>
-                    </button>
-                  ))}
-                </div>
-                <button type="button" className="btn !w-11 !px-0 justify-center" onClick={() => go(1)} aria-label="다음 프로젝트"><Arrow dir={1} /></button>
-              </div>
-            </>
-          ) : (
-            <Glance projects={projects} t={t} onPick={pick} onFeatures={showFeatures} />
-          )}
-        </section>
-
-        {/* 기능 소개 */}
-        <Features projects={projects} active={active} setActive={setActive} t={t} />
 
         {/* 기술 스택 */}
         {(pf.skills || []).length > 0 && (
@@ -583,6 +548,47 @@ function App() {
             </div>
           </section>
         )}
+
+        {/* 한눈에 보기 — 기술 스택 바로 다음(카드를 누르면 아래 선반에서 그 테이프가 열림) */}
+        {n > 0 && (
+          <section id="glance" className="pt-14 pb-20 border-b border-ink scroll-mt-16">
+            <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+              <div>
+                <span className="lbl text-cobalt">{t('en.glance')}</span>
+                <h2 className="font-serif font-bold text-[36px] md:text-[44px] leading-[1.05] tracking-[-.02em] mt-3">{t('page.glance')}</h2>
+              </div>
+            </div>
+            <Glance projects={projects} t={t} onPick={pick} onFeatures={showFeatures} />
+          </section>
+        )}
+
+        {/* 프로젝트: 테이프 선반 */}
+        <section id="projects" className="pt-14 pb-20 border-b border-ink scroll-mt-16">
+          <div className="flex flex-wrap items-end justify-between gap-5 mb-8">
+            <div>
+              <span className="lbl text-cobalt">{t('en.project')} · {pad(n)}</span>
+              <h2 className="font-serif font-bold text-[36px] md:text-[44px] leading-[1.05] tracking-[-.02em] mt-3">{t('page.nav-projects')}</h2>
+            </div>
+          </div>
+          <div className="shelf" ref={shelfRef}>
+            {projects.map((p, i) => <Tape key={p.id} p={p} i={i} total={n} open={i === active} onOpen={setActive} t={t} />)}
+          </div>
+          <div className="flex items-center justify-between gap-4 mt-6">
+            <button type="button" className="btn !w-11 !px-0 justify-center" onClick={() => go(-1)} aria-label="이전 프로젝트"><Arrow dir={-1} /></button>
+            <div className="flex gap-[6px]" role="tablist" aria-label="프로젝트">
+              {projects.map((p, i) => (
+                <button key={p.id} type="button" role="tab" aria-selected={i === active} onClick={() => setActive(i)}
+                        className={'lbl h-8 px-3 border transition-colors ' + (i === active ? 'bg-cobalt border-cobalt text-white' : 'border-btn text-ink')}>
+                  {pad(i + 1)}<span className="hidden sm:inline">&nbsp;{p.title}</span>
+                </button>
+              ))}
+            </div>
+            <button type="button" className="btn !w-11 !px-0 justify-center" onClick={() => go(1)} aria-label="다음 프로젝트"><Arrow dir={1} /></button>
+          </div>
+        </section>
+
+        {/* 기능 소개 */}
+        <Features projects={projects} active={active} setActive={setActive} t={t} />
 
         {/* 연락처 */}
         <section id="contact" className="pt-14 pb-16 scroll-mt-16">

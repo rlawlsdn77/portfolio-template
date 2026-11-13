@@ -237,7 +237,7 @@ code { font-family: var(--mono); font-size: .88em; background: var(--accent-soft
   .sec, .hero { padding: 0; border-top: 0; background: none !important; }
   .sec { margin-top: 14pt; }
   .sec.proj { break-before: page; margin-top: 0; }
-  #glance { break-before: page; margin-top: 0; }
+  #glance { break-before: page; margin-top: 0; }                    /* 한눈에 보기 = 기술 스택 다음 새 쪽(그 뒤 프로젝트마다 새 쪽) */
   .sec-head { margin-bottom: 10pt; break-after: avoid; }
   .sec-head h2 { font-size: 17pt; margin-top: 4pt; }
   .eyebrow { font-size: 8pt; }
